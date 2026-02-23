@@ -499,10 +499,26 @@ mod_flex_header_ui <- function(ns, left_id, right_id) {
 #' }
 #'
 #' @export
+# parse_nav <- function(hash, search) {
+#   if (nzchar(hash)) shiny::parseQueryString(sub("^#", "", hash))
+#   else if (nzchar(search)) shiny::parseQueryString(search)
+#   else list()
+# }
 parse_nav <- function(hash, search) {
-  if (nzchar(hash)) shiny::parseQueryString(sub("^#", "", hash))
-  else if (nzchar(search)) shiny::parseQueryString(search)
-  else list()
+  qs <- if (nzchar(hash)) {
+    shiny::parseQueryString(sub("^#", "", hash))
+  } else if (nzchar(search)) {
+    shiny::parseQueryString(sub("^\\?", "", search))
+  } else {
+    list()
+  }
+
+  list(
+    eco    = qs$eco    %||% "",
+    tab    = qs$tab    %||% "",
+    subtab = qs$subtab %||% "",
+    stock  = qs$stock  %||% ""
+  )
 }
 
 # Map subtab input ids (read) & selectors (write)
@@ -629,14 +645,26 @@ select_subtab <- function(tab, value, session) {
 #' write_hash("BtS", "overview", NULL)  # no subtab parameter
 #'
 #' @export
-write_hash <- function(eco, tab, sub) {
+# write_hash <- function(eco, tab, sub) {
+#   paste0(
+#     "#eco=", utils::URLencode(eco %||% "", reserved = TRUE),
+#     "&tab=", utils::URLencode(tab %||% "", reserved = TRUE),
+#     if (nzchar(sub %||% "")) paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else ""
+#   )
+# }
+write_hash <- function(eco, tab, sub, stock = NULL) {
+  eco   <- eco   %||% ""
+  tab   <- tab   %||% ""
+  sub   <- sub   %||% ""
+  stock <- stock %||% ""
+
   paste0(
-    "#eco=", utils::URLencode(eco %||% "", reserved = TRUE),
-    "&tab=", utils::URLencode(tab %||% "", reserved = TRUE),
-    if (nzchar(sub %||% "")) paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else ""
+    "#eco=", utils::URLencode(eco, reserved = TRUE),
+    "&tab=", utils::URLencode(tab, reserved = TRUE),
+    if (nzchar(sub))   paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else "",
+    if (nzchar(stock)) paste0("&stock=",  utils::URLencode(stock, reserved = TRUE)) else ""
   )
 }
-
 ####################################### End bookmarking Helpers #######################################
 
 
