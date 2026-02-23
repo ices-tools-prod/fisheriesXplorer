@@ -230,7 +230,7 @@ mod_stock_status_ui <- function(id) {
               )
             ),
             card_body(withSpinner(reactableOutput(ns("stock_status_table_reactable")))),
-            actionLink(ns("clear_stock"), "Clear stock filter", class = "btn btn-outline-secondary btn-sm")
+            actionLink(ns("clear_stock"), "Clear stock filter", class = "fx-actionlink")
           )
         )
       )

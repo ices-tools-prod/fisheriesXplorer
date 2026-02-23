@@ -862,3 +862,99 @@ output$myPlot <- renderPlotly({
 .js-plotly-plot .annotation text{
   font-size: var(--plt-annotation) !important;
 }
+
+
+# ---- Packages
+# install.packages(c("rsconnect", "dplyr", "ggplot2"))
+library(rsconnect)
+library(dplyr)
+library(ggplot2)
+
+# ---- CONFIG: fill these in
+account_name <- "ices-taf"
+apps <- c("fisheriesXplorer", "	advicexplorer", "seabass-catch-allocation-tool", "neafc-catch-explorer","SEAwiseToolbox")
+
+# If you haven't authenticated on this machine yet, do it once:
+# rsconnect::setAccountInfo(name = account_name, token = "TOKEN", secret = "SECRET")
+
+# ---- Helpers
+as_date_utc <- function(x) as.Date(as.POSIXct(x, origin = "1970-01-01", tz = "UTC"))
+
+get_hours_90d <- function(app) {
+  df <- rsconnect::showUsage(
+    appName    = app,
+    account    = account_name,
+    server     = "shinyapps.io",
+    usageType  = "hours",
+    from       = "90d",
+    interval   = "1d"
+  )
+  # Expected columns include: timestamp, hours
+  df %>%
+    mutate(app = app, date = as_date_utc(timestamp)) %>%
+    select(app, date, hours)
+}
+
+get_connections_90d <- function(app) {
+  df <- rsconnect::showMetrics(
+    metricSeries = "container_status",
+    metricNames  = "connect_count",
+    appName      = app,
+    account      = account_name,
+    server       = "shinyapps.io",
+    from         = "90d",
+    interval     = "1d"
+  )
+  # Expected columns include: timestamp, connect_count
+  df %>%
+    mutate(app = app, date = as_date_utc(time)) %>%
+    select(app, date, connect_count)
+}
+
+# ---- Pull data (3 apps)
+hours_df <- bind_rows(lapply(apps, function(a) {
+  tryCatch(get_hours_90d(a), error = function(e) {
+    message("Hours failed for ", a, ": ", e$message)
+    NULL
+  })
+}))
+
+conn_df <- bind_rows(lapply(apps, function(a) {
+  tryCatch(get_connections_90d(a), error = function(e) {
+    message("Connections failed for ", a, ": ", e$message)
+    NULL
+  })
+}))
+
+# ---- Plot: Active hours (daily)
+p_hours <- ggplot(hours_df, aes(x = date, y = hours)) +
+  geom_line() +
+  facet_wrap(~ app, ncol = 1, scales = "fixed") +
+  labs(x = NULL, y = "Active hours (per day)", title = "shinyapps.io active hours (last 90 days)")
+
+print(p_hours)
+ggsave("Active hours (daily).png", p_hours, width = 10, height = 6, dpi = 300, bg = "white")
+# ---- Plot: Connections (daily average connect_count)
+p_conn <- ggplot(conn_df, aes(x = date, y = connect_count)) +
+  geom_line() +
+  facet_wrap(~ app, ncol = 1, scales = "fixed") +
+  labs(x = NULL, y = "connect_count (daily mean)", title = "shinyapps.io connections metric (last 90 days)")
+
+print(p_conn)
+ggsave("Connections (daily average connect_count).png", p_conn, width = 10, height = 6, dpi = 300, bg = "white")
+
+
+# ---- 90-day totals per app
+totals <- full_join(hours_df, conn_df, by = c("app", "date")) %>%
+  group_by(app) %>%
+  summarise(
+    total_active_hours_90d = sum(hours, na.rm = TRUE),
+    sum_daily_mean_connect_count_90d = sum(connect_count, na.rm = TRUE),
+    avg_daily_mean_connect_count_90d = mean(connect_count, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(total_active_hours_90d))
+
+print(totals)
+
+totals
