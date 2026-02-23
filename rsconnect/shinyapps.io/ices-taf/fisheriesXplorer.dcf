@@ -1,0 +1,10 @@
+name: fisheriesXplorer
+title: fisheriesXplorer
+username: ices-taf
+account: ices-taf
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16154875
+bundleId: 11520156
+url: https://ices-taf.shinyapps.io/fisheriesXplorer/
+version: 1

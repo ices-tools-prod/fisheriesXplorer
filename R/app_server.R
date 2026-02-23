@@ -65,6 +65,8 @@ app_server <- function(input, output, session) {
   # One-time desired state from URL
   desired <- reactiveVal(NULL)
 
+  selected_stock <- reactiveVal(NULL)
+
 ##################################### Bookmarking #####################################
 # High-level:
 # - On first load, read URL hash/query once and parse desired eco, tab, subtab.
@@ -86,7 +88,8 @@ app_server <- function(input, output, session) {
     desired(list(
       eco    = p$eco    %||% "",
       tab    = p$tab    %||% "",
-      subtab = p$subtab %||% ""
+      subtab = p$subtab %||% "",
+      stock  = p$stock  %||% ""
     ))
     # Flip the global "restore in progress" flag; the observer below will do the work
     is_restoring(TRUE)
@@ -115,6 +118,9 @@ app_server <- function(input, output, session) {
       select_subtab(d$tab, d$subtab, session)
     }
 
+    # Step 4: if a stock is requested, set it (some modules may choose to ignore this)
+    if (nzchar(d$stock)) selected_stock(d$stock)
+    
     # Check whether the live app state now matches the desired state --------------------
     cur_tab <- input$`nav-page` %||% ""
     cur_sub <- get_current_subtab(d$tab, input)
@@ -125,7 +131,9 @@ app_server <- function(input, output, session) {
     # - the subtab matches (or none was requested)
     if (identical(selected_ecoregion() %||% "", d$eco %||% "") &&
         (!nzchar(d$tab) || identical(cur_tab, d$tab)) &&
-        (!nzchar(d$subtab) || identical(cur_sub, d$subtab))) {
+        (!nzchar(d$subtab) || identical(cur_sub, d$subtab)) &&
+        (!nzchar(d$stock) || identical(selected_stock() %||% "", d$stock))
+        ) {
       # Freeze the restore loop; further navigation will be driven by user input
       is_restoring(FALSE)
       return()
@@ -194,6 +202,7 @@ app_server <- function(input, output, session) {
     "stock_status_1", cap_year, cap_month,
     selected_ecoregion = selected_ecoregion, 
     shared = shared,
+    selected_stock = selected_stock,
     bookmark_qs        = reactive(list()),     # parent restores
     set_subtab         = function(...) {}
   )
@@ -216,7 +225,8 @@ app_server <- function(input, output, session) {
       subtab = {
         t <- input$`nav-page` %||% ""
         get_current_subtab(t, input)
-      }
+      },
+      stock = selected_stock() %||% ""
     )
   })
   current_state_deb <- debounce(current_state, millis = 150)
@@ -225,7 +235,7 @@ app_server <- function(input, output, session) {
     if (isTRUE(is_restoring())) return()
     st <- current_state_deb()
     shinyjs::runjs(sprintf("location.hash = %s;",
-      jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab), auto_unbox = TRUE)
+      jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock), auto_unbox = TRUE)
     ))
   }, ignoreInit = TRUE)
 
@@ -234,7 +244,7 @@ app_server <- function(input, output, session) {
     if (isTRUE(is_restoring())) return()
     st <- current_state()
     shinyjs::runjs(sprintf("location.hash = %s;",
-      jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab), auto_unbox = TRUE)
+      jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock), auto_unbox = TRUE)
     ))
   }, ignoreInit = TRUE)
 
@@ -243,7 +253,7 @@ app_server <- function(input, output, session) {
   share_url <- reactiveVal(NULL)
   observeEvent(input$share_btn, {
     st <- current_state()
-    final <- paste0(.base_url(session), write_hash(st$eco, st$tab, st$subtab))
+    final <- paste0(.base_url(session), write_hash(st$eco, st$tab, st$subtab, st$stock))
     share_url(final)
     showModal(modalDialog(
       title = "Share this view",

@@ -229,7 +229,8 @@ mod_stock_status_ui <- function(id) {
                 HTML(paste0("<span class='hovertext' data-hover='Stock status list csv file'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
               )
             ),
-            card_body(withSpinner(reactableOutput(ns("stock_status_table_reactable"))))
+            card_body(withSpinner(reactableOutput(ns("stock_status_table_reactable")))),
+            actionLink(ns("clear_stock"), "Clear stock filter", class = "btn btn-outline-secondary btn-sm")
           )
         )
       )
@@ -357,6 +358,7 @@ mod_stock_status_server <- function(
     cap_month, 
     selected_ecoregion, 
     shared,
+    selected_stock,
     bookmark_qs = reactive(NULL),
     set_subtab = function(...) {}) {
   moduleServer(id, function(input, output, session) {
@@ -861,7 +863,11 @@ mod_stock_status_server <- function(
     processed_data_reactable <- reactive({
       annex_data <- format_annex_table(shared$clean_status, as.integer(format(Sys.Date(), "%Y")), shared$SID, shared$SAG)
       
-      annex_data_cleaned <- annex_data %>%
+      sk <- selected_stock() %||% ""
+      if (nzchar(sk)) {
+        annex_data <- annex_data %>% dplyr::filter(as.character(AssessmentKey) == sk)
+      }
+      annex_data %>%
         dplyr::mutate(
           icon = paste0("<img src='", paste0("www/fish/", match_stockcode_to_illustration(StockKeyLabel, .)), "' height=30>"),
           StockKeyLabel = paste0("<a href='https://ices-taf.shinyapps.io/advicexplorer/?assessmentkey=", AssessmentKey, "&assessmentcomponent=", AssessmentComponent, "' target='_blank'>", StockKeyLabel, "</a>")
@@ -921,6 +927,10 @@ mod_stock_status_server <- function(
           reactable::colGroup(name = "Precautionary approach", columns = c("PA Fishing Pressure", "PA Stock Size"))
         )
       )
+    })
+
+    observeEvent(input$clear_stock, {
+      selected_stock("") # show full list again
     })
 
     ######################### Stock status table download ##############################################
