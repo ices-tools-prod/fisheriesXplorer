@@ -78,10 +78,10 @@ mod_stock_status_ui <- function(id) {
 
     # Give the navset an id; give each nav_panel a stable value
     navset_tab(
-      id = ns("main_tabset"),   
-
+      id = ns("main_tabset"),
       nav_panel(
-        "Summary", value = "status_summary",   
+        "Summary",
+        value = "status_summary",
         layout_sidebar(
           sidebar = sidebar(
             width = "33vw", bg = "white", fg = "black",
@@ -95,14 +95,16 @@ mod_stock_status_ui <- function(id) {
                 height = "85vh", full_screen = TRUE,
                 card_header(
                   "MSY & Precautionary Approach",
-                  downloadLink(ns("download_clean_status_data"),
+                  downloadLink(
+                    ns("download_clean_status_data"),
                     HTML(paste0("<span class='hovertext' data-hover='Status cvs file & plot images'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
                   )
                 ),
                 card_body(
                   fillable = TRUE,
                   withSpinner(plotOutput(ns("status_summary_ices"), height = "75vh"),
-                              caption = "Getting status data...")
+                    caption = "Getting status data..."
+                  )
                 )
               )
             ),
@@ -112,23 +114,25 @@ mod_stock_status_ui <- function(id) {
                 height = "85vh", full_screen = TRUE,
                 card_header(
                   "Catches in relation to MSY status",
-                  downloadLink(ns("download_status_catch_data"),
+                  downloadLink(
+                    ns("download_status_catch_data"),
                     HTML(paste0("<span class='hovertext' data-hover='Status cvs file & plot images'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
                   )
                 ),
                 card_body(
                   fillable = TRUE,
                   withSpinner(plotOutput(ns("status_summary_ges"), height = "75vh"),
-                              caption = "Getting assessment data...")
+                    caption = "Getting assessment data..."
+                  )
                 )
               )
             )
           )
         )
       ),
-
       nav_panel(
-        "Trends", value = "trends_by_group",   
+        "Trends",
+        value = "trends_by_group",
         layout_sidebar(
           sidebar = sidebar(
             width = "33vw", bg = "white", fg = "black",
@@ -143,25 +147,26 @@ mod_stock_status_ui <- function(id) {
                 radioButtons(ns("status_trend_selector"), "Select a fisheries guild:",
                   inline = TRUE,
                   choices = c(
-                    "Benthic"       = "benthic",
-                    "Demersal"      = "demersal",
+                    "Benthic" = "benthic",
+                    "Demersal" = "demersal",
                     "Elasmobranchs" = "elasmobranch",
-                    "Pelagic"       = "pelagic",
-                    "Shellfish"    = "shellfish"
+                    "Pelagic" = "pelagic",
+                    "Shellfish" = "shellfish"
                   )
                 ),
-                downloadLink(ns("download_trends_data"),
+                downloadLink(
+                  ns("download_trends_data"),
                   HTML(paste0("<span class='hovertext' data-hover='Status trends csv file'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
                 )
               ),
-              card_body(withSpinner(plotlyOutput(ns("status_trends"))))#, height = "68vh"
+              card_body(withSpinner(plotlyOutput(ns("status_trends")))) # , height = "68vh"
             )
           )
         )
       ),
-
       nav_panel(
-        "Catch & Kobe plot", value = "kobe_cld",  
+        "Catch & Kobe plot",
+        value = "kobe_cld",
         layout_sidebar(
           sidebar = sidebar(
             width = "33vw", bg = "white", fg = "black", open = FALSE,
@@ -176,12 +181,12 @@ mod_stock_status_ui <- function(id) {
                   radioButtons(ns("status_kobe_cld_selector"), "Select a fisheries guild:",
                     inline = TRUE,
                     choices = c(
-                      "All Stocks"= "All",
-                      "Benthic"   = "benthic",
-                      "Demersal"  = "demersal",
+                      "All Stocks" = "All",
+                      "Benthic" = "benthic",
+                      "Demersal" = "demersal",
                       "Elasmobranchs" = "elasmobranch",
-                      "Pelagic"   = "pelagic",
-                      "Shellfish"= "shellfish"
+                      "Pelagic" = "pelagic",
+                      "Shellfish" = "shellfish"
                     ),
                     selected = "All"
                   )
@@ -192,7 +197,8 @@ mod_stock_status_ui <- function(id) {
                 div(
                   style = "display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 16px;",
                   uiOutput(ns("kobe_cld_slider")),
-                  downloadLink(ns("download_CLD_data"),
+                  downloadLink(
+                    ns("download_CLD_data"),
                     HTML(paste0("<span class='hovertext' data-hover='Status cvs file & plot images'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
                   )
                 )
@@ -202,20 +208,24 @@ mod_stock_status_ui <- function(id) {
           fluidRow(
             column(
               6,
-              card(fillable = TRUE, height = "70vh", full_screen = TRUE,
-                   withSpinner(plotOutput(ns("status_cld"),  height = "67vh")))
+              card(
+                fillable = TRUE, height = "70vh", full_screen = TRUE,
+                withSpinner(plotOutput(ns("status_cld"), height = "67vh"))
+              )
             ),
             column(
               6,
-              card(fillable = TRUE, height = "75vh", full_screen = TRUE,
-                   withSpinner(plotOutput(ns("status_kobe"), height = "67vh")))
+              card(
+                fillable = TRUE, height = "75vh", full_screen = TRUE,
+                withSpinner(plotOutput(ns("status_kobe"), height = "67vh"))
+              )
             )
           )
         )
       ),
-
       nav_panel(
-        "Stock list", value = "status_lookup",   # <-- NEW value
+        "Stock list",
+        value = "status_lookup", # <-- NEW value
         layout_sidebar(
           sidebar = sidebar(
             width = "33vw", bg = "white", fg = "black",
@@ -225,12 +235,23 @@ mod_stock_status_ui <- function(id) {
           card(
             card_header(
               "Stock status table",
-              downloadLink(ns("download_status_table"),
+              downloadLink(
+                ns("download_status_table"),
                 HTML(paste0("<span class='hovertext' data-hover='Stock status list csv file'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
               )
             ),
             card_body(withSpinner(reactableOutput(ns("stock_status_table_reactable")))),
-            actionLink(ns("clear_stock"), "Clear stock filter", class = "fx-actionlink")
+            # actionLink(ns("clear_stock"), "Clear stock filter", class = "fx-actionlink")
+            tagList(
+              tags$span(
+                style = "display:none;",
+                textOutput(ns("selected_stock_js"))
+              ),
+              conditionalPanel(
+                condition = sprintf("output['%s'] && output['%s'] !== ''", ns("selected_stock_js"), ns("selected_stock_js")),
+                actionLink(ns("clear_stock"), "Clear stock filter", class = "fx-actionlink")
+              )
+            )
           )
         )
       )
@@ -928,6 +949,11 @@ mod_stock_status_server <- function(
         )
       )
     })
+
+    output$selected_stock_js <- renderText({
+      selected_stock() %||% ""
+    })
+    outputOptions(output, "selected_stock_js", suspendWhenHidden = FALSE)
 
     observeEvent(input$clear_stock, {
       selected_stock("") # show full list again
