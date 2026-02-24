@@ -429,9 +429,30 @@ mod_stock_status_server <- function(
 
 
     ################################## header + glossary #########################################
+    # output$ecoregion_label <- renderUI({
+    #   req(selected_ecoregion())
+    #   tags$span(tags$b("ICES ecoregion:"), " ", paste0(selected_ecoregion(), " (", get_ecoregion_acronym(selected_ecoregion()), ")"))
+    # })
     output$ecoregion_label <- renderUI({
-      req(selected_ecoregion())
-      tags$span(tags$b("ICES ecoregion:"), " ", paste0(selected_ecoregion(), " (", get_ecoregion_acronym(selected_ecoregion()), ")"))
+      eco <- selected_ecoregion()
+      req(eco)
+
+      acr <- get_ecoregion_acronym(eco)
+
+      if (is.na(acr)) {
+        tags$span(
+          tags$b("ICES ecoregion:"),
+          " ",
+          eco,
+          tags$span(" (not available in fisheriesXplorer)", class = "text-danger")
+        )
+      } else {
+        tags$span(
+          tags$b("ICES ecoregion:"),
+          " ",
+          paste0(eco, " (", acr, ")")
+        )
+      }
     })
 
     
