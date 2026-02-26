@@ -301,8 +301,12 @@ app_server <- function(input, output, session) {
   })
 
 
-  # Clear stock filter whenever we are NOT on Stock status -> Stock list
-  observeEvent(list(input$`nav-page`, input$`stock_status_1-main_tabset`),
+
+
+  
+  ########################################## observeEvent: clear stock filter on tab change, and ensure valid ecoregion #########
+  observeEvent(
+    list(input$`nav-page`, input$`stock_status_1-main_tabset`),
     {
       if (isTRUE(is_restoring())) {
         return()
@@ -311,8 +315,25 @@ app_server <- function(input, output, session) {
       tab <- input$`nav-page` %||% ""
       sub <- input$`stock_status_1-main_tabset` %||% ""
 
-      keep <- identical(tab, "stock_status") && identical(sub, "status_lookup")
-      if (!keep) selected_stock("")
+      # 1) Clear stock filter whenever we are NOT on Stock status -> Status lookup
+      keep_stock <- identical(tab, "stock_status") && identical(sub, "status_lookup")
+      if (!keep_stock) selected_stock("")
+
+      # 2) If ecoregion is missing/invalid at the moment of a tab/subtab change,
+      #    fall back to Greater North Sea (but do NOT overwrite a valid choice)
+      eco <- selected_ecoregion() %||% ""
+      acr <- get_ecoregion_acronym(eco)
+
+      eco_missing <- identical(eco, "") || isTRUE(is.na(acr))
+      if (eco_missing) {
+        selected_ecoregion(DEFAULT_ECOREGION)
+        # optional user feedback
+        showNotification(
+          paste0("Ecoregion not available; using ", DEFAULT_ECOREGION, "."),
+          type = "message",
+          duration = 4
+        )
+      }
     },
     ignoreInit = TRUE
   )

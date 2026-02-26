@@ -429,9 +429,30 @@ mod_stock_status_server <- function(
 
 
     ################################## header + glossary #########################################
+    # output$ecoregion_label <- renderUI({
+    #   req(selected_ecoregion())
+    #   tags$span(tags$b("ICES ecoregion:"), " ", paste0(selected_ecoregion(), " (", get_ecoregion_acronym(selected_ecoregion()), ")"))
+    # })
     output$ecoregion_label <- renderUI({
-      req(selected_ecoregion())
-      tags$span(tags$b("ICES ecoregion:"), " ", paste0(selected_ecoregion(), " (", get_ecoregion_acronym(selected_ecoregion()), ")"))
+      eco <- selected_ecoregion()
+      req(eco)
+
+      acr <- get_ecoregion_acronym(eco)
+
+      if (is.na(acr)) {
+        tags$span(
+          tags$b("ICES ecoregion:"),
+          " ",
+          eco,
+          tags$span(" (not available in fisheriesXplorer)", class = "text-danger")
+        )
+      } else {
+        tags$span(
+          tags$b("ICES ecoregion:"),
+          " ",
+          paste0(eco, " (", acr, ")")
+        )
+      }
     })
 
     
@@ -882,6 +903,7 @@ mod_stock_status_server <- function(
     ##################### Stock status lookup tab ######################################################
 
     processed_data_reactable <- reactive({
+      req(input$main_tabset == "status_lookup")
       annex_data <- format_annex_table(shared$clean_status, as.integer(format(Sys.Date(), "%Y")), shared$SID, shared$SAG)
       
       sk <- selected_stock() %||% ""
@@ -927,9 +949,19 @@ mod_stock_status_server <- function(
 
     
     ##################################### Stock status table display #################################
-    output$stock_status_table_reactable <- renderReactable({
-      req(nrow(processed_data_reactable()) != 0)
-      reactable::reactable(processed_data_reactable(),
+    output$stock_status_table_reactable <- renderReactable({      
+      req(input$main_tabset == "status_lookup")
+      df <- processed_data_reactable()
+
+      if (is.null(df) || nrow(df) == 0) {
+        return(reactable::reactable(
+          data.frame(Note = "No stocks available for the current selection."),
+          searchable = FALSE, filterable = FALSE, pagination = FALSE
+        ))
+      }
+
+      reactable::reactable(
+        df,
         filterable = TRUE,
         defaultPageSize = 150,
         resizable = TRUE,
@@ -1025,8 +1057,7 @@ mod_stock_status_server <- function(
       },
       contentType = "application/zip"
     )
-  # output$status_summary <- output$status_text2 <- output$status_text3 <- output$status_text4 <- renderUI({
-      # HTML(select_text(texts, "status", "sidebar"))
+ 
     output$status_text_summary <- renderUI({
       div(
         class = "sidebar-text",
