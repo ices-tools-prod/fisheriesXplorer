@@ -958,3 +958,57 @@ totals <- full_join(hours_df, conn_df, by = c("app", "date")) %>%
 print(totals)
 
 totals
+
+
+#' Show recent shinyapps.io logs for an app
+#'
+#' Requires:
+#'   install.packages("rsconnect")
+#'   rsconnect::setAccountInfo(name=..., token=..., secret=...)
+#'
+#' @param appName  App name on shinyapps.io (e.g., "fisheriesXplorer")
+#' @param account  Your shinyapps.io account name (optional; inferred if only one)
+#' @param server   Usually "shinyapps.io"
+#' @param tail     Number of log lines to show (best-effort; depends on rsconnect version)
+#' @param streaming If TRUE, keeps streaming until you interrupt (Esc/Ctrl+C)
+#' @return Invisible NULL
+show_shinyapps_logs <- function(appName,
+                               account = NULL,
+                               server = "shinyapps.io",
+                               tail = 200,
+                               streaming = TRUE) {
+  if (!requireNamespace("rsconnect", quietly = TRUE)) {
+    stop("Package 'rsconnect' is required. Install it with install.packages('rsconnect').")
+  }
+
+  # rsconnect::showLogs signature varies a bit by version; try common patterns.
+  if (!isTRUE(streaming)) {
+    # Non-streaming attempt (some versions support 'tail' and 'streaming')
+    out <- try(
+      rsconnect::showLogs(
+        name = appName,
+        account = account,
+        server = server,
+        streaming = FALSE,
+        tail = tail
+      ),
+      silent = TRUE
+    )
+
+    if (inherits(out, "try-error")) {
+      message("Your rsconnect version may not support tail/streaming args; falling back to streaming logs.")
+      rsconnect::showLogs(name = appName, account = account, server = server)
+    }
+    return(invisible(NULL))
+  }
+
+  # Streaming logs (works on most rsconnect versions)
+  rsconnect::showLogs(name = appName, account = account, server = server)
+  invisible(NULL)
+}
+
+show_shinyapps_logs(appName = "fisheriesXplorer", account = "ices-tools-dev", server = "shinyapps.io", tail = 200, streaming = FALSE)
+
+
+rsconnect::showLogs(appName = "fisheriesXplorer", account = "ices-tools-dev", server = "shinyapps.io",entries = 200)
+rsconnect::accountInfo("ices-tools-dev")
