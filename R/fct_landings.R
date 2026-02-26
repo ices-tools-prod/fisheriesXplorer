@@ -67,7 +67,7 @@ get_ecoregion_acronym <- function(ecoregion) {
   if (is.null(acr) || identical(acr, "")) NA_character_ else acr
 }
 
-
+DEFAULT_ECOREGION <- "Greater North Sea"
 #' Get active region acronym from subregion or ecoregion
 #'
 #' Returns the ecoregion acronym for the active region, preferring
