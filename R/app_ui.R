@@ -153,8 +153,6 @@ golem_add_external_resources <- function() {
       });
     ")),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/gothic-a1.css"),
-    # tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"),
-    # tags$script(src = "https://kit.fontawesome.com/ac71e9cf8e.js"),
     tags$style("body {font-family: 'Gothic A1', sans-serif;}"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/styles.css"),
     tags$script(src = "www/copy.js"),
