@@ -98,7 +98,7 @@ mod_stock_status_ui <- function(id) {
                   "MSY & Precautionary Approach",
                   downloadLink(
                     ns("download_clean_status_data"),
-                    label = download_icon_label("Status csv file & plots (takes a few seconds)")
+                    label = download_icon_label("Status summary csv file & plots")
                   )
                 ),
                 card_body(
