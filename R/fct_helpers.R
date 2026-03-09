@@ -741,3 +741,21 @@ revision_dates <- c(
   NwS = "2022-11-30",
   NrS = "2024-12-05",
   ONA = "2022-11-30")
+
+
+
+download_icon_label <- function(hover_text,
+                                label = "Download data",
+                                icon = "cloud-arrow-down",
+                                size = "18px") {
+
+  shiny::tags$span(
+    class = "hovertext",
+    `data-hover` = hover_text,
+    shiny::tags$span(
+      style = paste0("font-size:", size, ";"),
+      label, " ",
+      shiny::icon(icon)
+    )
+  )
+}

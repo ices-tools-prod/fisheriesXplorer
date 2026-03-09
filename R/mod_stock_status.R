@@ -73,6 +73,7 @@
 #' @export
 mod_stock_status_ui <- function(id) {
   ns <- NS(id)
+
   tagList(
     mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
 
@@ -97,7 +98,7 @@ mod_stock_status_ui <- function(id) {
                   "MSY & Precautionary Approach",
                   downloadLink(
                     ns("download_clean_status_data"),
-                    HTML(paste0("<span class='hovertext' data-hover='Status cvs file & plot images'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
+                    label = download_icon_label("Status csv file & plots (takes a few seconds)")
                   )
                 ),
                 card_body(
@@ -116,7 +117,7 @@ mod_stock_status_ui <- function(id) {
                   "Catches in relation to MSY status",
                   downloadLink(
                     ns("download_status_catch_data"),
-                    HTML(paste0("<span class='hovertext' data-hover='Status cvs file & plot images'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
+                    label = download_icon_label("Catches vs MSY status csv file & plot")
                   )
                 ),
                 card_body(
@@ -156,7 +157,7 @@ mod_stock_status_ui <- function(id) {
                 ),
                 downloadLink(
                   ns("download_trends_data"),
-                  HTML(paste0("<span class='hovertext' data-hover='Status trends csv file'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
+                  label = download_icon_label("Status trends csv file")
                 )
               ),
               card_body(withSpinner(plotlyOutput(ns("status_trends")))) # , height = "68vh"
@@ -199,7 +200,7 @@ mod_stock_status_ui <- function(id) {
                   uiOutput(ns("kobe_cld_slider")),
                   downloadLink(
                     ns("download_CLD_data"),
-                    HTML(paste0("<span class='hovertext' data-hover='Status cvs file & plot images'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
+                    label = download_icon_label("CLD & Kobe csv file & plots")
                   )
                 )
               )
@@ -237,7 +238,7 @@ mod_stock_status_ui <- function(id) {
               "Stock status table",
               downloadLink(
                 ns("download_status_table"),
-                HTML(paste0("<span class='hovertext' data-hover='Stock status list csv file'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
+                label = download_icon_label("Stock status list csv file")
               )
             ),
             card_body(withSpinner(reactableOutput(ns("stock_status_table_reactable")))),

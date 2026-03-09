@@ -15,6 +15,7 @@
 #' @importFrom stringr str_starts
 mod_vms_ui <- function(id) {
   ns <- NS(id)
+
   tagList(
     mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
     layout_sidebar(
@@ -32,7 +33,7 @@ mod_vms_ui <- function(id) {
             # height = "82vh",
             card_header("Fishing Effort",
                         downloadLink(ns("download_effort_data"),
-                                    HTML(paste0("<span class='hovertext' data-hover='Data & Plot image'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
+                                    label = download_icon_label("Fishing effort layers & plots")
                                     )
                         ),
             card_body(
@@ -51,7 +52,7 @@ mod_vms_ui <- function(id) {
             # height = "85vh",
             card_header("Swept Area Ratio",
                         downloadLink(ns("download_sar_data"),
-                                     HTML(paste0("<span class='hovertext' data-hover='Data & Plot image'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
+                                     label = download_icon_label("Swept Area Ratio layers & plots")
                         )
             ),
             card_body(
