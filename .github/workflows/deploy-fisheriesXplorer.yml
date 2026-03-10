@@ -34,7 +34,11 @@ jobs:
             libfontconfig1-dev \
             libfreetype6-dev \
             libharfbuzz-dev \
-            libfribidi-dev
+            libfribidi-dev \
+            libcairo2-dev \
+            libjpeg-dev \
+            libpng-dev \  
+            libtiff-dev
 
       - name: Restore renv environment
         uses: r-lib/actions/setup-renv@v2
