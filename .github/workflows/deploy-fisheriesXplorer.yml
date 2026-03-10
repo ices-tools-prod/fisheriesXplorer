@@ -38,7 +38,8 @@ jobs:
             libcairo2-dev \
             libjpeg-dev \
             libpng-dev \
-            libtiff-dev
+            libtiff-dev \
+            libudunits2-dev
 
       - name: Restore renv environment
         uses: r-lib/actions/setup-renv@v2
