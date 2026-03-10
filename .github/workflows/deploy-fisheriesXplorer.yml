@@ -39,7 +39,11 @@ jobs:
             libjpeg-dev \
             libpng-dev \
             libtiff-dev \
-            libudunits2-dev
+            libudunits2-dev \
+            gdal-bin \
+            libgdal-dev \
+            libgeos-dev \
+            libproj-dev
 
       - name: Restore renv environment
         uses: r-lib/actions/setup-renv@v2
