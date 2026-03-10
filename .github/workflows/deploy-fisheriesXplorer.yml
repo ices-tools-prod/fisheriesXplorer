@@ -48,6 +48,8 @@ jobs:
       - name: Restore renv environment
         uses: r-lib/actions/setup-renv@v2
 
+      - name: Install deploy dependencies
+        run: Rscript -e 'install.packages(c("rsconnect","desc"), repos="https://cloud.r-project.org")'
+
       - name: Deploy fisheriesXplorer
-        run: |
-          Rscript scripts/deploy_shinyapps.R
+        run: Rscript scripts/deploy_shinyapps.R
