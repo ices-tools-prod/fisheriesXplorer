@@ -98,7 +98,7 @@ mod_stock_status_ui <- function(id) {
                   "MSY & Precautionary Approach",
                   downloadLink(
                     ns("download_clean_status_data"),
-                    label = download_icon_label("Status summary csv file & plots")
+                    label = download_icon_label("Status summary (.csv & plot)")
                   )
                 ),
                 card_body(
@@ -117,7 +117,7 @@ mod_stock_status_ui <- function(id) {
                   "Catches in relation to MSY status",
                   downloadLink(
                     ns("download_status_catch_data"),
-                    label = download_icon_label("Catches vs MSY status csv file & plot")
+                    label = download_icon_label("Catches vs MSY status (.csv & plot)")
                   )
                 ),
                 card_body(
@@ -157,7 +157,7 @@ mod_stock_status_ui <- function(id) {
                 ),
                 downloadLink(
                   ns("download_trends_data"),
-                  label = download_icon_label("Status trends csv file")
+                  label = download_icon_label("Status trends (.csv)")
                 )
               ),
               card_body(withSpinner(plotlyOutput(ns("status_trends")))) # , height = "68vh"
@@ -200,7 +200,7 @@ mod_stock_status_ui <- function(id) {
                   uiOutput(ns("kobe_cld_slider")),
                   downloadLink(
                     ns("download_CLD_data"),
-                    label = download_icon_label("CLD & Kobe csv file & plots")
+                    label = download_icon_label("CLD & Kobe (.csv & plots)")
                   )
                 )
               )
@@ -238,7 +238,7 @@ mod_stock_status_ui <- function(id) {
               "Stock status table",
               downloadLink(
                 ns("download_status_table"),
-                label = download_icon_label("Stock status list csv file")
+                label = download_icon_label("Stock status list (.csv)")
               )
             ),
             card_body(withSpinner(reactableOutput(ns("stock_status_table_reactable")))),

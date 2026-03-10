@@ -91,7 +91,7 @@ mod_landings_ui <- function(id) {
               ),
               downloadLink(
                 ns("download_landings_data"),
-                label = download_icon_label("Landings csv files (takes a few seconds)")
+                label = download_icon_label("Landings (.csv, takes a few seconds)")
               )
             ),
             card_body(
@@ -115,7 +115,7 @@ mod_landings_ui <- function(id) {
             card_header(
               "Discard trends",
               downloadLink(ns("download_discard_data"),
-                label = download_icon_label("Discards csv file")
+                label = download_icon_label("Discards (.csv)")
               )
             ),
             card_body(

@@ -744,6 +744,63 @@ revision_dates <- c(
 
 
 
+#' Build a download label with tooltip and icon
+#'
+#' Create a reusable label for Shiny \code{downloadLink()} elements that
+#' includes a hover tooltip and a Font Awesome icon rendered via
+#' \code{shiny::icon()}. This helper avoids repeated HTML construction and
+#' ensures a consistent appearance for download buttons across modules.
+#'
+#' @param hover_text Character string used as the tooltip text. This is
+#'   inserted in the \code{data-hover} attribute of the wrapper span and
+#'   displayed by CSS rules associated with the \code{"hovertext"} class.
+#'
+#' @param label Character string used as the visible label preceding the
+#'   icon. Defaults to \code{"Download data"}.
+#'
+#' @param icon Character string specifying the Font Awesome icon name passed
+#'   to \code{shiny::icon()}. The \code{"fa-"} prefix should not be included.
+#'   Defaults to \code{"cloud-arrow-down"}.
+#'
+#' @param size Character string specifying the CSS font size applied to the
+#'   label and icon (e.g. \code{"18px"}, \code{"1.2em"}). Defaults to
+#'   \code{"18px"}.
+#'
+#' @return A \link[shiny]{tags$span} object that can be used directly as the
+#'   \code{label} argument of \code{downloadLink()} or other UI elements.
+#'
+#' @details
+#' The function wraps the label and icon inside two nested \code{span}
+#' elements. The outer span carries the CSS class \code{"hovertext"} and
+#' a \code{data-hover} attribute used for tooltip display. The inner span
+#' applies the font-size styling and contains the label text followed by a
+#' Font Awesome icon generated via \code{shiny::icon()}.
+#'
+#' This pattern replaces manual HTML such as
+#' \code{<i class="fa-solid fa-cloud-arrow-down"></i>} and ensures that the
+#' Font Awesome dependency is handled automatically by Shiny.
+#'
+#' @examples
+#' \dontrun{
+#' downloadLink(
+#'   "download_data",
+#'   label = download_icon_label(
+#'     hover_text = "Download the CSV file",
+#'     label = "Download data"
+#'   )
+#' )
+#'
+#' downloadLink(
+#'   "download_table",
+#'   label = download_icon_label(
+#'     hover_text = "Download table (.csv)",
+#'     icon = "file-arrow-down"
+#'   )
+#' )
+#' }
+#'
+#' @importFrom shiny tags icon
+#' @export
 download_icon_label <- function(hover_text,
                                 label = "Download data",
                                 icon = "cloud-arrow-down",
