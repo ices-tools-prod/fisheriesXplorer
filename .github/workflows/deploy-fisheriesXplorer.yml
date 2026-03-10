@@ -37,7 +37,7 @@ jobs:
             libfribidi-dev \
             libcairo2-dev \
             libjpeg-dev \
-            libpng-dev \  
+            libpng-dev \
             libtiff-dev
 
       - name: Restore renv environment
