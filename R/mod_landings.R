@@ -92,7 +92,8 @@ mod_landings_ui <- function(id) {
               download_icon_label(
                 text = "Download data",
                 outputId = ns("download_landings_data"),
-                hover_text = "Landings (.csv, takes a few seconds)"
+                hover_text = "Landings (.csv, takes a few seconds)",
+                size = "large"
               )
             ),
             card_body(
@@ -118,7 +119,8 @@ mod_landings_ui <- function(id) {
               download_icon_label(
                 text = "Download data",
                 outputId = ns("download_discard_data"),
-                hover_text = "Discards (.csv)"
+                hover_text = "Discards (.csv)",
+                size = "large"  
               )
             ),
             card_body(

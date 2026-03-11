@@ -99,7 +99,8 @@ mod_stock_status_ui <- function(id) {
                   download_icon_label(
                     text = "Download data",
                     outputId = ns("download_clean_status_data"),
-                    hover_text = "Status summary (.csv & plot)"
+                    hover_text = "Status summary (.csv & plot)",
+                    size = "large"
                   )
                 ),
                 card_body(
@@ -119,7 +120,8 @@ mod_stock_status_ui <- function(id) {
                   download_icon_label(
                     text = "Download data",
                     outputId = ns("download_status_catch_data"),
-                    hover_text = "Catches vs MSY status (.csv & plot)"
+                    hover_text = "Catches vs MSY status (.csv & plot)",
+                    size = "large"
                   )
                 ),
                 card_body(
@@ -160,7 +162,8 @@ mod_stock_status_ui <- function(id) {
                 download_icon_label(
                   text = "Download data",
                   outputId = ns("download_trends_data"),
-                  hover_text = "Status trends (.csv)"
+                  hover_text = "Status trends (.csv)",
+                  size = "large"
                 )
               ),
               card_body(withSpinner(plotlyOutput(ns("status_trends")))) # , height = "68vh"
@@ -204,7 +207,8 @@ mod_stock_status_ui <- function(id) {
                   download_icon_label(
                     text = "Download data",
                     outputId = ns("download_CLD_data"),
-                    hover_text = "CLD & Kobe (.csv & plots)"
+                    hover_text = "CLD & Kobe (.csv & plots)",
+                    size = "large"
                   )
                 )
               )
@@ -243,7 +247,8 @@ mod_stock_status_ui <- function(id) {
               download_icon_label(
                 text = "Download data",
                 outputId = ns("download_status_table"),
-                hover_text = "Stock status list (.csv)"
+                hover_text = "Stock status list (.csv)",
+                size = "large"
               )
             ),
             card_body(withSpinner(reactableOutput(ns("stock_status_table_reactable")))),
