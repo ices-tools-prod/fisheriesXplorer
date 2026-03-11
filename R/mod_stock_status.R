@@ -487,7 +487,7 @@ mod_stock_status_server <- function(
     ######################### Status summary tab #################################################
 
     catch_current <- reactive({
-      stockstatus_CLD_current_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID), custom_refpoints_path = "data/custom_refpoints_2025.csv"))
+      stockstatus_CLD_current_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID),  sag_settings = shared$SAG_Settings)) #custom_refpoints_path = "data/custom_refpoints_2025.csv",
     })
 
     output$status_summary_ices <- renderPlot({
@@ -679,7 +679,7 @@ mod_stock_status_server <- function(
 
     ##################### Stock trends tab ###############################################
     trends_data <- reactive({
-      stock_trends_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID), custom_refpoints_path = "data/custom_refpoints_2025.csv"))
+      stock_trends_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID), sag_settings = shared$SAG_Settings))
     })
 
     output$status_trends <- renderPlotly({
