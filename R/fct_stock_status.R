@@ -139,6 +139,18 @@ getSAG_ecoregion_new <- function(Ecoregion) {
         return(sag)
 }
 
+getSAG_SettingsEcoregion <- function(Ecoregion) {
+        
+        EcoregionCode <- get_ecoregion_acronym(Ecoregion)
+        
+        sag_settings <- jsonlite::fromJSON(
+                URLencode(
+                        sprintf("https://sag.ices.dk/SAG_API/LatestStocks/Settings?ecoregion=%s", EcoregionCode)
+                )
+        )
+        return(sag_settings)
+}
+
 #' Fetch and merge stock status for an ecoregion
 #'
 #' Queries the ICES SAG status web service for the latest stock status
@@ -522,160 +534,217 @@ format_sag <- function(sag, sid){
         return(out)
 }
 
-
-#' Apply custom proxy reference points to SAG data
+#' Extract proxy reference-point choices from SAG settings
 #'
-#' Reads a table of custom reference point selections and applies them
-#' to a formatted SAG data set, optionally replacing the official
-#' \code{FMSY} and \code{MSYBtrigger} values with user-chosen proxy
-#' reference points. Flags and names for the chosen proxies are also
-#' added.
+#' Parses the output of the SAG settings web service and extracts user-defined
+#' proxy reference-point selections for fishing mortality (F) and spawning
+#' stock biomass (SSB) charts. In ICES SAG settings, proxy reference points are
+#' defined using `settingKey == 51`, where the `settingValue` indicates which of
+#' the available custom reference points (1–4) should replace the default
+#' reference points shown in standard SAG graphs.
 #'
-#' @param sag_formatted A data frame of formatted SAG data (e.g. from
-#'   \code{format_sag()}), containing at least:
-#'   \code{AssessmentKey}, \code{FMSY}, \code{MSYBtrigger},
-#'   \code{CustomRefPointName1}–\code{CustomRefPointName4} and
-#'   \code{CustomRefPointValue1}–\code{CustomRefPointValue4}.
-#' @param custom_refpoints_path Character scalar; path to a CSV file
-#'   containing custom reference point settings. The file is read with
-#'   \code{read.table()} using \code{sep = ","} and must contain at
-#'   least:
+#' The function filters settings corresponding to fishing mortality and SSB
+#' charts (`SAGChartKey == 3` and `SAGChartKey == 4` respectively), expands any
+#' comma-separated `settingValue` entries into individual rows, and keeps only
+#' valid proxy identifiers (`1`, `2`, `3`, `4`). For each `AssessmentKey` and
+#' chart type, the first valid proxy option is retained.
+#'
+#' The output is reshaped to a wide format with one row per `AssessmentKey`
+#' containing proxy choices for the F and SSB charts.
+#'
+#' @param sag_settings A data frame returned by the SAG settings web service
+#'   (e.g. `icesSAG::getSAGSettingsForAStock()` or equivalent bulk download).
+#'   The table must contain at least the columns:
+#'   `AssessmentKey`, `SAGChartKey`, `settingKey`, and `settingValue`.
+#'
+#' @return A data frame with one row per `AssessmentKey` and the following columns:
 #'   \describe{
-#'     \item{AssessmentKey}{Numeric or character assessment key.}
-#'     \item{SAGChartKey}{Integer indicating which chart the setting
-#'       applies to (3 = FMSY, 4 = MSYBtrigger).}
-#'     \item{settingValue}{Integer 1–4 indicating which custom
-#'       reference point (out of 1–4) should be used as proxy.}
+#'     \item{AssessmentKey}{Integer assessment identifier.}
+#'     \item{choice_3}{Selected proxy reference-point index (1–4) for the fishing
+#'     mortality chart (`SAGChartKey == 3`). `NA` if no proxy is defined.}
+#'     \item{choice_4}{Selected proxy reference-point index (1–4) for the SSB
+#'     chart (`SAGChartKey == 4`). `NA` if no proxy is defined.}
 #'   }
 #'
-#' @return
-#' A data frame identical to \code{sag_formatted} but with additional
-#' columns:
-#' \describe{
-#'   \item{FMSY_is_proxy}{Logical; \code{TRUE} if a proxy was chosen for
-#'     \code{FMSY} (i.e. \code{SAGChartKey = 3} present).}
-#'   \item{FMSY_proxy_name}{Name of the chosen \code{FMSY} proxy (from
-#'     \code{CustomRefPointName1}–\code{CustomRefPointName4}), or
-#'     \code{NA} if none.}
-#'   \item{MSYB_is_proxy}{Logical; \code{TRUE} if a proxy was chosen for
-#'     \code{MSYBtrigger} (i.e. \code{SAGChartKey = 4} present).}
-#'   \item{MSYB_proxy_name}{Name of the chosen \code{MSYBtrigger} proxy,
-#'     or \code{NA} if none.}
-#' }
-#'
-#' In addition, when a choice is present:
-#' \itemize{
-#'   \item \code{FMSY} is overwritten by the selected
-#'     \code{CustomRefPointValue1}–\code{CustomRefPointValue4} for
-#'     \code{SAGChartKey = 3};
-#'   \item \code{MSYBtrigger} is overwritten by the selected custom
-#'     value for \code{SAGChartKey = 4}.
-#'   \item If no proxy is chosen, the original \code{FMSY} /
-#'     \code{MSYBtrigger} values are retained.
-#' }
-#'
 #' @details
-#' Internally, the function:
-#' \enumerate{
-#'   \item Reads \code{custom_refpoints_path} as a CSV into
-#'     \code{custom_RefPoints}.
-#'   \item Filters to \code{SAGChartKey \%in\% c(3, 4)} and, for each
-#'     \code{AssessmentKey}–\code{SAGChartKey} combination, keeps the
-#'     first \code{settingValue}.
-#'   \item Reshapes to a wide table with columns
-#'     \code{choice_3} (for FMSY) and \code{choice_4} (for MSYBtrigger).
-#'   \item Left-joins these choices onto \code{sag_formatted} and
-#'     derives:
-#'     \itemize{
-#'       \item Boolean flags \code{FMSY_is_proxy}, \code{MSYB_is_proxy};
-#'       \item proxy names from the corresponding
-#'         \code{CustomRefPointName1}–\code{CustomRefPointName4};
-#'       \item replacement values for \code{FMSY} and
-#'         \code{MSYBtrigger} using
-#'         \code{dplyr::coalesce()} to fall back to the original values
-#'         when no proxy is chosen.
-#'     }
-#'   \item Drops the temporary \code{choice_*} columns before returning.
+#' In the SAG system, the setting with `settingKey == 51` determines whether
+#' custom reference points should be used in place of the standard reference
+#' points (e.g. `FMSY` or `MSYBtrigger`). The value stored in `settingValue`
+#' indicates which custom reference point (1–4) should be used.
+#'
+#' Some settings may contain multiple comma-separated values; in such cases the
+#' function selects the first valid option.
+#'
+#' @examples
+#' \dontrun{
+#' settings <- icesSAG::getSAGSettingsForAStock(c(18808, 20919))
+#' proxy_choices <- extract_custom_refpoint_choices(settings)
 #' }
 #'
-#' @importFrom dplyr filter group_by summarise mutate left_join across
-#'   case_when coalesce select
-#' @importFrom tidyr pivot_wider
-#' @noRd
-add_proxyRefPoints <- function(sag_formatted, custom_refpoints_path) {
-        
-        custom_RefPoints <- read.table(custom_refpoints_path,
-                sep = ",",
-                header = TRUE,
-                stringsAsFactors = FALSE
-        )
-
-        # 1) One choice per AssessmentKey for each chart (3 = FMSY, 4 = MSYBtrigger)
-        cust_choice <- custom_RefPoints %>%
-                filter(SAGChartKey %in% c(3, 4)) %>%
-                dplyr::group_by(AssessmentKey, SAGChartKey) %>%
-                dplyr::summarise(settingValue = dplyr::first(settingValue), .groups = "drop") %>%
-                tidyr::pivot_wider(
-                        names_from = SAGChartKey,
-                        values_from = settingValue,
-                        names_prefix = "choice_"
-                )
-        # -> columns: AssessmentKey, choice_3 (1..4), choice_4 (1..4)
-        # 2) Join once, add flags/names, and overwrite values where a proxy is chosen
-        sag_final <- sag_formatted %>%
-                dplyr::left_join(cust_choice, by = "AssessmentKey") %>%
-                # ensure numeric for safety (in case they came as character)
-                dplyr::mutate(
-                        across(
-                                c(FMSY, MSYBtrigger, starts_with("CustomRefPointValue")),
-                                ~ suppressWarnings(as.numeric(.x))
-                        )
-                ) %>%
-                dplyr::mutate(
-                        # flags + proxy names
-                        FMSY_is_proxy = !is.na(choice_3),
-                        FMSY_proxy_name = dplyr::case_when(
-                                choice_3 == 1 ~ CustomRefPointName1,
-                                choice_3 == 2 ~ CustomRefPointName2,
-                                choice_3 == 3 ~ CustomRefPointName3,
-                                choice_3 == 4 ~ CustomRefPointName4,
-                                TRUE ~ NA_character_
-                        ),
-                        MSYB_is_proxy = !is.na(choice_4),
-                        MSYB_proxy_name = dplyr::case_when(
-                                choice_4 == 1 ~ CustomRefPointName1,
-                                choice_4 == 2 ~ CustomRefPointName2,
-                                choice_4 == 3 ~ CustomRefPointName3,
-                                choice_4 == 4 ~ CustomRefPointName4,
-                                TRUE ~ NA_character_
-                        ),
-
-                        # assign chosen custom VALUES; keep official when no choice exists
-                        FMSY = dplyr::coalesce(
-                                dplyr::case_when(
-                                        choice_3 == 1 ~ CustomRefPointValue1,
-                                        choice_3 == 2 ~ CustomRefPointValue2,
-                                        choice_3 == 3 ~ CustomRefPointValue3,
-                                        choice_3 == 4 ~ CustomRefPointValue4,
-                                        TRUE ~ NA_real_
-                                ),
-                                FMSY
-                        ),
-                        MSYBtrigger = dplyr::coalesce(
-                                dplyr::case_when(
-                                        choice_4 == 1 ~ CustomRefPointValue1,
-                                        choice_4 == 2 ~ CustomRefPointValue2,
-                                        choice_4 == 3 ~ CustomRefPointValue3,
-                                        choice_4 == 4 ~ CustomRefPointValue4,
-                                        TRUE ~ NA_real_
-                                ),
-                                MSYBtrigger
-                        )
-                ) %>%
-                dplyr::select(-starts_with("choice_"))
-        return(sag_final)
+#' @export
+extract_custom_refpoint_choices <- function(sag_settings) {
+  sag_settings %>%
+    dplyr::filter(settingKey == 51, SAGChartKey %in% c(3, 4)) %>%
+    dplyr::transmute(
+      AssessmentKey = as.integer(AssessmentKey),
+      SAGChartKey = as.integer(SAGChartKey),
+      settingValue = as.character(settingValue)
+    ) %>%
+    tidyr::separate_rows(settingValue, sep = ",") %>%
+    dplyr::mutate(settingValue = trimws(settingValue)) %>%
+    dplyr::filter(settingValue %in% c("1", "2", "3", "4")) %>%
+    dplyr::group_by(AssessmentKey, SAGChartKey) %>%
+    dplyr::summarise(settingValue = dplyr::first(settingValue), .groups = "drop") %>%
+    tidyr::pivot_wider(
+      names_from = SAGChartKey,
+      values_from = settingValue,
+      names_prefix = "choice_"
+    ) %>%
+    dplyr::mutate(
+      choice_3 = as.integer(choice_3),
+      choice_4 = as.integer(choice_4)
+    )
 }
 
+
+#' Apply proxy reference points to formatted SAG data
+#'
+#' Integrates proxy reference-point selections into a formatted SAG reference
+#' point dataset. When SAG settings specify that a custom reference point
+#' should replace the default reference point, the function overwrites the
+#' corresponding values in the dataset.
+#'
+#' Specifically:
+#' - `FMSY` is replaced using the selected custom reference point when a proxy
+#'   is defined for the fishing mortality chart (`SAGChartKey == 3`).
+#' - `MSYBtrigger` is replaced when a proxy is defined for the spawning stock
+#'   biomass chart (`SAGChartKey == 4`).
+#'
+#' The function also records whether the reference point is a proxy and stores
+#' the corresponding proxy reference-point name.
+#'
+#' @param sag_formatted A formatted SAG reference-point dataset containing
+#'   standard reference points and custom reference-point fields. The table must
+#'   include the columns:
+#'   `AssessmentKey`, `FMSY`, `MSYBtrigger`,
+#'   `CustomRefPointName1`–`CustomRefPointName4`, and
+#'   `CustomRefPointValue1`–`CustomRefPointValue4`.
+#'
+#' @param sag_settings A data frame containing SAG settings retrieved from the
+#'   SAG settings web service. This is passed internally to
+#'   `extract_custom_refpoint_choices()` to determine which proxy reference
+#'   points should be applied.
+#'
+#' @return A modified version of `sag_formatted` with:
+#'   \describe{
+#'     \item{FMSY}{Possibly replaced by a selected custom reference-point value.}
+#'     \item{MSYBtrigger}{Possibly replaced by a selected custom reference-point
+#'     value.}
+#'     \item{FMSY_is_proxy}{Logical flag indicating whether `FMSY` was replaced
+#'     by a proxy reference point.}
+#'     \item{MSYB_is_proxy}{Logical flag indicating whether `MSYBtrigger` was
+#'     replaced by a proxy reference point.}
+#'     \item{FMSY_proxy_name}{Name of the custom reference point used as proxy,
+#'     if applicable.}
+#'     \item{MSYB_proxy_name}{Name of the custom reference point used as proxy,
+#'     if applicable.}
+#'   }
+#'
+#' @details
+#' Proxy reference points are defined in SAG settings using `settingKey == 51`.
+#' The numeric value (1–4) indicates which of the custom reference points stored
+#' in the SAG reference-point dataset should be used.
+#'
+#' The function:
+#' \enumerate{
+#'   \item Extracts proxy selections from the SAG settings table.
+#'   \item Joins these selections to the formatted SAG dataset using
+#'   `AssessmentKey`.
+#'   \item Replaces `FMSY` and/or `MSYBtrigger` with the corresponding custom
+#'   reference-point values where proxies are defined.
+#' }
+#'
+#' If no proxy is specified for an assessment, the original reference points
+#' remain unchanged.
+#'
+#' @examples
+#' \dontrun{
+#' sag_settings <- icesSAG::getSAGSettingsForAStock(assessment_keys)
+#'
+#' sag_final <- add_proxyRefPoints(
+#'   sag_formatted = sag_refpts,
+#'   sag_settings = sag_settings
+#' )
+#' }
+#'
+#' @export
+add_proxyRefPoints <- function(sag_formatted, sag_settings) {
+  cust_choice <- extract_custom_refpoint_choices(sag_settings)
+
+  sag_formatted %>%
+    dplyr::left_join(cust_choice, by = "AssessmentKey") %>%
+    dplyr::mutate(
+      dplyr::across(
+        c(FMSY, MSYBtrigger, dplyr::starts_with("CustomRefPointValue")),
+        ~ suppressWarnings(as.numeric(.x))
+      )
+    ) %>%
+    dplyr::mutate(
+      FMSY_proxy_name = dplyr::case_when(
+        choice_3 == 1 ~ CustomRefPointName1,
+        choice_3 == 2 ~ CustomRefPointName2,
+        choice_3 == 3 ~ CustomRefPointName3,
+        choice_3 == 4 ~ CustomRefPointName4,
+        TRUE ~ NA_character_
+      ),
+      MSYB_proxy_name = dplyr::case_when(
+        choice_4 == 1 ~ CustomRefPointName1,
+        choice_4 == 2 ~ CustomRefPointName2,
+        choice_4 == 3 ~ CustomRefPointName3,
+        choice_4 == 4 ~ CustomRefPointName4,
+        TRUE ~ NA_character_
+      )
+    ) %>%
+    dplyr::mutate(
+      FMSY_is_valid_proxy = !is.na(FMSY_proxy_name) &
+        !grepl("custom|loss|mgt|mp|pa|lim|lowerbound|F/F",
+               FMSY_proxy_name, ignore.case = TRUE),
+      MSYB_is_valid_proxy = !is.na(MSYB_proxy_name) &
+        !grepl("custom|loss|mgt|mp|pa|lim|lowerbound|F/F",
+               MSYB_proxy_name, ignore.case = TRUE)
+    ) %>%
+    dplyr::mutate(
+      FMSY_is_proxy = !is.na(choice_3) & FMSY_is_valid_proxy,
+      MSYB_is_proxy = !is.na(choice_4) & MSYB_is_valid_proxy,
+      FMSY = dplyr::coalesce(
+        dplyr::case_when(
+          FMSY_is_proxy & choice_3 == 1 ~ CustomRefPointValue1,
+          FMSY_is_proxy & choice_3 == 2 ~ CustomRefPointValue2,
+          FMSY_is_proxy & choice_3 == 3 ~ CustomRefPointValue3,
+          FMSY_is_proxy & choice_3 == 4 ~ CustomRefPointValue4,
+          TRUE ~ NA_real_
+        ),
+        FMSY
+      ),
+      MSYBtrigger = dplyr::coalesce(
+        dplyr::case_when(
+          MSYB_is_proxy & choice_4 == 1 ~ CustomRefPointValue1,
+          MSYB_is_proxy & choice_4 == 2 ~ CustomRefPointValue2,
+          MSYB_is_proxy & choice_4 == 3 ~ CustomRefPointValue3,
+          MSYB_is_proxy & choice_4 == 4 ~ CustomRefPointValue4,
+          TRUE ~ NA_real_
+        ),
+        MSYBtrigger
+      ),
+      FMSY_proxy_name = dplyr::if_else(FMSY_is_proxy, FMSY_proxy_name, NA_character_),
+      MSYB_proxy_name = dplyr::if_else(MSYB_is_proxy, MSYB_proxy_name, NA_character_)
+    ) %>%
+    dplyr::select(
+      -dplyr::starts_with("choice_"),
+      -FMSY_is_valid_proxy,
+      -MSYB_is_valid_proxy
+    )
+}
 
 #' Compute current stock status with proxy reference points (CLD view)
 #'

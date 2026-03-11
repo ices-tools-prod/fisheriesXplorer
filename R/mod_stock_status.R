@@ -96,9 +96,11 @@ mod_stock_status_ui <- function(id) {
                 height = "85vh", full_screen = TRUE,
                 card_header(
                   "MSY & Precautionary Approach",
-                  downloadLink(
-                    ns("download_clean_status_data"),
-                    label = download_icon_label("Status summary (.csv & plot)")
+                  download_icon_label(
+                    text = "Download data",
+                    outputId = ns("download_clean_status_data"),
+                    hover_text = "Status summary (.csv & plot)",
+                    size = "large"
                   )
                 ),
                 card_body(
@@ -115,9 +117,11 @@ mod_stock_status_ui <- function(id) {
                 height = "85vh", full_screen = TRUE,
                 card_header(
                   "Catches in relation to MSY status",
-                  downloadLink(
-                    ns("download_status_catch_data"),
-                    label = download_icon_label("Catches vs MSY status (.csv & plot)")
+                  download_icon_label(
+                    text = "Download data",
+                    outputId = ns("download_status_catch_data"),
+                    hover_text = "Catches vs MSY status (.csv & plot)",
+                    size = "large"
                   )
                 ),
                 card_body(
@@ -155,9 +159,11 @@ mod_stock_status_ui <- function(id) {
                     "Shellfish" = "shellfish"
                   )
                 ),
-                downloadLink(
-                  ns("download_trends_data"),
-                  label = download_icon_label("Status trends (.csv)")
+                download_icon_label(
+                  text = "Download data",
+                  outputId = ns("download_trends_data"),
+                  hover_text = "Status trends (.csv)",
+                  size = "large"
                 )
               ),
               card_body(withSpinner(plotlyOutput(ns("status_trends")))) # , height = "68vh"
@@ -198,9 +204,11 @@ mod_stock_status_ui <- function(id) {
                 div(
                   style = "display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 16px;",
                   uiOutput(ns("kobe_cld_slider")),
-                  downloadLink(
-                    ns("download_CLD_data"),
-                    label = download_icon_label("CLD & Kobe (.csv & plots)")
+                  download_icon_label(
+                    text = "Download data",
+                    outputId = ns("download_CLD_data"),
+                    hover_text = "CLD & Kobe (.csv & plots)",
+                    size = "large"
                   )
                 )
               )
@@ -236,13 +244,14 @@ mod_stock_status_ui <- function(id) {
           card(
             card_header(
               "Stock status table",
-              downloadLink(
-                ns("download_status_table"),
-                label = download_icon_label("Stock status list (.csv)")
+              download_icon_label(
+                text = "Download data",
+                outputId = ns("download_status_table"),
+                hover_text = "Stock status list (.csv)",
+                size = "large"
               )
             ),
             card_body(withSpinner(reactableOutput(ns("stock_status_table_reactable")))),
-            # actionLink(ns("clear_stock"), "Clear stock filter", class = "fx-actionlink")
             tagList(
               tags$span(
                 style = "display:none;",
@@ -483,7 +492,7 @@ mod_stock_status_server <- function(
     ######################### Status summary tab #################################################
 
     catch_current <- reactive({
-      stockstatus_CLD_current_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID), custom_refpoints_path = "data/custom_refpoints_2025.csv"))
+      stockstatus_CLD_current_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID),  sag_settings = shared$SAG_Settings)) #custom_refpoints_path = "data/custom_refpoints_2025.csv",
     })
 
     output$status_summary_ices <- renderPlot({
@@ -675,7 +684,7 @@ mod_stock_status_server <- function(
 
     ##################### Stock trends tab ###############################################
     trends_data <- reactive({
-      stock_trends_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID), custom_refpoints_path = "data/custom_refpoints_2025.csv"))
+      stock_trends_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID), sag_settings = shared$SAG_Settings))
     })
 
     output$status_trends <- renderPlotly({
