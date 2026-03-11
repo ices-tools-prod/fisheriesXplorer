@@ -4,9 +4,9 @@
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
-#' @noRd 
+#' @noRd
 #'
-#' @importFrom shiny NS tagList 
+#' @importFrom shiny NS tagList
 #' @importFrom glue glue
 #' @importFrom ggplot2 ggtitle
 #' @importFrom lubridate year
@@ -30,12 +30,14 @@ mod_vms_ui <- function(id) {
           6,
           card(
             # height = "82vh",
-            card_header("Fishing Effort",
-                        download_icon_label(
-                          text = "Download data",
-                          outputId = ns("download_effort_data"),
-                          hover_text = "Fishing effort layers & plots"
-                        )
+            card_header(
+              "Fishing Effort",
+              download_icon_label(
+                text = "Download data",
+                outputId = ns("download_effort_data"),
+                hover_text = "Fishing effort layers & plots",
+                size = "large"
+              )
             ),
             card_body(
               selectInput(ns("fishing_cat_selector"), "Select fishing gear",
@@ -46,42 +48,44 @@ mod_vms_ui <- function(id) {
               withSpinner(suppressWarnings(uiOutput(ns("vms_effort_layer"), width = "100%", fill = TRUE)))
             )
           )
-      ),
-      column(
-        6,
+        ),
+        column(
+          6,
           card(
             # height = "85vh",
-            card_header("Swept Area Ratio",
-                        download_icon_label(
-                          text = "Download data",
-                          outputId = ns("download_sar_data"),
-                          hover_text = "Swept Area Ratio layers & plots"
-                        )
+            card_header(
+              "Swept Area Ratio",
+              download_icon_label(
+                text = "Download data",
+                outputId = ns("download_sar_data"),
+                hover_text = "Swept Area Ratio layers & plots",
+                size = "large"
+              )
             ),
             card_body(
-              
               selectInput(ns("sar_layer_selector"), "Select fishing benthic impact layer",
                 choices = c("All" = "all", "Surface" = "surface", "Subsurface" = "subsurface"),
                 selected = "Surface"
               ),
               tags$style(type = "text/css", "#vms_sar_layer {margin-left: auto; margin-right: auto; margin-bottom: auto;  max-width: 97%; height: auto;}"),
               withSpinner(suppressWarnings(uiOutput(ns("vms_sar_layer"), height = "65vh", width = "100%", fill = TRUE)))
-              )
             )
           )
         )
+      )
     )
   )
 }
 #' vms Server Functions
 #'
-#' @noRd 
-mod_vms_server <- function(id, 
+#' @noRd
+mod_vms_server <- function(
+    id,
     selected_ecoregion,
-    bookmark_qs = reactive(NULL)){
-  moduleServer(id, function(input, output, session){
+    bookmark_qs = reactive(NULL)) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     ################################## bookmarking #########################################
     # RESTORE once, defer until after first flush, then push up
     observeEvent(bookmark_qs(), once = TRUE, ignoreInit = TRUE, {
@@ -112,7 +116,7 @@ mod_vms_server <- function(id,
     output$current_date <- renderUI({
       tab <- input$main_tabset
       if (is.null(tab)) tab <- "vms"
-      
+
       date_text <- "November, 2025"
 
       tagList(
@@ -122,62 +126,65 @@ mod_vms_server <- function(id,
       )
     })
     mod_glossary_float_server(
-     "app_glossary",
-     terms = reactive({
-       df <- select_text(texts, "glossary", NULL) # your texts.rda table
-       df[, intersect(names(df), c("term", "definition", "source")), drop = FALSE]
-     })
-   )
+      "app_glossary",
+      terms = reactive({
+        df <- select_text(texts, "glossary", NULL) # your texts.rda table
+        df[, intersect(names(df), c("term", "definition", "source")), drop = FALSE]
+      })
+    )
 
-        
+
     output$vms_effort_layer <- renderUI({
       req(selected_ecoregion, input$fishing_cat_selector)
-      render_vms(ecoregion = selected_ecoregion(),
-                 gear = input$fishing_cat_selector,
-                 vms_layer = "effort",
-                 ns = ns)
+      render_vms(
+        ecoregion = selected_ecoregion(),
+        gear = input$fishing_cat_selector,
+        vms_layer = "effort",
+        ns = ns
+      )
     })
-    
+
     output$vms_sar_layer <- renderUI({
       req(selected_ecoregion, input$fishing_cat_selector)
-      
-      render_vms(ecoregion = selected_ecoregion(),
-                 gear = input$sar_layer_selector,
-                 vms_layer = "sar",
-                 ns = ns)
+
+      render_vms(
+        ecoregion = selected_ecoregion(),
+        gear = input$sar_layer_selector,
+        vms_layer = "sar",
+        ns = ns
+      )
     })
-    
+
     output$download_effort_data <- downloadHandler(
       filename = vms_bundle_filename(selected_ecoregion, vms_layer = "effort"),
-      content  = vms_bundle_content(selected_ecoregion, vms_layer = "effort"),
+      content = vms_bundle_content(selected_ecoregion, vms_layer = "effort"),
       contentType = "application/zip"
     )
-    
+
     output$download_sar_data <- downloadHandler(
       filename = vms_bundle_filename(selected_ecoregion, vms_layer = "sar"),
-      content  = vms_bundle_content(selected_ecoregion, vms_layer = "sar"),
+      content = vms_bundle_content(selected_ecoregion, vms_layer = "sar"),
       contentType = "application/zip"
     )
-    
+
     # output$effort_text <- renderUI({
     #   HTML(select_text(texts, "vms", "effort_sidebar"))
     # })
-    
+
     # output$sar_text <- renderUI({
     #   HTML(select_text(texts, "status", "sar_sidebar"))
     # })
     output$effort_sar_text <- renderUI({
       div(
         class = "sidebar-text",
-      HTML(select_text(texts, paste0("vms_", get_ecoregion_acronym(selected_ecoregion())), "effort_SAR"))    
+        HTML(select_text(texts, paste0("vms_", get_ecoregion_acronym(selected_ecoregion())), "effort_SAR"))
       )
     })
   })
 }
-    
+
 ## To be copied in the UI
 # mod_vms_ui("vms_1")
-    
+
 ## To be copied in the server
 # mod_vms_server("vms_1")
-
