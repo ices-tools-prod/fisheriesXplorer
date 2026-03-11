@@ -139,6 +139,18 @@ getSAG_ecoregion_new <- function(Ecoregion) {
         return(sag)
 }
 
+getSAG_SettingsEcoregion <- function(Ecoregion) {
+        
+        EcoregionCode <- get_ecoregion_acronym(Ecoregion)
+        
+        sag_settings <- jsonlite::fromJSON(
+                URLencode(
+                        sprintf("https://sag.ices.dk/SAG_API/LatestStocks/Settings?ecoregion=%s", EcoregionCode)
+                )
+        )
+        return(sag_settings)
+}
+
 #' Fetch and merge stock status for an ecoregion
 #'
 #' Queries the ICES SAG status web service for the latest stock status

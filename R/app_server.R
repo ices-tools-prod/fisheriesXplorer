@@ -163,17 +163,22 @@ app_server <- function(input, output, session) {
         getSID(year = as.integer(format(Sys.Date(), "%Y")), EcoR = selected_ecoregion()),
         error = function(e) paste("Error fetching SID:", e$message)
       )
-      incProgress(0.5, detail = "Getting SAG...")
+      incProgress(0.4, detail = "Getting SAG...")
       sag <- tryCatch(
         getSAG_ecoregion_new(selected_ecoregion()),
         error = function(e) paste("Error fetching SAG:", e$message)
+      )
+      incProgress(0.6, detail = "Getting SAG settings...")
+      sag_settings <- tryCatch(
+        getSAG_SettingsEcoregion(selected_ecoregion()),
+        error = function(e) paste("Error fetching SAG settings:", e$message)
       )
       incProgress(0.9, detail = "Getting SAG status...")
       status <- tryCatch(
         format_sag_status_new(getStatusWebService(selected_ecoregion(), sid), sag),
         error = function(e) paste("Error fetching SAG status:", e$message)
       )
-      list(SID = sid, SAG = sag, clean_status = status)
+      list(SID = sid, SAG = sag, SAG_Settings = sag_settings, clean_status = status)
     })
   }) %>% bindCache(selected_ecoregion())
 
@@ -181,6 +186,7 @@ app_server <- function(input, output, session) {
     data <- fetchData()
     shared$SID <- data$SID
     shared$SAG <- data$SAG
+    shared$SAG_Settings <- data$SAG_Settings
     shared$clean_status <- data$clean_status
   })
 
