@@ -23,8 +23,7 @@ mod_vms_ui <- function(id) {
       sidebar = sidebar(
         width = "33vw", bg = "white", fg = "black",
         open = FALSE,
-        uiOutput(ns("effort_sar_text")),
-        # uiOutput(ns("sar_text"))
+        uiOutput(ns("effort_sar_text"))
       ),
       fluidRow(
         column(
@@ -32,10 +31,12 @@ mod_vms_ui <- function(id) {
           card(
             # height = "82vh",
             card_header("Fishing Effort",
-                        downloadLink(ns("download_effort_data"),
-                                    label = download_icon_label("Fishing effort layers & plots")
-                                    )
-                        ),
+                        download_icon_label(
+                          text = "Download data",
+                          outputId = ns("download_effort_data"),
+                          hover_text = "Fishing effort layers & plots"
+                        )
+            ),
             card_body(
               selectInput(ns("fishing_cat_selector"), "Select fishing gear",
                 choices = c("All" = "all", "Beam trawls", "Bottom otter trawls", "Bottom seines", "Dredges", "Pelagic trawls and seines", "Static gears"),
@@ -51,8 +52,10 @@ mod_vms_ui <- function(id) {
           card(
             # height = "85vh",
             card_header("Swept Area Ratio",
-                        downloadLink(ns("download_sar_data"),
-                                     label = download_icon_label("Swept Area Ratio layers & plots")
+                        download_icon_label(
+                          text = "Download data",
+                          outputId = ns("download_sar_data"),
+                          hover_text = "Swept Area Ratio layers & plots"
                         )
             ),
             card_body(

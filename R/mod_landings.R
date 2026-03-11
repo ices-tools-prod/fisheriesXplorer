@@ -89,9 +89,10 @@ mod_landings_ui <- function(id) {
                   "Country" = "Country"
                 )
               ),
-              downloadLink(
-                ns("download_landings_data"),
-                label = download_icon_label("Landings (.csv, takes a few seconds)")
+              download_icon_label(
+                text = "Download data",
+                outputId = ns("download_landings_data"),
+                hover_text = "Landings (.csv, takes a few seconds)"
               )
             ),
             card_body(
@@ -114,8 +115,10 @@ mod_landings_ui <- function(id) {
           card(
             card_header(
               "Discard trends",
-              downloadLink(ns("download_discard_data"),
-                label = download_icon_label("Discards (.csv)")
+              download_icon_label(
+                text = "Download data",
+                outputId = ns("download_discard_data"),
+                hover_text = "Discards (.csv)"
               )
             ),
             card_body(

@@ -139,6 +139,18 @@ getSAG_ecoregion_new <- function(Ecoregion) {
         return(sag)
 }
 
+getSAG_SettingsEcoregion <- function(Ecoregion) {
+        
+        EcoregionCode <- get_ecoregion_acronym(Ecoregion)
+        
+        sag_settings <- jsonlite::fromJSON(
+                URLencode(
+                        sprintf("https://sag.ices.dk/SAG_API/LatestStocks/Settings?ecoregion=%s", EcoregionCode)
+                )
+        )
+        return(sag_settings)
+}
+
 #' Fetch and merge stock status for an ecoregion
 #'
 #' Queries the ICES SAG status web service for the latest stock status
@@ -602,80 +614,171 @@ format_sag <- function(sag, sid){
 #'   case_when coalesce select
 #' @importFrom tidyr pivot_wider
 #' @noRd
-add_proxyRefPoints <- function(sag_formatted, custom_refpoints_path) {
+# add_proxyRefPoints <- function(sag_formatted, custom_refpoints_path, sag_settings) {
         
-        custom_RefPoints <- read.table(custom_refpoints_path,
-                sep = ",",
-                header = TRUE,
-                stringsAsFactors = FALSE
-        )
+#         custom_RefPoints <- read.table(custom_refpoints_path,
+#                 sep = ",",
+#                 header = TRUE,
+#                 stringsAsFactors = FALSE
+#         )
+#         browser()
+#         head(sag_settings)
+#         # 1) One choice per AssessmentKey for each chart (3 = FMSY, 4 = MSYBtrigger)
+#         cust_choice <- custom_RefPoints %>%
+#                 filter(SAGChartKey %in% c(3, 4)) %>%
+#                 dplyr::group_by(AssessmentKey, SAGChartKey) %>%
+#                 dplyr::summarise(settingValue = dplyr::first(settingValue), .groups = "drop") %>%
+#                 tidyr::pivot_wider(
+#                         names_from = SAGChartKey,
+#                         values_from = settingValue,
+#                         names_prefix = "choice_"
+#                 )
+#         # -> columns: AssessmentKey, choice_3 (1..4), choice_4 (1..4)
+#         # 2) Join once, add flags/names, and overwrite values where a proxy is chosen
+#         sag_final <- sag_formatted %>%
+#                 dplyr::left_join(cust_choice, by = "AssessmentKey") %>%
+#                 # ensure numeric for safety (in case they came as character)
+#                 dplyr::mutate(
+#                         across(
+#                                 c(FMSY, MSYBtrigger, starts_with("CustomRefPointValue")),
+#                                 ~ suppressWarnings(as.numeric(.x))
+#                         )
+#                 ) %>%
+#                 dplyr::mutate(
+#                         # flags + proxy names
+#                         FMSY_is_proxy = !is.na(choice_3),
+#                         FMSY_proxy_name = dplyr::case_when(
+#                                 choice_3 == 1 ~ CustomRefPointName1,
+#                                 choice_3 == 2 ~ CustomRefPointName2,
+#                                 choice_3 == 3 ~ CustomRefPointName3,
+#                                 choice_3 == 4 ~ CustomRefPointName4,
+#                                 TRUE ~ NA_character_
+#                         ),
+#                         MSYB_is_proxy = !is.na(choice_4),
+#                         MSYB_proxy_name = dplyr::case_when(
+#                                 choice_4 == 1 ~ CustomRefPointName1,
+#                                 choice_4 == 2 ~ CustomRefPointName2,
+#                                 choice_4 == 3 ~ CustomRefPointName3,
+#                                 choice_4 == 4 ~ CustomRefPointName4,
+#                                 TRUE ~ NA_character_
+#                         ),
 
-        # 1) One choice per AssessmentKey for each chart (3 = FMSY, 4 = MSYBtrigger)
-        cust_choice <- custom_RefPoints %>%
-                filter(SAGChartKey %in% c(3, 4)) %>%
-                dplyr::group_by(AssessmentKey, SAGChartKey) %>%
-                dplyr::summarise(settingValue = dplyr::first(settingValue), .groups = "drop") %>%
-                tidyr::pivot_wider(
-                        names_from = SAGChartKey,
-                        values_from = settingValue,
-                        names_prefix = "choice_"
-                )
-        # -> columns: AssessmentKey, choice_3 (1..4), choice_4 (1..4)
-        # 2) Join once, add flags/names, and overwrite values where a proxy is chosen
-        sag_final <- sag_formatted %>%
-                dplyr::left_join(cust_choice, by = "AssessmentKey") %>%
-                # ensure numeric for safety (in case they came as character)
-                dplyr::mutate(
-                        across(
-                                c(FMSY, MSYBtrigger, starts_with("CustomRefPointValue")),
-                                ~ suppressWarnings(as.numeric(.x))
-                        )
-                ) %>%
-                dplyr::mutate(
-                        # flags + proxy names
-                        FMSY_is_proxy = !is.na(choice_3),
-                        FMSY_proxy_name = dplyr::case_when(
-                                choice_3 == 1 ~ CustomRefPointName1,
-                                choice_3 == 2 ~ CustomRefPointName2,
-                                choice_3 == 3 ~ CustomRefPointName3,
-                                choice_3 == 4 ~ CustomRefPointName4,
-                                TRUE ~ NA_character_
-                        ),
-                        MSYB_is_proxy = !is.na(choice_4),
-                        MSYB_proxy_name = dplyr::case_when(
-                                choice_4 == 1 ~ CustomRefPointName1,
-                                choice_4 == 2 ~ CustomRefPointName2,
-                                choice_4 == 3 ~ CustomRefPointName3,
-                                choice_4 == 4 ~ CustomRefPointName4,
-                                TRUE ~ NA_character_
-                        ),
-
-                        # assign chosen custom VALUES; keep official when no choice exists
-                        FMSY = dplyr::coalesce(
-                                dplyr::case_when(
-                                        choice_3 == 1 ~ CustomRefPointValue1,
-                                        choice_3 == 2 ~ CustomRefPointValue2,
-                                        choice_3 == 3 ~ CustomRefPointValue3,
-                                        choice_3 == 4 ~ CustomRefPointValue4,
-                                        TRUE ~ NA_real_
-                                ),
-                                FMSY
-                        ),
-                        MSYBtrigger = dplyr::coalesce(
-                                dplyr::case_when(
-                                        choice_4 == 1 ~ CustomRefPointValue1,
-                                        choice_4 == 2 ~ CustomRefPointValue2,
-                                        choice_4 == 3 ~ CustomRefPointValue3,
-                                        choice_4 == 4 ~ CustomRefPointValue4,
-                                        TRUE ~ NA_real_
-                                ),
-                                MSYBtrigger
-                        )
-                ) %>%
-                dplyr::select(-starts_with("choice_"))
-        return(sag_final)
+#                         # assign chosen custom VALUES; keep official when no choice exists
+#                         FMSY = dplyr::coalesce(
+#                                 dplyr::case_when(
+#                                         choice_3 == 1 ~ CustomRefPointValue1,
+#                                         choice_3 == 2 ~ CustomRefPointValue2,
+#                                         choice_3 == 3 ~ CustomRefPointValue3,
+#                                         choice_3 == 4 ~ CustomRefPointValue4,
+#                                         TRUE ~ NA_real_
+#                                 ),
+#                                 FMSY
+#                         ),
+#                         MSYBtrigger = dplyr::coalesce(
+#                                 dplyr::case_when(
+#                                         choice_4 == 1 ~ CustomRefPointValue1,
+#                                         choice_4 == 2 ~ CustomRefPointValue2,
+#                                         choice_4 == 3 ~ CustomRefPointValue3,
+#                                         choice_4 == 4 ~ CustomRefPointValue4,
+#                                         TRUE ~ NA_real_
+#                                 ),
+#                                 MSYBtrigger
+#                         )
+#                 ) %>%
+#                 dplyr::select(-starts_with("choice_"))
+#         return(sag_final)
+# }
+extract_custom_refpoint_choices <- function(sag_settings) {
+  sag_settings %>%
+    dplyr::filter(settingKey == 51, SAGChartKey %in% c(3, 4)) %>%
+    dplyr::transmute(
+      AssessmentKey = as.integer(AssessmentKey),
+      SAGChartKey = as.integer(SAGChartKey),
+      settingValue = as.character(settingValue)
+    ) %>%
+    tidyr::separate_rows(settingValue, sep = ",") %>%
+    dplyr::mutate(settingValue = trimws(settingValue)) %>%
+    dplyr::filter(settingValue %in% c("1", "2", "3", "4")) %>%
+    dplyr::group_by(AssessmentKey, SAGChartKey) %>%
+    dplyr::summarise(settingValue = dplyr::first(settingValue), .groups = "drop") %>%
+    tidyr::pivot_wider(
+      names_from = SAGChartKey,
+      values_from = settingValue,
+      names_prefix = "choice_"
+    ) %>%
+    dplyr::mutate(
+      choice_3 = as.integer(choice_3),
+      choice_4 = as.integer(choice_4)
+    )
 }
 
+add_proxyRefPoints <- function(sag_formatted, sag_settings) {
+  cust_choice <- extract_custom_refpoint_choices(sag_settings)
+
+  sag_formatted %>%
+    dplyr::left_join(cust_choice, by = "AssessmentKey") %>%
+    dplyr::mutate(
+      dplyr::across(
+        c(FMSY, MSYBtrigger, dplyr::starts_with("CustomRefPointValue")),
+        ~ suppressWarnings(as.numeric(.x))
+      )
+    ) %>%
+    dplyr::mutate(
+      FMSY_proxy_name = dplyr::case_when(
+        choice_3 == 1 ~ CustomRefPointName1,
+        choice_3 == 2 ~ CustomRefPointName2,
+        choice_3 == 3 ~ CustomRefPointName3,
+        choice_3 == 4 ~ CustomRefPointName4,
+        TRUE ~ NA_character_
+      ),
+      MSYB_proxy_name = dplyr::case_when(
+        choice_4 == 1 ~ CustomRefPointName1,
+        choice_4 == 2 ~ CustomRefPointName2,
+        choice_4 == 3 ~ CustomRefPointName3,
+        choice_4 == 4 ~ CustomRefPointName4,
+        TRUE ~ NA_character_
+      )
+    ) %>%
+    dplyr::mutate(
+      FMSY_is_valid_proxy = !is.na(FMSY_proxy_name) &
+        !grepl("custom|loss|mgt|mp|pa|lim|lowerbound|F/F",
+               FMSY_proxy_name, ignore.case = TRUE),
+      MSYB_is_valid_proxy = !is.na(MSYB_proxy_name) &
+        !grepl("custom|loss|mgt|mp|pa|lim|lowerbound|F/F",
+               MSYB_proxy_name, ignore.case = TRUE)
+    ) %>%
+    dplyr::mutate(
+      FMSY_is_proxy = !is.na(choice_3) & FMSY_is_valid_proxy,
+      MSYB_is_proxy = !is.na(choice_4) & MSYB_is_valid_proxy,
+      FMSY = dplyr::coalesce(
+        dplyr::case_when(
+          FMSY_is_proxy & choice_3 == 1 ~ CustomRefPointValue1,
+          FMSY_is_proxy & choice_3 == 2 ~ CustomRefPointValue2,
+          FMSY_is_proxy & choice_3 == 3 ~ CustomRefPointValue3,
+          FMSY_is_proxy & choice_3 == 4 ~ CustomRefPointValue4,
+          TRUE ~ NA_real_
+        ),
+        FMSY
+      ),
+      MSYBtrigger = dplyr::coalesce(
+        dplyr::case_when(
+          MSYB_is_proxy & choice_4 == 1 ~ CustomRefPointValue1,
+          MSYB_is_proxy & choice_4 == 2 ~ CustomRefPointValue2,
+          MSYB_is_proxy & choice_4 == 3 ~ CustomRefPointValue3,
+          MSYB_is_proxy & choice_4 == 4 ~ CustomRefPointValue4,
+          TRUE ~ NA_real_
+        ),
+        MSYBtrigger
+      ),
+      FMSY_proxy_name = dplyr::if_else(FMSY_is_proxy, FMSY_proxy_name, NA_character_),
+      MSYB_proxy_name = dplyr::if_else(MSYB_is_proxy, MSYB_proxy_name, NA_character_)
+    ) %>%
+    dplyr::select(
+      -dplyr::starts_with("choice_"),
+      -FMSY_is_valid_proxy,
+      -MSYB_is_valid_proxy
+    )
+}
 
 #' Compute current stock status with proxy reference points (CLD view)
 #'
