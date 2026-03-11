@@ -23,28 +23,51 @@
 #' get_ecoregion_acronym("Greater North Sea")
 #'
 #' @export
+# get_ecoregion_acronym <- function(ecoregion) {
+#   switch(ecoregion,
+#          "Baltic Sea" = "BtS",
+#          "Bay of Biscay and the Iberian Coast" = "BI",
+#          "Bay of Biscay" = "BoB",
+#          "Iberian Waters" = "IW",
+#          "Celtic Seas" = "CS",
+#          "Celtic Sea" = "CSx",
+#          "Irish Sea" = "IrS",
+#          "Greater North Sea" = "NrS",
+#          "Norwegian Sea" = "NwS",
+#          "Icelandic Waters" = "IS",
+#          "Barents Sea" = "BrS",
+#          "Greenland Sea" = "GS",
+#          "Faroes" = "FO",
+#          "Oceanic Northeast Atlantic" = "ONA",
+#          "Azores" = "AZ",
+#          stop("Unknown ecoregion")
+#   )
+# }
 get_ecoregion_acronym <- function(ecoregion) {
-  switch(ecoregion,
-         "Baltic Sea" = "BtS",
-         "Bay of Biscay and the Iberian Coast" = "BI",
-         "Bay of Biscay" = "BoB",
-         "Iberian Waters" = "IW",
-         "Celtic Seas" = "CS",
-         "Celtic Sea" = "CSx",
-         "Irish Sea" = "IrS",
-         "Greater North Sea" = "NrS",
-         "Norwegian Sea" = "NwS",
-         "Icelandic Waters" = "IS",
-         "Barents Sea" = "BrS",
-         "Greenland Sea" = "GS",
-         "Faroes" = "FO",
-         "Oceanic Northeast Atlantic" = "ONA",
-         "Azores" = "AZ",
-         stop("Unknown ecoregion")
+  acr <- switch(ecoregion,
+    "Baltic Sea" = "BtS",
+    "Bay of Biscay and the Iberian Coast" = "BI",
+    "Bay of Biscay" = "BoB",
+    "Iberian Waters" = "IW",
+    "Celtic Seas" = "CS",
+    "Celtic Sea" = "CSx",
+    "Irish Sea" = "IrS",
+    "Greater North Sea" = "NrS",
+    "Norwegian Sea" = "NwS",
+    "Icelandic Waters" = "IS",
+    "Barents Sea" = "BrS",
+    "Greenland Sea" = "GS",
+    "Faroes" = "FO",
+    "Oceanic Northeast Atlantic" = "ONA",
+    "Azores" = "AZ",
+    NULL
   )
+
+  # normalize empty results to NA
+  if (is.null(acr) || identical(acr, "")) NA_character_ else acr
 }
 
-
+DEFAULT_ECOREGION <- "Greater North Sea"
 #' Get active region acronym from subregion or ecoregion
 #'
 #' Returns the ecoregion acronym for the active region, preferring

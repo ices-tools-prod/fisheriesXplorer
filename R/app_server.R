@@ -40,7 +40,6 @@
 #' @importFrom stringr str_split
 #' @noRd
 app_server <- function(input, output, session) {
-
   ######################## Welcome modal (maybe we could add useful information here?) ########################
   # showModal(modalDialog(
   #   title = "Important message",
@@ -50,8 +49,8 @@ app_server <- function(input, output, session) {
   # ------------------------
   # Date bits (refactor all the dates here?)
   # ------------------------
-  app_date  <- strsplit(date(), " ")[[1]]
-  cap_year  <- app_date[5]
+  app_date <- strsplit(date(), " ")[[1]]
+  cap_year <- app_date[5]
   cap_month <- app_date[2]
 
   # ------------------------
@@ -65,38 +64,49 @@ app_server <- function(input, output, session) {
   # One-time desired state from URL
   desired <- reactiveVal(NULL)
 
-##################################### Bookmarking #####################################
-# High-level:
-# - On first load, read URL hash/query once and parse desired eco, tab, subtab.
-# - Store that in `desired()` and set `is_restoring(TRUE)`.
-# - A single observe() then drives the restore process:
-#   * set ecoregion immediately
-#   * set top-level navbar tab immediately
-#   * keep retrying subtab selection until controls are bound
-#   * stop restoring once live state == desired state
+  selected_stock <- reactiveVal(NULL)
 
-# 1) Read URL once and stage the desired navigation state ------------------------------
-  observeEvent(session$clientData$url_hash, {
-    # Hash and query string (e.g. #eco=..., ?tab=..., ?subtab=...)
-    hash   <- isolate(session$clientData$url_hash)   %||% ""
-    search <- isolate(session$clientData$url_search) %||% ""
-    # parse_nav() is a small helper that extracts eco/tab/subtab from hash+query
-    p <- parse_nav(hash, search)
-    # Store desired state in a single reactiveVal, with empty string as "not set"
-    desired(list(
-      eco    = p$eco    %||% "",
-      tab    = p$tab    %||% "",
-      subtab = p$subtab %||% ""
-    ))
-    # Flip the global "restore in progress" flag; the observer below will do the work
-    is_restoring(TRUE)
-  }, once = TRUE, ignoreInit = FALSE)
+  ##################################### Bookmarking #####################################
+  # High-level:
+  # - On first load, read URL hash/query once and parse desired eco, tab, subtab.
+  # - Store that in `desired()` and set `is_restoring(TRUE)`.
+  # - A single observe() then drives the restore process:
+  #   * set ecoregion immediately
+  #   * set top-level navbar tab immediately
+  #   * keep retrying subtab selection until controls are bound
+  #   * stop restoring once live state == desired state
 
-# 2) Single restore path (bounded retries while inputs bind) ---------------------------
+  # 1) Read URL once and stage the desired navigation state ------------------------------
+  observeEvent(session$clientData$url_hash,
+    {
+      # Hash and query string (e.g. #eco=..., ?tab=..., ?subtab=...)
+      hash <- isolate(session$clientData$url_hash) %||% ""
+      search <- isolate(session$clientData$url_search) %||% ""
+      # parse_nav() is a small helper that extracts eco/tab/subtab from hash+query
+      p <- parse_nav(hash, search)
+      # Store desired state in a single reactiveVal, with empty string as "not set"
+      desired(list(
+        eco    = p$eco %||% "",
+        tab    = p$tab %||% "",
+        subtab = p$subtab %||% "",
+        stock  = p$stock %||% ""
+      ))
+      # Flip the global "restore in progress" flag; the observer below will do the work
+      is_restoring(TRUE)
+    },
+    once = TRUE,
+    ignoreInit = FALSE
+  )
+
+  # 2) Single restore path (bounded retries while inputs bind) ---------------------------
   observe({
     d <- desired()
-    if (is.null(d)) return()
-    if (!isTRUE(is_restoring())) return()
+    if (is.null(d)) {
+      return()
+    }
+    if (!isTRUE(is_restoring())) {
+      return()
+    }
 
     # Step 1: restore ecoregion immediately
     if (nzchar(d$eco)) selected_ecoregion(d$eco)
@@ -110,10 +120,14 @@ app_server <- function(input, output, session) {
     if (nzchar(d$subtab) && d$tab %in% names(SUBTAB_INPUTS)) {
       # if mismatch, try selecting; we run this observe block repeatedly while restoring
       cur <- get_current_subtab(d$tab, input)
-      if (!identical(cur, d$subtab))
-      # This call eventually propagates into the relevant module via set_subtab()
-      select_subtab(d$tab, d$subtab, session)
+      if (!identical(cur, d$subtab)) {
+        # This call eventually propagates into the relevant module via set_subtab()
+        select_subtab(d$tab, d$subtab, session)
+      }
     }
+
+    # Step 4: if a stock is requested, set it (some modules may choose to ignore this)
+    if (nzchar(d$stock)) selected_stock(d$stock)
 
     # Check whether the live app state now matches the desired state --------------------
     cur_tab <- input$`nav-page` %||% ""
@@ -124,8 +138,10 @@ app_server <- function(input, output, session) {
     # - the top-level tab matches (or none was requested)
     # - the subtab matches (or none was requested)
     if (identical(selected_ecoregion() %||% "", d$eco %||% "") &&
-        (!nzchar(d$tab) || identical(cur_tab, d$tab)) &&
-        (!nzchar(d$subtab) || identical(cur_sub, d$subtab))) {
+      (!nzchar(d$tab) || identical(cur_tab, d$tab)) &&
+      (!nzchar(d$subtab) || identical(cur_sub, d$subtab)) &&
+      (!nzchar(d$stock) || identical(selected_stock() %||% "", d$stock))
+    ) {
       # Freeze the restore loop; further navigation will be driven by user input
       is_restoring(FALSE)
       return()
@@ -147,103 +163,123 @@ app_server <- function(input, output, session) {
         getSID(year = as.integer(format(Sys.Date(), "%Y")), EcoR = selected_ecoregion()),
         error = function(e) paste("Error fetching SID:", e$message)
       )
-      incProgress(0.5, detail = "Getting SAG...")
+      incProgress(0.4, detail = "Getting SAG...")
       sag <- tryCatch(
         getSAG_ecoregion_new(selected_ecoregion()),
         error = function(e) paste("Error fetching SAG:", e$message)
+      )
+      incProgress(0.6, detail = "Getting SAG settings...")
+      sag_settings <- tryCatch(
+        getSAG_SettingsEcoregion(selected_ecoregion()),
+        error = function(e) paste("Error fetching SAG settings:", e$message)
       )
       incProgress(0.9, detail = "Getting SAG status...")
       status <- tryCatch(
         format_sag_status_new(getStatusWebService(selected_ecoregion(), sid), sag),
         error = function(e) paste("Error fetching SAG status:", e$message)
       )
-      list(SID = sid, SAG = sag, clean_status = status)
+      list(SID = sid, SAG = sag, SAG_Settings = sag_settings, clean_status = status)
     })
   }) %>% bindCache(selected_ecoregion())
 
   observe({
     data <- fetchData()
-    shared$SID          <- data$SID
-    shared$SAG          <- data$SAG
+    shared$SID <- data$SID
+    shared$SAG <- data$SAG
+    shared$SAG_Settings <- data$SAG_Settings
     shared$clean_status <- data$clean_status
   })
 
   ##################################### Feature modules (parent handles bookmarking) #####################################
 
   mod_navigation_page_server(
-    "navigation_page_1", 
-    parent_session = session, 
+    "navigation_page_1",
+    parent_session = session,
     selected_ecoregion = selected_ecoregion,
-    bookmark_qs        = reactive(list())
+    bookmark_qs = reactive(list())
   )
 
   mod_overview_server(
     "overview_1",
     selected_ecoregion = selected_ecoregion,
-    bookmark_qs        = reactive(list()),     # parent restores
-    set_subtab         = function(...) {}      # no-op
+    bookmark_qs        = reactive(list()), # parent restores
+    set_subtab         = function(...) {} # no-op
   )
   mod_landings_server(
     "landings_1", cap_year, cap_month,
-    selected_ecoregion = selected_ecoregion, 
+    selected_ecoregion = selected_ecoregion,
     shared = shared,
-    bookmark_qs        = reactive(list()),     # parent restores
-    set_subtab         = function(...) {}
+    bookmark_qs = reactive(list()), # parent restores
+    set_subtab = function(...) {}
   )
   mod_stock_status_server(
     "stock_status_1", cap_year, cap_month,
-    selected_ecoregion = selected_ecoregion, 
+    selected_ecoregion = selected_ecoregion,
     shared = shared,
-    bookmark_qs        = reactive(list()),     # parent restores
-    set_subtab         = function(...) {}
+    selected_stock = selected_stock,
+    bookmark_qs = reactive(list()), # parent restores
+    set_subtab = function(...) {}
   )
   mod_vms_server(
     "vms_1",
-    selected_ecoregion = selected_ecoregion, 
-    bookmark_qs        = reactive(list())     # parent restores
+    selected_ecoregion = selected_ecoregion,
+    bookmark_qs        = reactive(list()) # parent restores
   )
   mod_resources_server(
     "resources_1",
-    bookmark_qs        = reactive(list()),     # parent restores
-    set_subtab         = function(...) {} 
+    bookmark_qs        = reactive(list()), # parent restores
+    set_subtab         = function(...) {}
   )
 
   ##################################### Single writer: keep URL hash in sync (debounced), except during restore #####################################
   current_state <- reactive({
     list(
-      eco    = selected_ecoregion() %||% "",
-      tab    = input$`nav-page`     %||% "",
+      eco = selected_ecoregion() %||% "",
+      tab = input$`nav-page` %||% "",
       subtab = {
         t <- input$`nav-page` %||% ""
         get_current_subtab(t, input)
-      }
+      },
+      stock = selected_stock() %||% ""
     )
   })
   current_state_deb <- debounce(current_state, millis = 150)
 
-  observeEvent(current_state_deb(), {
-    if (isTRUE(is_restoring())) return()
-    st <- current_state_deb()
-    shinyjs::runjs(sprintf("location.hash = %s;",
-      jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab), auto_unbox = TRUE)
-    ))
-  }, ignoreInit = TRUE)
+  observeEvent(current_state_deb(),
+    {
+      if (isTRUE(is_restoring())) {
+        return()
+      }
+      st <- current_state_deb()
+      shinyjs::runjs(sprintf(
+        "location.hash = %s;",
+        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock), auto_unbox = TRUE)
+      ))
+    },
+    ignoreInit = TRUE
+  )
 
   # When restore completes, write once immediately
-  observeEvent(is_restoring(), {
-    if (isTRUE(is_restoring())) return()
-    st <- current_state()
-    shinyjs::runjs(sprintf("location.hash = %s;",
-      jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab), auto_unbox = TRUE)
-    ))
-  }, ignoreInit = TRUE)
+  observeEvent(is_restoring(),
+    {
+      if (isTRUE(is_restoring())) {
+        return()
+      }
+      st <- current_state()
+      shinyjs::runjs(sprintf(
+        "location.hash = %s;",
+        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock), auto_unbox = TRUE)
+      ))
+    },
+    ignoreInit = TRUE
+  )
 
   ##################################### Share link modal and clipboard #####################################
 
   share_url <- reactiveVal(NULL)
   observeEvent(input$share_btn, {
     st <- current_state()
-    final <- paste0(.base_url(session), write_hash(st$eco, st$tab, st$subtab))
+    final <- paste0(.base_url(session), write_hash(st$eco, st$tab, st$subtab, st$stock))
     share_url(final)
     showModal(modalDialog(
       title = "Share this view",
@@ -259,10 +295,52 @@ app_server <- function(input, output, session) {
     ))
   })
 
-########################################## Clipboard handler ##########################################
+  ########################################## Clipboard handler ##########################################
   observeEvent(input$copy_share_link, {
     session$sendCustomMessage("copyText", list(text = share_url() %||% ""))
   })
-  observeEvent(input$share_copy_success, { showNotification("Link copied to clipboard", type = "message") })
-  observeEvent(input$share_copy_error,   { showNotification(paste("Copy failed:", input$share_copy_error), type = "error") })
+  observeEvent(input$share_copy_success, {
+    showNotification("Link copied to clipboard", type = "message")
+  })
+  observeEvent(input$share_copy_error, {
+    showNotification(paste("Copy failed:", input$share_copy_error), type = "error")
+  })
+
+
+
+
+  
+  ########################################## observeEvent: clear stock filter on tab change, and ensure valid ecoregion #########
+  observeEvent(
+    list(input$`nav-page`, input$`stock_status_1-main_tabset`),
+    {
+      if (isTRUE(is_restoring())) {
+        return()
+      }
+
+      tab <- input$`nav-page` %||% ""
+      sub <- input$`stock_status_1-main_tabset` %||% ""
+
+      # 1) Clear stock filter whenever we are NOT on Stock status -> Status lookup
+      keep_stock <- identical(tab, "stock_status") && identical(sub, "status_lookup")
+      if (!keep_stock) selected_stock("")
+
+      # 2) If ecoregion is missing/invalid at the moment of a tab/subtab change,
+      #    fall back to Greater North Sea (but do NOT overwrite a valid choice)
+      eco <- selected_ecoregion() %||% ""
+      acr <- get_ecoregion_acronym(eco)
+
+      eco_missing <- identical(eco, "") || isTRUE(is.na(acr))
+      if (eco_missing) {
+        selected_ecoregion(DEFAULT_ECOREGION)
+        # optional user feedback
+        showNotification(
+          paste0("Ecoregion not available; using ", DEFAULT_ECOREGION, "."),
+          type = "message",
+          duration = 4
+        )
+      }
+    },
+    ignoreInit = TRUE
+  )
 }

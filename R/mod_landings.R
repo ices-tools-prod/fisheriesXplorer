@@ -64,6 +64,7 @@
 #' @export
 mod_landings_ui <- function(id) {
   ns <- NS(id)
+  
   tagList(
     mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
     tabsetPanel(
@@ -88,9 +89,11 @@ mod_landings_ui <- function(id) {
                   "Country" = "Country"
                 )
               ),
-              downloadLink(
-                ns("download_landings_data"),
-                HTML(paste0("<span class='hovertext' data-hover='Landings csv files (takes a few seconds)'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
+              download_icon_label(
+                text = "Download data",
+                outputId = ns("download_landings_data"),
+                hover_text = "Landings (.csv, takes a few seconds)",
+                size = "large"
               )
             ),
             card_body(
@@ -113,8 +116,11 @@ mod_landings_ui <- function(id) {
           card(
             card_header(
               "Discard trends",
-              downloadLink(ns("download_discard_data"),
-                HTML(paste0("<span class='hovertext' data-hover='Discards csv file'><font size= 4>Download data <i class='fa-solid fa-cloud-arrow-down'></i></font></span>"))
+              download_icon_label(
+                text = "Download data",
+                outputId = ns("download_discard_data"),
+                hover_text = "Discards (.csv)",
+                size = "large"  
               )
             ),
             card_body(
