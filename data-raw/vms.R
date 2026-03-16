@@ -9,6 +9,12 @@ library(sf)
 library(rnaturalearth)
 library(rnaturalearthhires)
 library(stringr)
+library(ggplot2)
+
+source("R/fct_vms.R")
+source("R/fct_helpers.R")
+source("data-raw/ecoregion.R")
+source("data-raw/ecoregion_shapefile.R")
 
 
 zip_sf <- function(dat, directory, zip_name, fname) {
@@ -124,6 +130,7 @@ for(i in 1:length(ecoregions)){
   
   # create plot safely; skip saving plot if warnings as "skip"
   result <-  tryCatch({
+    
      p <- plot_effort_map_app(effort_maps[[ecoregions[i]]], 
                               ecoregion_name = ecoregions[i],
                               ecoregion_shape = ecoregion[[ecoregions[i]]],

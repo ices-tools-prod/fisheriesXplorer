@@ -23,12 +23,17 @@ plot_effort_map_app <- function (effort, ecoregion_name, ecoregion_shape, land_s
   if(fishing_category != "all") {
     effort <- effort %>% filter(fishing_category_FO == fishing_category)
   }
-  p <- ggplot() + geom_sf(data = ecoregion_shape, color = "grey90", fill = "transparent") + 
-    geom_sf(data = land_shape,fill = "grey80", color = "grey90", size = 1) + 
+  p <- ggplot() + 
+    # geom_sf(data = ecoregion_shape, color = "grey90", fill = "transparent") + 
+    # geom_sf(data = land_shape,fill = "grey80", color = "grey90") + 
+    geom_sf(data = ecoregion_shape, color = "grey70", fill = "transparent") +
+    geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
     geom_sf(data = effort, aes(fill = icesFO:::get_map_breaks(mw_fishinghours)), col = "transparent") + 
     scale_fill_viridis_d(name = "MW Fishing Hours", direction = -1, option = "A", guide = guide_legend(reverse = TRUE)) + 
     theme_bw(base_size = 15) + 
-    theme(axis.title.x = element_blank(), 
+    theme(panel.background = element_rect(fill = "#d3e8fd", colour = NA),
+          plot.background  = element_rect(fill = "white", colour = NA),
+          axis.title.x = element_blank(), 
           axis.title.y = element_blank()) + 
     coord_sf(crs = crs, xlim = xlims, ylim = ylims) + 
     labs(caption = paste0("Natural Earth and ICES VMS Data \nVMS data updated ", data_update_date))+
@@ -42,6 +47,7 @@ plot_effort_map_app <- function (effort, ecoregion_name, ecoregion_shape, land_s
               subtitle = paste0(ecoregion_name, ": All gears"))
   }
   p
+  browser()
 }
 
 
@@ -79,13 +85,19 @@ plot_sar_map_app <- function (sar_data,  ecoregion_name, ecoregion_shape, land_s
   xlims <- c(box[1], box[3])
   ylims <- c(box[2], box[4])
   
-  p <- ggplot() + geom_sf(data = ecoregion_shape, color = "grey90", fill = "transparent") + 
-    geom_sf(data = land_shape,fill = "grey80", color = "grey90") + 
+  p <- ggplot() + 
+    # geom_sf(data = ecoregion_shape, color = "grey90", fill = "transparent") + 
+    # geom_sf(data = land_shape,fill = "grey80", color = "grey90") + 
+    geom_sf(data = ecoregion_shape, color = "grey70", fill = "transparent") +
+    geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
     geom_sf(data = sar_data, aes(fill = icesFO:::get_map_breaks(sar)), col = "transparent") + 
     scale_fill_viridis_d(name = legend_name, direction = -1, 
                                   option = "A", guide = guide_legend(reverse = TRUE)) + 
     theme_bw(base_size = 15) + 
-    theme(axis.title.x = element_blank(), 
+    theme(
+          panel.background = element_rect(fill = "#f0f4f8", colour = NA),
+          plot.background  = element_rect(fill = "#f0f4f8", colour = NA),
+          axis.title.x = element_blank(), 
           axis.title.y = element_blank()) + 
     coord_sf(crs = crs, xlim = xlims, ylim = ylims) + 
     labs(caption = paste0("Natural Earth and ICES VMS Data \nVMS data updated ", data_update_date)) + 
