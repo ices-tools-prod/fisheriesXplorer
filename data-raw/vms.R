@@ -9,6 +9,12 @@ library(sf)
 library(rnaturalearth)
 library(rnaturalearthhires)
 library(stringr)
+library(ggplot2)
+
+source("R/fct_vms.R")
+source("R/fct_helpers.R")
+# run source("data-raw/ecoregion.R")
+source("data-raw/ecoregion_shapefile.R")
 
 
 zip_sf <- function(dat, directory, zip_name, fname) {
@@ -123,8 +129,32 @@ for(i in 1:length(ecoregions)){
   name_of_file <- paste0("inst/app/www/vms/",ecoregion_name, "_effort_", gear_name, ".png")
   
   # create plot safely; skip saving plot if warnings as "skip"
-  result <-  tryCatch({
-     p <- plot_effort_map_app(effort_maps[[ecoregions[i]]], 
+  # result <-  tryCatch({
+    
+  #    p <- plot_effort_map_app(effort_maps[[ecoregions[i]]], 
+  #                             ecoregion_name = ecoregions[i],
+  #                             ecoregion_shape = ecoregion[[ecoregions[i]]],
+  #                             land_shape = atlantic_land_shp,
+  #                             fishing_category = gear[j],
+  #                             crs = CRS_LAEA_EUROPE,
+  #                             data_update_date = vms_data_update,
+  #                             yr = yr)
+      
+  #   browser()
+  #    ggplot2::ggplot_build(p)
+  #    p
+    
+  # },
+  # warning = function(w) {
+  #   warning(sprintf("Plot creation for %s produced a warning: %s", name_of_file, conditionMessage(w)))
+  #   NULL
+  # },
+  # error = function(e) {
+  #   warning(sprintf("Plot creation for %s failed: %s", name_of_file, conditionMessage(e)))
+  #   NULL
+  # })
+
+  result <- plot_effort_map_app(effort_maps[[ecoregions[i]]], 
                               ecoregion_name = ecoregions[i],
                               ecoregion_shape = ecoregion[[ecoregions[i]]],
                               land_shape = atlantic_land_shp,
@@ -132,20 +162,6 @@ for(i in 1:length(ecoregions)){
                               crs = CRS_LAEA_EUROPE,
                               data_update_date = vms_data_update,
                               yr = yr)
-      
-    
-     ggplot2::ggplot_build(p)
-     p
-    
-  },
-  warning = function(w) {
-    warning(sprintf("Plot creation for %s produced a warning: %s", name_of_file, conditionMessage(w)))
-    NULL
-  },
-  error = function(e) {
-    warning(sprintf("Plot creation for %s failed: %s", name_of_file, conditionMessage(e)))
-    NULL
-  })
   
   if (!is.null(result) && inherits(result, "ggplot")) {
       ragg::agg_png(filename = name_of_file, units = "px",width = plot_width, height = plot_height, res = dpi)
@@ -180,28 +196,36 @@ for(i in 1:length(sar_maps)){
       name_of_file <- paste0("inst/app/www/vms/",ecoregion_name, "_sar_", layers[j], ".png")
       
       
-      result <-  tryCatch({
-        p <- plot_sar_map_app(sar_maps[[names(sar_maps[i])]], 
+      # result <-  tryCatch({
+      #   p <- plot_sar_map_app(sar_maps[[names(sar_maps[i])]], 
+      #                         ecoregion_name = names(sar_maps[i]), 
+      #                         ecoregion_shape = ecoregion[[names(sar_maps[i])]],
+      #                         land_shape = atlantic_land_shp, 
+      #                         sar_layer = layers[j],
+      #                         crs = CRS_LAEA_EUROPE,
+      #                         data_update_date = vms_data_update,
+      #                         yr = yr) 
+        
+      #   ggplot2::ggplot_build(p)
+      #   p
+        
+      # },
+      # warning = function(w) {
+      #   warning(sprintf("Plot creation for %s produced a warning: %s", name_of_file, conditionMessage(w)))
+      #   NULL
+      # },
+      # error = function(e) {
+      #   warning(sprintf("Plot creation for %s failed: %s", name_of_file, conditionMessage(e)))
+      #   NULL
+      # })
+      result <- plot_sar_map_app(sar_maps[[names(sar_maps[i])]], 
                               ecoregion_name = names(sar_maps[i]), 
                               ecoregion_shape = ecoregion[[names(sar_maps[i])]],
                               land_shape = atlantic_land_shp, 
                               sar_layer = layers[j],
                               crs = CRS_LAEA_EUROPE,
                               data_update_date = vms_data_update,
-                              yr = yr) 
-        
-        ggplot2::ggplot_build(p)
-        p
-        
-      },
-      warning = function(w) {
-        warning(sprintf("Plot creation for %s produced a warning: %s", name_of_file, conditionMessage(w)))
-        NULL
-      },
-      error = function(e) {
-        warning(sprintf("Plot creation for %s failed: %s", name_of_file, conditionMessage(e)))
-        NULL
-      })
+                              yr = yr)
       
       if (!is.null(result) && inherits(result, "ggplot")) {
         ragg::agg_png(filename = name_of_file, units = "px",width = plot_width, height = plot_height, res = dpi)
