@@ -12,44 +12,102 @@
 #' @import ggplot2
 #' @importFrom sf st_transform st_bbox
 #' @importFrom dplyr filter
-plot_effort_map_app <- function (effort, ecoregion_name, ecoregion_shape, land_shape, fishing_category, crs, data_update_date, yr) {
+# plot_effort_map_app <- function (effort, ecoregion_name, ecoregion_shape, land_shape, fishing_category, crs, data_update_date, yr) {
+  
+#   ecoregion_shape <- st_transform(ecoregion_shape, crs = crs)
+#   box <- st_bbox(ecoregion_shape)
+#   xlims <- c(box[1], box[3])
+#   ylims <- c(box[2], box[4])
+  
+  
+#   if(fishing_category != "all") {
+#     effort <- effort %>% filter(fishing_category_FO == fishing_category)
+#   }
+#   p <- ggplot() + 
+#     # geom_sf(data = ecoregion_shape, color = "grey90", fill = "transparent") + 
+#     # geom_sf(data = land_shape,fill = "grey80", color = "grey90") + 
+#     geom_sf(data = ecoregion_shape, color = "grey70", fill = "transparent") +
+#     geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
+#     geom_sf(data = effort, aes(fill = icesFO:::get_map_breaks(mw_fishinghours)), col = "transparent") + 
+#     scale_fill_viridis_d(name = "MW Fishing Hours", direction = -1, option = "A", guide = guide_legend(reverse = TRUE)) + 
+#     theme_bw(base_size = 15) + 
+#     theme(panel.background = element_rect(fill = "#d3e8fd", colour = NA),
+#           plot.background  = element_rect(fill = "white", colour = NA),
+#           axis.title.x = element_blank(), 
+#           axis.title.y = element_blank()) + 
+#     coord_sf(crs = crs, xlim = xlims, ylim = ylims) + 
+#     labs(caption = paste0("Natural Earth and ICES VMS Data \nVMS data updated ", data_update_date))+
+#     ggtitle(paste0("Average MW Fishing hours ", paste(yr-3, yr, sep = "-")),
+#             subtitle = paste0(ecoregion_name, ": ", fishing_category))
+  
+#   if(fishing_category == "all") {
+#     p <- p + facet_wrap(~fishing_category_FO)+
+#       theme(strip.text = element_text(size = 11))+
+#       ggtitle(paste0("Average MW Fishing hours ", paste(yr-3, yr, sep = "-")),
+#               subtitle = paste0(ecoregion_name, ": All gears"))
+#   }
+#   p
+# }
+plot_effort_map_app <- function(effort, ecoregion_name, ecoregion_shape, land_shape,
+                                fishing_category, crs, data_update_date, yr) {
   
   ecoregion_shape <- st_transform(ecoregion_shape, crs = crs)
   box <- st_bbox(ecoregion_shape)
   xlims <- c(box[1], box[3])
   ylims <- c(box[2], box[4])
   
-  
-  if(fishing_category != "all") {
+  if (fishing_category != "all") {
     effort <- effort %>% filter(fishing_category_FO == fishing_category)
   }
-  p <- ggplot() + 
-    # geom_sf(data = ecoregion_shape, color = "grey90", fill = "transparent") + 
-    # geom_sf(data = land_shape,fill = "grey80", color = "grey90") + 
-    geom_sf(data = ecoregion_shape, color = "grey70", fill = "transparent") +
-    geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
-    geom_sf(data = effort, aes(fill = icesFO:::get_map_breaks(mw_fishinghours)), col = "transparent") + 
-    scale_fill_viridis_d(name = "MW Fishing Hours", direction = -1, option = "A", guide = guide_legend(reverse = TRUE)) + 
-    theme_bw(base_size = 15) + 
-    theme(panel.background = element_rect(fill = "#d3e8fd", colour = NA),
-          plot.background  = element_rect(fill = "white", colour = NA),
-          axis.title.x = element_blank(), 
-          axis.title.y = element_blank()) + 
-    coord_sf(crs = crs, xlim = xlims, ylim = ylims) + 
-    labs(caption = paste0("Natural Earth and ICES VMS Data \nVMS data updated ", data_update_date))+
-    ggtitle(paste0("Average MW Fishing hours ", paste(yr-3, yr, sep = "-")),
-            subtitle = paste0(ecoregion_name, ": ", fishing_category))
   
-  if(fishing_category == "all") {
-    p <- p + facet_wrap(~fishing_category_FO)+
-      theme(strip.text = element_text(size = 11))+
-      ggtitle(paste0("Average MW Fishing hours ", paste(yr-3, yr, sep = "-")),
-              subtitle = paste0(ecoregion_name, ": All gears"))
+  effort <- effort %>%
+    filter(!is.na(mw_fishinghours), is.finite(mw_fishinghours), mw_fishinghours > 0)
+  
+  if (nrow(effort) == 0) {
+    message("No effort data for ", ecoregion_name, " / ", fishing_category)
+    return(NULL)
   }
+  
+  effort <- effort %>%
+    mutate(effort_breaks = icesFO:::get_map_breaks(mw_fishinghours))
+  
+  p <- ggplot() +
+    geom_sf(data = ecoregion_shape, color = "grey30", fill = "transparent") +
+    geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
+    geom_sf(data = effort, aes(fill = effort_breaks), col = "transparent") +
+    scale_fill_viridis_d(
+      name = "MW Fishing Hours",
+      direction = -1,
+      option = "A",
+      guide = guide_legend(reverse = TRUE)
+    ) +
+    theme_bw(base_size = 15) +
+    theme(
+      panel.background = element_rect(fill = "#d6e8f7", colour = NA),
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.grid.major = element_line(color = "grey70", linewidth = 0.3),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank()
+    ) +
+    coord_sf(crs = crs, xlim = xlims, ylim = ylims) +
+    labs(caption = paste0("Natural Earth and ICES VMS Data \nVMS data updated ", data_update_date)) +
+    ggtitle(
+      paste0("Average MW Fishing hours ", paste(yr - 3, yr, sep = "-")),
+      subtitle = paste0(ecoregion_name, ": ", fishing_category)
+    )
+  
+  if (fishing_category == "all") {
+    p <- p +
+      facet_wrap(~fishing_category_FO) +
+      theme(strip.text = element_text(size = 11)) +
+      ggtitle(
+        paste0("Average MW Fishing hours ", paste(yr - 3, yr, sep = "-")),
+        subtitle = paste0(ecoregion_name, ": All gears")
+      )
+  }
+  
   p
-  browser()
 }
-
 
 
 #' Plot sar layer with ecoregion outline and land. plot has data update date stamp
@@ -67,50 +125,121 @@ plot_effort_map_app <- function (effort, ecoregion_name, ecoregion_shape, land_s
 #' @importFrom sf st_transform st_bbox
 #' @importFrom dplyr filter
 #' @importFrom stringr str_to_title
-plot_sar_map_app <- function (sar_data,  ecoregion_name, ecoregion_shape, land_shape, sar_layer, crs, data_update_date, yr) {
+# plot_sar_map_app <- function (sar_data,  ecoregion_name, ecoregion_shape, land_shape, sar_layer, crs, data_update_date, yr) {
  
-  if(sar_layer != "all") {
-    legend_name  <-  paste0(stringr::str_to_title(sar_layer), " Swept\nArea Ratio")
+#   if(sar_layer != "all") {
+#     legend_name  <-  paste0(stringr::str_to_title(sar_layer), " Swept\nArea Ratio")
     
-    sar_data$sar <- as.numeric(sar_data$sar)
-    sar_data$layer <- tolower(sar_data$layer)
-    sar_data <- filter(sar_data, layer == sar_layer & sar > 0)
+#     sar_data$sar <- as.numeric(sar_data$sar)
+#     sar_data$layer <- tolower(sar_data$layer)
+#     sar_data <- filter(sar_data, layer == sar_layer & sar > 0)
+#   } else {
+    
+#     legend_name  <-  "Swept\nArea Ratio"
+#   }
+  
+#   ecoregion_shape <- st_transform(ecoregion_shape, crs = crs)
+#   box <- st_bbox(ecoregion_shape)
+#   xlims <- c(box[1], box[3])
+#   ylims <- c(box[2], box[4])
+  
+#   p <- ggplot() + 
+#     # geom_sf(data = ecoregion_shape, color = "grey90", fill = "transparent") + 
+#     # geom_sf(data = land_shape,fill = "grey80", color = "grey90") + 
+#     geom_sf(data = ecoregion_shape, color = "grey30", fill = "transparent") +
+#     geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
+#     geom_sf(data = sar_data, aes(fill = icesFO:::get_map_breaks(sar)), col = "transparent") + 
+#     scale_fill_viridis_d(name = legend_name, direction = -1, 
+#                                   option = "A", guide = guide_legend(reverse = TRUE)) + 
+#     theme_bw(base_size = 15) + 
+#     theme(
+#           panel.background = element_rect(fill = "#d6e8f7", colour = NA),
+#           plot.background = element_rect(fill = "white", colour = NA),
+#           panel.grid.major = element_line(color = "grey70", linewidth = 0.3),
+#           axis.title.x = element_blank(), 
+#           axis.title.y = element_blank()) + 
+#     coord_sf(crs = crs, xlim = xlims, ylim = ylims) + 
+#     labs(caption = paste0("Natural Earth and ICES VMS Data \nVMS data updated ", data_update_date)) + 
+#     ggtitle(paste0("Swept Area Ratio ", paste(yr-3, yr, sep = "-")),
+#           subtitle = paste0(ecoregion_name, ": ", stringr::str_to_title(sar_layer), " layer"))
+  
+#   if(sar_layer == "all") {
+
+#     p <- p + facet_wrap(~layer)+
+#       theme(strip.text = element_text(size = 11)) +
+#       ggtitle(paste0("Swept Area Ratio ", paste(yr-3, yr, sep = "-")),
+#               subtitle = paste0(ecoregion_name, ": Surface and Subsurface layers"))
+#   }
+#   p
+# }
+plot_sar_map_app <- function(sar_data, ecoregion_name, ecoregion_shape, land_shape,
+                             sar_layer, crs, data_update_date, yr) {
+  
+  sar_data <- sar_data %>%
+    dplyr::mutate(
+      sar = as.numeric(sar),
+      layer = tolower(layer)
+    )
+  
+  if (sar_layer != "all") {
+    legend_name <- paste0(stringr::str_to_title(sar_layer), " Swept\nArea Ratio")
+    sar_data <- sar_data %>%
+      dplyr::filter(layer == sar_layer)
   } else {
-    
-    legend_name  <-  "Swept\nArea Ratio"
+    legend_name <- "Swept\nArea Ratio"
   }
+  
+  sar_data <- sar_data %>%
+    dplyr::filter(!is.na(sar), is.finite(sar), sar > 0)
+  
+  if (nrow(sar_data) == 0) {
+    message("No SAR data for ", ecoregion_name, " / ", sar_layer)
+    return(NULL)
+  }
+  
+  sar_data <- sar_data %>%
+    dplyr::mutate(sar_breaks = icesFO:::get_map_breaks(sar))
   
   ecoregion_shape <- st_transform(ecoregion_shape, crs = crs)
   box <- st_bbox(ecoregion_shape)
   xlims <- c(box[1], box[3])
   ylims <- c(box[2], box[4])
   
-  p <- ggplot() + 
-    # geom_sf(data = ecoregion_shape, color = "grey90", fill = "transparent") + 
-    # geom_sf(data = land_shape,fill = "grey80", color = "grey90") + 
-    geom_sf(data = ecoregion_shape, color = "grey70", fill = "transparent") +
+  p <- ggplot() +
+    geom_sf(data = ecoregion_shape, color = "grey30", fill = "transparent") +
     geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
-    geom_sf(data = sar_data, aes(fill = icesFO:::get_map_breaks(sar)), col = "transparent") + 
-    scale_fill_viridis_d(name = legend_name, direction = -1, 
-                                  option = "A", guide = guide_legend(reverse = TRUE)) + 
-    theme_bw(base_size = 15) + 
+    geom_sf(data = sar_data, aes(fill = sar_breaks), col = "transparent") +
+    scale_fill_viridis_d(
+      name = legend_name,
+      direction = -1,
+      option = "A",
+      guide = guide_legend(reverse = TRUE)
+    ) +
+    theme_bw(base_size = 15) +
     theme(
-          panel.background = element_rect(fill = "#f0f4f8", colour = NA),
-          plot.background  = element_rect(fill = "#f0f4f8", colour = NA),
-          axis.title.x = element_blank(), 
-          axis.title.y = element_blank()) + 
-    coord_sf(crs = crs, xlim = xlims, ylim = ylims) + 
-    labs(caption = paste0("Natural Earth and ICES VMS Data \nVMS data updated ", data_update_date)) + 
-    ggtitle(paste0("Swept Area Ratio ", paste(yr-3, yr, sep = "-")),
-          subtitle = paste0(ecoregion_name, ": ", stringr::str_to_title(sar_layer), " layer"))
+      panel.background = element_rect(fill = "#d6e8f7", colour = NA),
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.grid.major = element_line(color = "grey70", linewidth = 0.3),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank()
+    ) +
+    coord_sf(crs = crs, xlim = xlims, ylim = ylims) +
+    labs(caption = paste0("Natural Earth and ICES VMS Data \nVMS data updated ", data_update_date)) +
+    ggtitle(
+      paste0("Swept Area Ratio ", paste(yr - 3, yr, sep = "-")),
+      subtitle = paste0(ecoregion_name, ": ", stringr::str_to_title(sar_layer), " layer")
+    )
   
-  if(sar_layer == "all") {
-
-    p <- p + facet_wrap(~layer)+
+  if (sar_layer == "all") {
+    p <- p +
+      facet_wrap(~layer) +
       theme(strip.text = element_text(size = 11)) +
-      ggtitle(paste0("Swept Area Ratio ", paste(yr-3, yr, sep = "-")),
-              subtitle = paste0(ecoregion_name, ": Surface and Subsurface layers"))
+      ggtitle(
+        paste0("Swept Area Ratio ", paste(yr - 3, yr, sep = "-")),
+        subtitle = paste0(ecoregion_name, ": Surface and Subsurface layers")
+      )
   }
+  
   p
 }
 
