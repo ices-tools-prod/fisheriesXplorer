@@ -218,14 +218,7 @@ plot_sar_map_app <- function(sar_data, ecoregion_name, ecoregion_shape, land_sha
   p <- ggplot() +
     geom_sf(data = ecoregion_shape, color = "grey30", fill = "transparent") +
     geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
-    # geom_sf(data = sar_data, aes(fill = sar_breaks), col = "transparent") +
     geom_sf(data = sar_data, aes(fill = sar_breaks, colour = sar_breaks), linewidth = 0.05) +
-    # scale_fill_viridis_d(
-    #   name = legend_name,
-    #   direction = -1,
-    #   option = "A",
-    #   guide = guide_legend(reverse = TRUE)
-    # ) +
     scale_fill_viridis_d(
       name = legend_name,
       direction = -1,
