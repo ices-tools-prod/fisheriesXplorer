@@ -74,12 +74,17 @@ plot_effort_map_app <- function(effort, ecoregion_name, ecoregion_shape, land_sh
   p <- ggplot() +
     geom_sf(data = ecoregion_shape, color = "grey30", fill = "transparent") +
     geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
-    geom_sf(data = effort, aes(fill = effort_breaks), col = "transparent") +
+    geom_sf(data = effort, aes(fill = effort_breaks, colour = effort_breaks), linewidth = 0.05) +
     scale_fill_viridis_d(
       name = "MW Fishing Hours",
       direction = -1,
       option = "A",
       guide = guide_legend(reverse = TRUE)
+    ) +
+    scale_colour_viridis_d(
+      direction = -1,
+      option = "A",
+      guide = "none"
     ) +
     theme_bw(base_size = 15) +
     theme(
@@ -198,6 +203,11 @@ plot_sar_map_app <- function(sar_data, ecoregion_name, ecoregion_shape, land_sha
   }
   
   sar_data <- sar_data %>%
+  dplyr::mutate(
+    layer = factor(layer, levels = c("surface", "subsurface"))
+  )
+
+  sar_data <- sar_data %>%
     dplyr::mutate(sar_breaks = icesFO:::get_map_breaks(sar))
   
   ecoregion_shape <- st_transform(ecoregion_shape, crs = crs)
@@ -208,12 +218,24 @@ plot_sar_map_app <- function(sar_data, ecoregion_name, ecoregion_shape, land_sha
   p <- ggplot() +
     geom_sf(data = ecoregion_shape, color = "grey30", fill = "transparent") +
     geom_sf(data = land_shape, fill = "grey85", color = "grey60") +
-    geom_sf(data = sar_data, aes(fill = sar_breaks), col = "transparent") +
+    # geom_sf(data = sar_data, aes(fill = sar_breaks), col = "transparent") +
+    geom_sf(data = sar_data, aes(fill = sar_breaks, colour = sar_breaks), linewidth = 0.05) +
+    # scale_fill_viridis_d(
+    #   name = legend_name,
+    #   direction = -1,
+    #   option = "A",
+    #   guide = guide_legend(reverse = TRUE)
+    # ) +
     scale_fill_viridis_d(
       name = legend_name,
       direction = -1,
       option = "A",
       guide = guide_legend(reverse = TRUE)
+    ) +
+    scale_colour_viridis_d(
+      direction = -1,
+      option = "A",
+      guide = "none"
     ) +
     theme_bw(base_size = 15) +
     theme(
@@ -232,7 +254,8 @@ plot_sar_map_app <- function(sar_data, ecoregion_name, ecoregion_shape, land_sha
   
   if (sar_layer == "all") {
     p <- p +
-      facet_wrap(~layer) +
+      facet_wrap(~layer,
+      labeller = labeller(layer = c(surface = "Surface", subsurface = "Subsurface"))) +
       theme(strip.text = element_text(size = 11)) +
       ggtitle(
         paste0("Swept Area Ratio ", paste(yr - 3, yr, sep = "-")),
