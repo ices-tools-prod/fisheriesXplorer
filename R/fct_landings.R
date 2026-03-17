@@ -1,71 +1,71 @@
-#' Get acronym for an ICES ecoregion
-#'
-#' Translates a full ICES ecoregion name into the corresponding
-#' three-letter acronym used in the app (e.g. `"Baltic Sea"` → `"BtS"`).
-#'
-#' @param ecoregion A single character string giving the full
-#'   ecoregion name. Must be one of:
-#'   `"Baltic Sea"`, `"Bay of Biscay and the Iberian Coast"`,
-#'   `"Celtic Seas"`, `"Greater North Sea"`, `"Norwegian Sea"`,
-#'   `"Icelandic Waters"`, `"Barents Sea"`, `"Greenland Sea"`,
-#'   `"Faroes"`, `"Oceanic Northeast Atlantic"`, or `"Azores"`.
-#'
-#' @return A character string with the corresponding acronym:
-#'   `"BtS"`, `"BI"`, `"CS"`, `"NrS"`, `"NwS"`, `"IS"`, `"BrS"`,
-#'   `"GS"`, `"FO"`, `"ONA"`, or `"AZ"`.
-#'
-#' @details
-#' If `ecoregion` does not match any of the supported names,
-#' the function raises an error via [base::stop()].
-#'
-#' @examples
-#' get_ecoregion_acronym("Baltic Sea")
-#' get_ecoregion_acronym("Greater North Sea")
-#'
-#' @export
+# #' Get acronym for an ICES ecoregion
+# #'
+# #' Translates a full ICES ecoregion name into the corresponding
+# #' three-letter acronym used in the app (e.g. `"Baltic Sea"` → `"BtS"`).
+# #'
+# #' @param ecoregion A single character string giving the full
+# #'   ecoregion name. Must be one of:
+# #'   `"Baltic Sea"`, `"Bay of Biscay and the Iberian Coast"`,
+# #'   `"Celtic Seas"`, `"Greater North Sea"`, `"Norwegian Sea"`,
+# #'   `"Icelandic Waters"`, `"Barents Sea"`, `"Greenland Sea"`,
+# #'   `"Faroes"`, `"Oceanic Northeast Atlantic"`, or `"Azores"`.
+# #'
+# #' @return A character string with the corresponding acronym:
+# #'   `"BtS"`, `"BI"`, `"CS"`, `"NrS"`, `"NwS"`, `"IS"`, `"BrS"`,
+# #'   `"GS"`, `"FO"`, `"ONA"`, or `"AZ"`.
+# #'
+# #' @details
+# #' If `ecoregion` does not match any of the supported names,
+# #' the function raises an error via [base::stop()].
+# #'
+# #' @examples
+# #' get_ecoregion_acronym("Baltic Sea")
+# #' get_ecoregion_acronym("Greater North Sea")
+# #'
+# #' @export
+# # get_ecoregion_acronym <- function(ecoregion) {
+# #   switch(ecoregion,
+# #          "Baltic Sea" = "BtS",
+# #          "Bay of Biscay and the Iberian Coast" = "BI",
+# #          "Bay of Biscay" = "BoB",
+# #          "Iberian Waters" = "IW",
+# #          "Celtic Seas" = "CS",
+# #          "Celtic Sea" = "CSx",
+# #          "Irish Sea" = "IrS",
+# #          "Greater North Sea" = "NrS",
+# #          "Norwegian Sea" = "NwS",
+# #          "Icelandic Waters" = "IS",
+# #          "Barents Sea" = "BrS",
+# #          "Greenland Sea" = "GS",
+# #          "Faroes" = "FO",
+# #          "Oceanic Northeast Atlantic" = "ONA",
+# #          "Azores" = "AZ",
+# #          stop("Unknown ecoregion")
+# #   )
+# # }
 # get_ecoregion_acronym <- function(ecoregion) {
-#   switch(ecoregion,
-#          "Baltic Sea" = "BtS",
-#          "Bay of Biscay and the Iberian Coast" = "BI",
-#          "Bay of Biscay" = "BoB",
-#          "Iberian Waters" = "IW",
-#          "Celtic Seas" = "CS",
-#          "Celtic Sea" = "CSx",
-#          "Irish Sea" = "IrS",
-#          "Greater North Sea" = "NrS",
-#          "Norwegian Sea" = "NwS",
-#          "Icelandic Waters" = "IS",
-#          "Barents Sea" = "BrS",
-#          "Greenland Sea" = "GS",
-#          "Faroes" = "FO",
-#          "Oceanic Northeast Atlantic" = "ONA",
-#          "Azores" = "AZ",
-#          stop("Unknown ecoregion")
+#   acr <- switch(ecoregion,
+#     "Baltic Sea" = "BtS",
+#     "Bay of Biscay and the Iberian Coast" = "BI",
+#     "Bay of Biscay" = "BoB",
+#     "Iberian Waters" = "IW",
+#     "Celtic Seas" = "CS",
+#     "Celtic Sea" = "CSx",
+#     "Irish Sea" = "IrS",
+#     "Greater North Sea" = "NrS",
+#     "Norwegian Sea" = "NwS",
+#     "Icelandic Waters" = "IS",
+#     "Barents Sea" = "BrS",
+#     "Greenland Sea" = "GS",
+#     "Faroes" = "FO",
+#     "Oceanic Northeast Atlantic" = "ONA",
+#     "Azores" = "AZ",
+#     NULL
 #   )
-# }
-get_ecoregion_acronym <- function(ecoregion) {
-  acr <- switch(ecoregion,
-    "Baltic Sea" = "BtS",
-    "Bay of Biscay and the Iberian Coast" = "BI",
-    "Bay of Biscay" = "BoB",
-    "Iberian Waters" = "IW",
-    "Celtic Seas" = "CS",
-    "Celtic Sea" = "CSx",
-    "Irish Sea" = "IrS",
-    "Greater North Sea" = "NrS",
-    "Norwegian Sea" = "NwS",
-    "Icelandic Waters" = "IS",
-    "Barents Sea" = "BrS",
-    "Greenland Sea" = "GS",
-    "Faroes" = "FO",
-    "Oceanic Northeast Atlantic" = "ONA",
-    "Azores" = "AZ",
-    NULL
-  )
 
-  # normalize empty results to NA
-  if (is.null(acr) || identical(acr, "")) NA_character_ else acr
-}
+#   # normalize empty results to NA
+#   if (is.null(acr) || identical(acr, "")) NA_character_ else acr
+# }
 
 DEFAULT_ECOREGION <- "Greater North Sea"
 #' Get active region acronym from subregion or ecoregion
