@@ -1,7 +1,7 @@
-## Module Release Checklist
+## ShinyApp Module Release Checklist
 
 ### Code development
-- [ ] @<responsible_person> Development/Review app/module code
+- [ ] @<responsible_person> Development module code
 
 ### Code review
 - [ ] @<reviewer_1> Code review on pull request
@@ -14,6 +14,7 @@
 
 ### Content Validation
 - [ ] @<responsible_person> Check data consistency and expected outputs
+- [ ] @<responsible_person> Make sure app's glossary is updated with relevant terms
 
 ### Deployment (Development)
 - [ ] @<responsible_person> Deploy to Dev server
