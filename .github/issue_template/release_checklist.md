@@ -1,7 +1,7 @@
-## ShinyApp Module Release Checklist
+## ShinyApp Module Release Operational Checklist
 
 ### Code development
-- [ ] @<responsible_person> Development module code
+- [ ] @<responsible_person> Development module code - in public GitHub repo - 
 
 ### Code review
 - [ ] @<reviewer_1> Code review on pull request
