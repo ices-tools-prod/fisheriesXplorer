@@ -3,10 +3,8 @@ mod_bycatch_ui <- function(id) {
 
   tagList(
     mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
-
     navset_tab(
       id = ns("bycatch_tabset"),
-
       nav_panel(
         "Bycatch per unit effort (BPUE)",
         value = "bpue",
@@ -79,7 +77,6 @@ mod_bycatch_ui <- function(id) {
           )
         )
       ),
-
       nav_panel(
         "Total bycatch",
         value = "total_bycatch",
@@ -160,8 +157,7 @@ mod_bycatch_server <- function(
     id,
     selected_ecoregion,
     bookmark_qs = reactive(NULL),
-    set_subtab = function(...) {}
-) {
+    set_subtab = function(...) {}) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -192,9 +188,12 @@ mod_bycatch_server <- function(
       }
     })
 
-    observeEvent(input$bycatch_tabset, {
-      set_subtab(input$bycatch_tabset)
-    }, ignoreInit = TRUE)
+    observeEvent(input$bycatch_tabset,
+      {
+        set_subtab(input$bycatch_tabset)
+      },
+      ignoreInit = TRUE
+    )
 
     ################################## header + glossary #########################################
 
@@ -248,12 +247,21 @@ mod_bycatch_server <- function(
       eco <- selected_ecoregion()
       req(eco)
 
-      tryCatch({
-        get_bycatch_ecoregion(eco) %>%
-          clean_bycatch_data()
-      }, error = function(e) {
-        data.frame()
-      })
+      out <- tryCatch(
+        {
+          raw <- get_bycatch_ecoregion(eco)
+          clean_bycatch_data(raw)
+        },
+        error = function(e) {
+          empty_bycatch_data()
+        }
+      )
+
+      if (!is.data.frame(out) || !"taxon" %in% names(out)) {
+        return(empty_bycatch_data())
+      }
+
+      out
     })
 
     ################################## selected taxa #########################################
@@ -292,51 +300,57 @@ mod_bycatch_server <- function(
 
     ################################## update filter dropdowns #########################################
 
-    observeEvent(bpue_base_data(), {
-      dat <- bpue_base_data()
+    observeEvent(bpue_base_data(),
+      {
+        dat <- bpue_base_data()
 
-      valid_metiers <- sort(unique(dat$metier_L4))
-      valid_species <- sort(unique(dat$common_name))
+        valid_metiers <- sort(unique(dat$metier_L4))
+        valid_species <- sort(unique(dat$common_name))
 
-      updateSelectizeInput(
-        session = session,
-        inputId = "bpue_metier_filter",
-        choices = valid_metiers,
-        selected = isolate(input$bpue_metier_filter[input$bpue_metier_filter %in% valid_metiers]),
-        server = TRUE
-      )
+        updateSelectizeInput(
+          session = session,
+          inputId = "bpue_metier_filter",
+          choices = valid_metiers,
+          selected = isolate(input$bpue_metier_filter[input$bpue_metier_filter %in% valid_metiers]),
+          server = TRUE
+        )
 
-      updateSelectizeInput(
-        session = session,
-        inputId = "bpue_species_filter",
-        choices = valid_species,
-        selected = isolate(input$bpue_species_filter[input$bpue_species_filter %in% valid_species]),
-        server = TRUE
-      )
-    }, ignoreInit = FALSE)
+        updateSelectizeInput(
+          session = session,
+          inputId = "bpue_species_filter",
+          choices = valid_species,
+          selected = isolate(input$bpue_species_filter[input$bpue_species_filter %in% valid_species]),
+          server = TRUE
+        )
+      },
+      ignoreInit = FALSE
+    )
 
-    observeEvent(total_bycatch_base_data(), {
-      dat <- total_bycatch_base_data()
+    observeEvent(total_bycatch_base_data(),
+      {
+        dat <- total_bycatch_base_data()
 
-      valid_metiers <- sort(unique(dat$metier_L4))
-      valid_species <- sort(unique(dat$common_name))
+        valid_metiers <- sort(unique(dat$metier_L4))
+        valid_species <- sort(unique(dat$common_name))
 
-      updateSelectizeInput(
-        session = session,
-        inputId = "bycatch_metier_filter",
-        choices = valid_metiers,
-        selected = isolate(input$bycatch_metier_filter[input$bycatch_metier_filter %in% valid_metiers]),
-        server = TRUE
-      )
+        updateSelectizeInput(
+          session = session,
+          inputId = "bycatch_metier_filter",
+          choices = valid_metiers,
+          selected = isolate(input$bycatch_metier_filter[input$bycatch_metier_filter %in% valid_metiers]),
+          server = TRUE
+        )
 
-      updateSelectizeInput(
-        session = session,
-        inputId = "bycatch_species_filter",
-        choices = valid_species,
-        selected = isolate(input$bycatch_species_filter[input$bycatch_species_filter %in% valid_species]),
-        server = TRUE
-      )
-    }, ignoreInit = FALSE)
+        updateSelectizeInput(
+          session = session,
+          inputId = "bycatch_species_filter",
+          choices = valid_species,
+          selected = isolate(input$bycatch_species_filter[input$bycatch_species_filter %in% valid_species]),
+          server = TRUE
+        )
+      },
+      ignoreInit = FALSE
+    )
 
     ################################## fully filtered data #########################################
 
