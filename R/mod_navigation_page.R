@@ -125,7 +125,24 @@ mod_navigation_page_ui <- function(id) {
                     div(class = "fx-tooltip", HTML("<strong>VMS</strong><br><br>Fishing Effort &amp; Swept Area Ratio (SAR)"))
                   )
                 )
+              ),
+              fluidRow(
+                column(
+                  6,
+                  align = "center",
+                  div(
+                    class = "image-button-wrap",
+                    actionLink(
+                      ns("bycatchBtn"),
+                      label = NULL, class = "image-button-link",
+                      style = "background-image: url('www/icons/bycatch.svg');",
+                      title = "Bycatch", `aria-label` = "Bycatch"
+                    ),
+                    div(class = "fx-tooltip", HTML("<strong>Bycatch</strong><br><br>Bycatch of mammals, seabirds, and elasmobranchs"))
+                  )
+                )
               )
+
             )
           )
         )
@@ -284,6 +301,7 @@ mod_navigation_page_server <- function(
     observeEvent(input$landingsBtn,   { updateNavbarPage(parent_session, "nav-page", selected = "landings") })
     observeEvent(input$stockStatusBtn,{ updateNavbarPage(parent_session, "nav-page", selected = "stock_status") })
     observeEvent(input$vmsBtn,{ updateNavbarPage(parent_session, "nav-page", selected = "vms") })
+    observeEvent(input$bycatchBtn,{ updateNavbarPage(parent_session, "nav-page", selected = "bycatch") })
   })
 }
 
