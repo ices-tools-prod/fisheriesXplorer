@@ -142,6 +142,113 @@ prepare_bycatch_plot_data <- function(df,
     )
 }
 
+# plot_bycatch_metric_interactive <- function(df,
+#                                             taxon,
+#                                             value_col,
+#                                             lower_col,
+#                                             upper_col,
+#                                             y_label,
+#                                             empty_title = "No data available",
+#                                             legend_title = "Metier level 4",
+#                                             palette = metier_palette) {
+
+#   data_subset <- prepare_bycatch_plot_data(
+#     df = df,
+#     taxa_selected = taxon,
+#     value_col = value_col,
+#     lower_col = lower_col,
+#     upper_col = upper_col
+#   )
+
+#   if (nrow(data_subset) == 0) {
+#     return(
+#       plotly::plot_ly() %>%
+#         plotly::layout(
+#           title = list(text = empty_title),
+#           xaxis = list(visible = FALSE),
+#           yaxis = list(visible = FALSE)
+#         )
+#     )
+#   }
+
+#   p <- ggplot(
+#     data_subset,
+#     aes(
+#       x = label_reordered,
+#       y = .data[[value_col]],
+#       fill = metier_L4,
+#       text = tooltip
+#     )
+#   ) +
+#     geom_linerange(
+#       aes(
+#         ymin = .data[[lower_col]],
+#         ymax = .data[[upper_col]]
+#       ),
+#       linewidth = 0.8,
+#       colour = "black"
+#     ) +
+#     geom_point(
+#       shape = 21,
+#       size = 4,
+#       stroke = 0.2,
+#       colour = "black"
+#     ) +
+#     facet_wrap(
+#       ~ taxon,
+#       ncol = 1,
+#       scales = "free_x",
+#       strip.position = "top"
+#     ) +
+#     tidytext::scale_x_reordered() +
+#     scale_fill_manual(
+#       values = palette,
+#       na.value = "grey70",
+#       name = legend_title
+#     ) +
+#     labs(
+#       x = "Metier level 4 and species",
+#       y = y_label
+#     ) +
+#     theme_classic(base_size = 13) +
+#     theme(
+#       # # 1) axis label spacing
+#       axis.title.x = element_text(margin = margin(t = 30)),
+#       axis.title.y = element_text(margin = margin(r = 30)),
+
+#       # 2) spacing between facets
+#       panel.spacing = unit(2, "lines"),
+
+#       # x tick labels
+#       axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+
+#       # 3) grid lines
+#       panel.grid.major = element_line(
+#         colour = "grey85",
+#         linewidth = 0.4
+#       ),
+#       panel.grid.minor = element_blank(),
+#       panel.grid.major.x = element_blank(), 
+#       strip.background = element_blank(),
+#       strip.placement = "outside",
+#       strip.text = element_text(hjust = 0)
+#     )
+
+#   n_taxa <- length(unique(data_subset$taxon))
+#   plot_height <- 100 + n_taxa * 300
+#   ggplotly(p, tooltip = "text", height = plot_height) %>%
+#     layout(
+#       # height = plot_height,
+#       margin = list(r = 150),
+#       legend = list(
+#         orientation = "h",
+#         y = 1.12, 
+#         x = .5, 
+#         xanchor = "center", 
+#         yanchor = "bottom"
+#       )
+#     )
+# }
 plot_bycatch_metric_interactive <- function(df,
                                             taxon,
                                             value_col,
@@ -190,15 +297,9 @@ plot_bycatch_metric_interactive <- function(df,
     ) +
     geom_point(
       shape = 21,
-      size = 3.5,
-      stroke = 0.5,
+      size = 4,
+      stroke = 0.2,
       colour = "black"
-    ) +
-    facet_wrap(
-      ~ taxon,
-      ncol = 1,
-      scales = "free_x",
-      strip.position = "top"
     ) +
     tidytext::scale_x_reordered() +
     scale_fill_manual(
@@ -210,25 +311,43 @@ plot_bycatch_metric_interactive <- function(df,
       x = "Metier level 4 and species",
       y = y_label
     ) +
-    theme_classic() +
+    theme_classic(base_size = 13) +
     theme(
+      axis.title.x = element_text(margin = margin(t = 20)),
+      axis.title.y = element_text(margin = margin(r = 20)),
       axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-      strip.background = element_blank(),
-      strip.placement = "outside",
-      strip.text = element_text(hjust = 0),
-      legend.position = "bottom"
+      panel.grid.major = element_line(
+        colour = "grey85",
+        linewidth = 0.4
+      ),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      legend.position = "top"
     )
 
   ggplotly(p, tooltip = "text") %>%
     layout(
+      autosize = TRUE,
+      margin = list(l = 110, r = 40, t = 90, b = 140),
       legend = list(
-        orientation = "v",
-        x = 1.02,
-        y = 0.5
+        orientation = "h",
+        y = 1.08,
+        x = 0.5,
+        xanchor = "center",
+        yanchor = "bottom"
+      ),
+      yaxis = list(
+        automargin = TRUE,
+        title = list(
+          text = y_label,
+          standoff = 20
+        )
+      ),
+      xaxis = list(
+        automargin = TRUE
       )
     )
 }
-
 
 
 plot_bpue_interactive <- function(df,
@@ -240,7 +359,7 @@ plot_bpue_interactive <- function(df,
     value_col = "bpuE_Numeric",
     lower_col = "bpuE_lower_CI_Numeric",
     upper_col = "bpuE_upper_CI_Numeric",
-    y_label = "Bycatch per unit effort - BPUE (individuals/DaS)",
+    y_label = "Bycatch per unit effort \n BPUE (individuals/DaS)",
     empty_title = "No BPUE data available",
     palette = palette
   )
@@ -255,7 +374,7 @@ plot_bycatch_interactive <- function(df,
     value_col = "bycatch_2024",
     lower_col = "bycatch_lower_CI",
     upper_col = "bycatch_upper_CI",
-    y_label = "Total Bycatch in 2024 (individuals)",
+    y_label = "Total Bycatch in 2024 \n (individuals)",
     empty_title = "No bycatch data available",
     palette = palette
   )

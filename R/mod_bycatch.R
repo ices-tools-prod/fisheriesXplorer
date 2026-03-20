@@ -23,11 +23,11 @@ mod_bycatch_ui <- function(id) {
                 card_header(
                   div(
                     style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
-                    checkboxGroupInput(
+                    radioButtons(
                       ns("bpue_taxa_selector"),
-                      "Select taxa:",
+                      "Select taxon:",
                       choices = c("Fish", "Elasmobranchs", "Seabirds", "Turtles", "Mammals"),
-                      selected = c("Mammals"),
+                      selected = "Mammals",
                       inline = TRUE
                     ),
                     download_icon_label(
@@ -68,7 +68,7 @@ mod_bycatch_ui <- function(id) {
                     )
                   ),
                   withSpinner(
-                    plotlyOutput(ns("bpue_plot"), height = "68vh"),
+                    plotlyOutput(ns("bpue_plot"), height = "85vh"),
                     caption = "Getting BPUE data..."
                   )
                 )
@@ -94,11 +94,11 @@ mod_bycatch_ui <- function(id) {
               card_header(
                 div(
                   style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
-                  checkboxGroupInput(
+                  radioButtons(
                     ns("bycatch_taxa_selector"),
-                    "Select taxa:",
+                    "Select taxon:",
                     choices = c("Fish", "Elasmobranchs", "Seabirds", "Turtles", "Mammals"),
-                    selected = c("Mammals"),
+                    selected = "Mammals",
                     inline = TRUE
                   ),
                   download_icon_label(
@@ -139,7 +139,7 @@ mod_bycatch_ui <- function(id) {
                   )
                 ),
                 withSpinner(
-                  plotlyOutput(ns("total_bycatch_plot"), height = "68vh"),
+                  plotlyOutput(ns("total_bycatch_plot"), height = "85vh"),
                   caption = "Getting total bycatch data..."
                 )
               )
