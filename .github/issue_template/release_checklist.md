@@ -5,7 +5,7 @@
 
 ### Code review
 - [ ] @<reviewer_1> Code review on pull request
-- [ ] @<reviewer_2> Code review on pull request
+- [ ] @<reviewer_2> TAF compliance
 
 ### Data Validation
 - [ ] @<responsible_person> Data profiling tool (DPT)
