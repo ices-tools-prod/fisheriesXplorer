@@ -23,9 +23,7 @@
 #'
 #' @export
 get_bycatch_ecoregion <- function(Ecoregion) {
-       
-        # EcoregionCode <- get_ecoregion_acronym(Ecoregion)
-        
+
         bycatch <- jsonlite::fromJSON(
                 URLencode(
                         sprintf("https://bycatch.ices.dk/API/GetAdviceResults?ecoregion=%s", Ecoregion)
