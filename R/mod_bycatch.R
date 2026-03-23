@@ -246,7 +246,7 @@ mod_bycatch_server <- function(
     bycatch_data <- reactive({
       eco <- selected_ecoregion()
       req(eco)
-
+      
       out <- tryCatch(
         {
           raw <- get_bycatch_ecoregion(eco)
