@@ -1,7 +1,6 @@
 # scripts/deploy_shinyapps.R
 
 library(rsconnect)
-library(desc)
 
 account <- Sys.getenv("SHINYAPPS_ACCOUNT")
 token   <- Sys.getenv("SHINYAPPS_TOKEN")
@@ -15,12 +14,13 @@ rsconnect::setAccountInfo(
   secret = secret
 )
 
-app_name <- desc::desc_get_field("Package")
+app_name <- "fisheriesXplorer"
 
 existing <- try(rsconnect::deployments("."), silent = TRUE)
 app_id <- if (inherits(existing, "try-error") || nrow(existing) == 0) NULL else existing$appID[1]
 
 rsconnect::deployApp(
+  appDir   = ".",
   appName  = app_name,
   appTitle = app_name,
   account  = account,
