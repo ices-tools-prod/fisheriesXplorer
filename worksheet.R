@@ -1165,3 +1165,29 @@ plot_bycatch_fish <- function(EcoR){
 }
 
 
+## find definititions of metiers using icesVocab
+test <- icesVocab::getCodeDetail("GearType", "OTB")
+metier_palette <- c(
+  "GTR" = "#e6ab02",
+  "LLD" = "#a6761d",
+  "OTB" = "#1b9e77",
+  "PS" = "#666666",
+  "PTM" = "#1f78b4", 
+  "GNS" ="#d95f02",
+  "LLS"="#66a61e", 
+  "FPO"="#b2df8a", 
+  "LHP"="#fb9a99", 
+  "FPN"="#fdbf6f",
+  "FYK"="#cab2d6",
+  "OTM"="#e7298a",
+  "SDN"="#ffff99",
+  "OTT"="#7570b3",
+  "GND"="#6a3d9a",
+  "GTN"="#ff7f00",
+  "LTL"="#b15928",
+  "PTB"="#8dd3c7",
+  "TBB"="#ffffb3",
+  "SSC"="#bebada",
+  "DRB"="#fb8072",
+  "LHM"="#80b1d3"
+)
