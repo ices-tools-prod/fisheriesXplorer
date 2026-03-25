@@ -97,8 +97,10 @@ mod_landings_ui <- function(id) {
               )
             ),
             card_body(
+              uiOutput(ns("guild_selector_ui")),
               withSpinner(
-                uiOutput(ns("landings_layer"), height = "65vh")
+                
+                plotlyOutput(ns("landings_layer"), height = "65vh")
               )
             )
           )
@@ -292,32 +294,118 @@ mod_landings_server <- function(
      })
    )
     
-    ################################## Landings plots #########################################
+    # ################################## Landings plots #########################################
 
-    output$landings_layer <- renderUI({
-      req(!is.null(input$landings_layer_selector))
+    # output$landings_layer <- renderUI({
+    #   req(!is.null(input$landings_layer_selector))
 
-      plotting_params <- list()
-      plotting_params$landings <- list(
-        "Common name" = list("n" = 10, type = "line"),
-        "Fisheries guild" = list("n" = 6, type = "line"),
-        "Country" = list("n" = 8, type = "line")
-      )
-      params <- plotting_params$landings[[input$landings_layer_selector]]
-      ecoregion <- selected_ecoregion()
-      acronym <- get_ecoregion_acronym(ecoregion)
-      rda_path <- paste0("./data/", acronym, ".rda")
-      load(rda_path)
-      fig <- plot_catch_trends_plotly(get(get_ecoregion_acronym(ecoregion)), type = input$landings_layer_selector, line_count = params$n, dataUpdated = "October, 2025", session = session, ecoregion = acronym) # %>%
+    #   plotting_params <- list()
+    #   plotting_params$landings <- list(
+    #     "Common name" = list("n" = 10, type = "line"),
+    #     "Fisheries guild" = list("n" = 6, type = "line"),
+    #     "Country" = list("n" = 8, type = "line")
+    #   )
+    #   params <- plotting_params$landings[[input$landings_layer_selector]]
+    #   ecoregion <- selected_ecoregion()
+    #   acronym <- get_ecoregion_acronym(ecoregion)
+    #   rda_path <- paste0("./data/", acronym, ".rda")
+    #   load(rda_path)
+    #   fig <- plot_catch_trends_plotly(get(get_ecoregion_acronym(ecoregion)), type = input$landings_layer_selector, line_count = params$n, dataUpdated = "October, 2025", session = session, ecoregion = acronym) # %>%
       
 
-      for (i in 1:length(fig$x$data)) {
-        if (!is.null(fig$x$data[[i]]$name)) {
-          fig$x$data[[i]]$name <- gsub("\\(", "", strsplit(fig$x$data[[i]]$name, ",")[[1]][1])
-        }
-      }
-      fig
-    })
+    #   for (i in 1:length(fig$x$data)) {
+    #     if (!is.null(fig$x$data[[i]]$name)) {
+    #       fig$x$data[[i]]$name <- gsub("\\(", "", strsplit(fig$x$data[[i]]$name, ",")[[1]][1])
+    #     }
+    #   }
+    #   fig
+    # })
+    ################################## Landings plots #########################################
+
+landings_data <- reactive({
+  ecoregion <- selected_ecoregion()
+  acronym <- get_ecoregion_acronym(ecoregion)
+  rda_path <- file.path("data", paste0(acronym, ".rda"))
+
+  e <- new.env(parent = emptyenv())
+  load(rda_path, envir = e)
+  get(acronym, envir = e)
+})
+
+available_guilds <- reactive({
+  dat <- landings_data()
+  names(dat) <- c(
+    "Year", "Country", "iso3", "Fisheries guild", "Ecoregion",
+    "Species name", "Species code", "Common name", "Value"
+  )
+
+  dat %>%
+    dplyr::filter(
+      !is.na(`Fisheries guild`),
+      `Fisheries guild` != "",
+      `Fisheries guild` != "undefined"
+    ) %>%
+    dplyr::pull(`Fisheries guild`) %>%
+    unique() %>%
+    sort()
+})
+
+output$guild_selector_ui <- renderUI({
+  req(input$landings_layer_selector)
+
+  if (identical(input$landings_layer_selector, "Common name")) {
+    guilds <- available_guilds()
+
+    selectizeInput(
+      ns("selected_guild"),
+      "Select fisheries guild:",
+      choices = guilds,
+      selected = guilds[1],
+      multiple = FALSE,
+      options = list(placeholder = "Choose a fisheries guild")
+    )
+  }
+})
+
+output$landings_layer <- renderPlotly({
+  req(input$landings_layer_selector)
+
+  plotting_params <- list(
+    "Common name" = list(n = 10),
+    "Fisheries guild" = list(n = 6),
+    "Country" = list(n = 8)
+  )
+
+  params <- plotting_params[[input$landings_layer_selector]]
+  ecoregion <- selected_ecoregion()
+  acronym <- get_ecoregion_acronym(ecoregion)
+
+  guild_filter <- NULL
+  if (identical(input$landings_layer_selector, "Common name")) {
+    req(input$selected_guild)
+    guild_filter <- input$selected_guild
+  }
+
+  fig <- plot_catch_trends_plotly(
+    x = landings_data(),
+    type = input$landings_layer_selector,
+    line_count = params$n,
+    selected_guild = guild_filter,
+    dataUpdated = "October, 2025",
+    session = session,
+    ecoregion = acronym
+  )
+
+  for (i in seq_along(fig$x$data)) {
+  nm <- fig$x$data[[i]]$name
+  if (!is.null(nm) && nm != "Total") {
+    fig$x$data[[i]]$name <- sub(",.*$", "", nm)
+    fig$x$data[[i]]$name <- gsub("\\(", "", fig$x$data[[i]]$name)
+  }
+}
+
+  fig
+})
 
     ############################### Download landings data bundle ###############################
     output$download_landings_data <- downloadHandler(
