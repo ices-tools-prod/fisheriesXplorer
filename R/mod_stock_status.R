@@ -152,6 +152,7 @@ mod_stock_status_ui <- function(id) {
                 radioButtons(ns("status_trend_selector"), "Select a fisheries guild:",
                   inline = TRUE,
                   choices = c(
+                    "All guilds" = "All",
                     "Benthic" = "benthic",
                     "Demersal" = "demersal",
                     "Elasmobranchs" = "elasmobranch",
@@ -439,10 +440,7 @@ mod_stock_status_server <- function(
 
 
     ################################## header + glossary #########################################
-    # output$ecoregion_label <- renderUI({
-    #   req(selected_ecoregion())
-    #   tags$span(tags$b("ICES ecoregion:"), " ", paste0(selected_ecoregion(), " (", get_ecoregion_acronym(selected_ecoregion()), ")"))
-    # })
+    
     output$ecoregion_label <- renderUI({
       eco <- selected_ecoregion()
       req(eco)
