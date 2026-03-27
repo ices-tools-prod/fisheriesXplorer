@@ -583,7 +583,7 @@ format_sag <- function(sag, sid){
 #'
 #' @export
 extract_custom_refpoint_choices <- function(sag_settings) {
-  sag_settings %>%
+  out <- sag_settings %>%
     dplyr::filter(settingKey == 51, SAGChartKey %in% c(3, 4)) %>%
     dplyr::transmute(
       AssessmentKey = as.integer(AssessmentKey),
@@ -599,13 +599,18 @@ extract_custom_refpoint_choices <- function(sag_settings) {
       names_from = SAGChartKey,
       values_from = settingValue,
       names_prefix = "choice_"
-    ) %>%
+    )
+
+  if (!"choice_3" %in% names(out)) out$choice_3 <- NA_character_
+  if (!"choice_4" %in% names(out)) out$choice_4 <- NA_character_
+
+  out %>%
     dplyr::mutate(
       choice_3 = as.integer(choice_3),
       choice_4 = as.integer(choice_4)
-    )
+    ) %>%
+    dplyr::select(AssessmentKey, choice_3, choice_4)
 }
-
 
 #' Apply proxy reference points to formatted SAG data
 #'
@@ -680,7 +685,7 @@ extract_custom_refpoint_choices <- function(sag_settings) {
 #' @export
 add_proxyRefPoints <- function(sag_formatted, sag_settings) {
   cust_choice <- extract_custom_refpoint_choices(sag_settings)
-
+  
   sag_formatted %>%
     dplyr::left_join(cust_choice, by = "AssessmentKey") %>%
     dplyr::mutate(
@@ -835,7 +840,7 @@ add_proxyRefPoints <- function(sag_formatted, sag_settings) {
 #'   select full_join case_when
 #' @noRd
 stockstatus_CLD_current_proxy <- function(x) {
-
+  
   # --- Ensure proxy columns exist
   for (nm in c("FMSY_is_proxy","FMSY_proxy_name","MSYB_is_proxy","MSYB_proxy_name")) {
     if (!nm %in% names(x)) x[[nm]] <- NA
@@ -1470,6 +1475,7 @@ plot_status_prop_pies <- function(
 #' @noRd
 plot_GES_pies <- function(x, y, return_data = FALSE, width_px = 800) {
   # --- Responsive sizes
+  
   base_size        <- max(14, min(20, round(width_px / 50)))
   caption_size     <- max(8, base_size - 2)
   value_label_size <- max(4, min(9, round(base_size / 3.0)))   # a bit larger than before
