@@ -910,8 +910,6 @@ stockstatus_CLD_current_proxy <- function(x) {
   df4
 }
 
-
-
 #' Compute stock-level and guild-mean trends with proxy reference points
 #'
 #' Builds a long-format time series of relative status metrics for each
