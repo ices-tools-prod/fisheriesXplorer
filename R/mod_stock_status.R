@@ -152,6 +152,7 @@ mod_stock_status_ui <- function(id) {
                 radioButtons(ns("status_trend_selector"), "Select a fisheries guild:",
                   inline = TRUE,
                   choices = c(
+                    "All guilds" = "All",
                     "Benthic" = "benthic",
                     "Demersal" = "demersal",
                     "Elasmobranchs" = "elasmobranch",
