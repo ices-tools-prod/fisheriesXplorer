@@ -45,7 +45,11 @@ jobs:
             gdal-bin \
             libgdal-dev \
             libgeos-dev \
-            libproj-dev
+            libproj-dev \
+            libgit2-dev \
+            libglpk-dev \
+            libnode-dev \
+            pandoc
 
       - name: Restore renv environment
         uses: r-lib/actions/setup-renv@v2
