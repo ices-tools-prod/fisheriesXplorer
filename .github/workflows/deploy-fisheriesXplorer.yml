@@ -55,11 +55,6 @@ jobs:
             libglpk-dev \
             libnode-dev
 
-      - name: Restore renv
-        uses: r-lib/actions/setup-renv@v2
-        with:
-          cache-version: 1
-
       - name: Install deploy dependencies
         run: Rscript -e 'install.packages(c("rsconnect","desc"), repos = "https://cloud.r-project.org")'
 
