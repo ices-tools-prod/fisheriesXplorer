@@ -38,7 +38,6 @@
 #' @importFrom bslib nav_spacer nav_item
 #' @noRd
 app_ui <- function(request) {
-  
   tagList(
     # External resources
     golem_add_external_resources(),
@@ -83,8 +82,7 @@ app_ui <- function(request) {
       tabPanel("Landings", value = "landings", mod_landings_ui("landings_1")),
       tabPanel("Stock status", value = "stock_status", mod_stock_status_ui("stock_status_1")),
       tabPanel("VMS", value = "vms", mod_vms_ui("vms_1")),
-      tabPanel("Bycatch", value = "bycatch", mod_bycatch_ui("bycatch_1")),
-      
+
       # push right
       bslib::nav_spacer(),
 
@@ -135,16 +133,19 @@ app_ui <- function(request) {
 #'
 #' Intended to be called once from \code{app_ui()}.
 #'
-#' @importFrom golem add_resource_path app_sys bundle_resources
+#' @importFrom golem add_resource_path bundle_resources
 #' @importFrom shiny tags includeHTML
 #' @importFrom shinyjs useShinyjs
 #' @noRd
 golem_add_external_resources <- function() {
-  add_resource_path("www", app_sys("app/www"))
+  add_resource_path("www", system.file("app/www", package = "fisheriesXplorer"))
   tags$head(
     tags$link(rel = "shortcut icon", href = "www/fishriesXplorer_PNG.png"),
-    includeHTML(("R/google-analytics.html")),
-    bundle_resources(path = app_sys("app/www"), app_title = "fisheriesXplorer"),
+    includeHTML(system.file("app/www/google-analytics.html", package = "fisheriesXplorer")),
+    bundle_resources(
+      path = system.file("app/www", package = "fisheriesXplorer"),
+      app_title = "fisheriesXplorer"
+    ),
     tags$style(HTML("#custom_slider .shiny-input-container { margin-top: 0px !important; }")),
     tags$script(HTML("
       document.addEventListener('DOMContentLoaded', function() {
@@ -160,5 +161,3 @@ golem_add_external_resources <- function() {
     shinyjs::useShinyjs()
   )
 }
-
-

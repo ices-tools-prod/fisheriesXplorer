@@ -20,21 +20,25 @@ existing <- try(rsconnect::deployments("."), silent = TRUE)
 app_id <- if (inherits(existing, "try-error") || nrow(existing) == 0) NULL else existing$appID[1]
 
 rsconnect::deployApp(
-  appDir   = ".",
-  appName  = app_name,
-  appTitle = app_name,
-  account  = account,
-  server   = "shinyapps.io",
-  appFiles = c(
+  appDir    = ".",
+  appName   = app_name,
+  appTitle  = desc::desc_get_field("Package"),
+  account   = account,
+  server    = "shinyapps.io",
+  appFiles  = c(
+    "app.R",
+    "DESCRIPTION",
+    "NAMESPACE",
+    "renv.lock",
+    ".Rbuildignore",
+    ".renvignore",
     "R/",
     "inst/",
     "data/",
-    "NAMESPACE",
-    "DESCRIPTION",
-    "app.R",
-    "renv.lock"
+    "man/"
   ),
-  appId = app_id,
-  lint = FALSE,
-  forceUpdate = TRUE
+  appId     = app_id,
+  lint      = FALSE,
+  forceUpdate = TRUE,
+  logLevel  = "verbose"
 )
