@@ -1,0 +1,12 @@
+^dev/
+^data-raw/
+^modules_in_development/
+^tests/
+^vignettes/
+^pkgdown/
+^docs/
+^man/
+^\.github/
+^README\.Rmd$
+^cran-comments\.md$
+^worksheet\.R$
