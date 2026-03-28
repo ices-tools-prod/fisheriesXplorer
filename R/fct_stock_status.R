@@ -1151,7 +1151,6 @@ stock_trends_proxy <- function(x) {
 #' for internal use by the Shiny app to display an appropriate fish
 #' illustration for a stock.
 #'
-#' @importFrom base sapply substr
 #' @noRd
 match_stockcode_to_illustration <- function(StockKeyLabel, df) {
         sapply(StockKeyLabel, function(key) {

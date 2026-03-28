@@ -1,44 +1,33 @@
-
 #' Floating, non-blocking glossary panel (UI)
 #'
-#' Adds a right-side **floating panel** that stays hidden until opened via a
-#' “Glossary” link. The panel overlays the app **without blocking** interaction
-#' and contains a searchable/filterable **reactable** table of glossary terms.
-#' The panel body scrolls vertically; the header remains fixed.
+#' Adds a right-side floating panel that stays hidden until opened via a
+#' glossary link. The panel overlays the app without blocking interaction
+#' and contains a searchable, filterable reactable table of glossary terms.
+#' The panel body scrolls vertically and the header remains fixed.
 #'
-#' This UI relies on CSS rules for the `.glossary-float` container
-#' (recommended to place in `www/styles.css`) to control responsive sizing and
-#' typography. By default, the panel is closed on load (`display: none`) and is
-#' opened by the inline JS in this UI (set to `display: flex`).
+#' This UI relies on CSS rules for the \code{.glossary-float} container,
+#' typically placed in \code{www/styles.css}, to control responsive sizing
+#' and typography. By default, the panel is closed on load
+#' (\code{display: none}) and is opened by the inline JavaScript in this UI
+#' (\code{display: flex}).
 #'
 #' @param id Module ID (string). Passed to \code{\link[shiny]{NS}} for namespacing.
-#' @param link_text Text shown in the trigger link (default: "Glossary").
-#' @param panel_title Title shown in the panel header (default: "Glossary").
+#' @param link_text Text shown in the trigger link. Default is \code{"Glossary"}.
+#' @param panel_title Title shown in the panel header. Default is \code{"Glossary"}.
 #'
 #' @details
-#' **Styling**
+#' Recommended CSS for the floating panel should be placed in
+#' \code{www/styles.css}, not inside this documentation block.
 #'
-#' Add responsive styles for the container to `www/styles.css`, e.g.:
-#' \preformatted{
-#' .glossary-float{ display:none; position:fixed; right:20px; top:80px; z-index:2000;
-#'   background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.2);
-#'   overflow:hidden; display:flex; flex-direction:column;
-#'   width:clamp(360px, 38vw, 780px); max-height:42vh; font-size:clamp(12px,1.4vw,14px);
-#' }
-#' @media (max-width:576px){ .glossary-float{ right:8px; top:8px; width:min(96vw,560px); max-height:70vh; } }
-#' }
+#' The panel opens with a click on the glossary link and closes with the
+#' close button or the Escape key. The app remains usable, including
+#' scrolling, while the panel is open. The panel can also be repositioned
+#' by dragging the header.
 #'
-#' **Behavior**
+#' If preferred, the inline JavaScript can be replaced by a small external
+#' script that toggles an \code{is-open} class via data attributes.
 #'
-#' - Panel opens with a click on the “Glossary” link and closes with the “×” or the
-#'   Escape key.
-#' - The app remains usable, including scrolling, while the panel is open.
-#' - The panel can be repositioned by dragging the header (basic mouse-drag logic).
-#'
-#' If you prefer zero inline JS, you can switch to a small external script that toggles
-#' an `is-open` class via `data-g-open`/`data-g-close` attributes. (See notes in server docs.)
-#'
-#' @return A UI fragment (tagList) to include in your Shiny UI.
+#' @return A UI fragment (\code{tagList}) to include in the Shiny UI.
 #'
 #' @examples
 #' \dontrun{

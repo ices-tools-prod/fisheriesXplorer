@@ -8,14 +8,15 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     environment: ${{ github.ref_name == 'release' && 'prod' || 'dev' }}
 
     env:
       CI: "true"
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
-      SHINYAPPS_TOKEN:   ${{ secrets.SHINYAPPS_TOKEN }}
-      SHINYAPPS_SECRET:  ${{ secrets.SHINYAPPS_SECRET }}
+      SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+      SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
 
     steps:
       - name: Checkout repository
@@ -24,7 +25,11 @@ jobs:
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
         with:
-          r-version: '4.4.3'
+          r-version: "4.4.3"
+          use-public-rspm: true
+
+      - name: Setup pandoc
+        uses: r-lib/actions/setup-pandoc@v2
 
       - name: System dependencies
         run: |
@@ -48,14 +53,20 @@ jobs:
             libproj-dev \
             libgit2-dev \
             libglpk-dev \
-            libnode-dev \
-            pandoc
+            libnode-dev
 
-      - name: Restore renv environment
+      - name: Restore renv
         uses: r-lib/actions/setup-renv@v2
+        with:
+          cache-version: 1
 
       - name: Install deploy dependencies
-        run: Rscript -e 'install.packages(c("rsconnect","desc"), repos="https://cloud.r-project.org")'
+        run: Rscript -e 'install.packages(c("rsconnect","desc"), repos = "https://cloud.r-project.org")'
+
+      - name: Debug repositories
+        run: |
+          Rscript -e 'print(getOption("repos"))'
+          Rscript -e 'if (file.exists("renv.lock")) cat(readLines("renv.lock"), sep = "\n")' | head -200
 
       - name: Deploy fisheriesXplorer
         run: Rscript scripts/deploy_shinyapps.R
