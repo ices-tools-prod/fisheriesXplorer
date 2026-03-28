@@ -63,10 +63,8 @@ jobs:
       - name: Install deploy dependencies
         run: Rscript -e 'install.packages(c("rsconnect","desc"), repos = "https://cloud.r-project.org")'
 
-      - name: Debug repositories
-        run: |
-          Rscript -e 'print(getOption("repos"))'
-          Rscript -e 'if (file.exists("renv.lock")) cat(readLines("renv.lock"), sep = "\n")' | head -200
+      - name: Verify package installs
+        run: Rscript -e 'install.packages(".", repos = NULL, type = "source")'
 
       - name: Deploy fisheriesXplorer
         run: Rscript scripts/deploy_shinyapps.R
