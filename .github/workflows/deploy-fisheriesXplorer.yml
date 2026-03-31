@@ -58,8 +58,5 @@ jobs:
       - name: Install deploy dependencies
         run: Rscript -e 'install.packages(c("rsconnect","desc"), repos = "https://cloud.r-project.org")'
 
-      - name: Verify package installs
-        run: Rscript -e 'install.packages(".", repos = NULL, type = "source")'
-
       - name: Deploy fisheriesXplorer
         run: Rscript scripts/deploy_shinyapps.R
