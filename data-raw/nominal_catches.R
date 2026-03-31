@@ -515,7 +515,7 @@ format_catches <- function(year, ecoregion, historical, official, preliminary = 
 
 
 ################### Getting data from ICES ###################
-sid <- icesSD::getSD(NULL, 2025)
+sid <- icesSD::getSD(NULL, as.numeric(format(Sys.Date(), "%Y")))
 
 fish_category <- dplyr::mutate(sid, X3A_CODE = substr(sid$StockKeyLabel, start = 1, stop = 3))
 fish_category <- dplyr::select(fish_category, X3A_CODE, FisheriesGuild)
@@ -542,7 +542,7 @@ for (ecoregion in ecoregions) {
         acronym <- get_ecoregion_acronym(ecoregion)
         mkdir(paste0("./data-raw/", acronym))
 
-        catch_dat <- format_catches(2025, ecoregion, hist, official, NULL, species_list, sid)
+        catch_dat <- format_catches(as.numeric(format(Sys.Date(), "%Y")), ecoregion, hist, official, NULL, species_list, sid)
     
 
         catch_dat$COUNTRY[which(catch_dat$COUNTRY == "Russian Federation")] <- "Russia"
