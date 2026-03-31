@@ -1,5 +1,3 @@
-# scripts/deploy_shinyapps.R
-
 library(rsconnect)
 library(desc)
 
