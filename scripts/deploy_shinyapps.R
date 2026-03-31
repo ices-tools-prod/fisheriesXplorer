@@ -1,5 +1,3 @@
-# scripts/deploy_shinyapps.R
-
 library(rsconnect)
 library(desc)
 
@@ -30,16 +28,14 @@ rsconnect::deployApp(
     "app.R",
     "DESCRIPTION",
     "NAMESPACE",
-    "renv.lock",
     ".Rbuildignore",
     ".renvignore",
     "R/",
     "inst/",
-    "data/",
-    "man/"
+    "data/"
   ),
-  appId     = app_id,
-  lint      = FALSE,
+  appId       = app_id,
+  lint        = FALSE,
   forceUpdate = TRUE,
-  logLevel  = "verbose"
+  logLevel    = "verbose"
 )

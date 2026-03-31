@@ -17,6 +17,7 @@ jobs:
       SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
       SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
       SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+      RSCONNECT_PACKRAT: "TRUE"
 
     steps:
       - name: Checkout repository
@@ -56,7 +57,10 @@ jobs:
             libnode-dev
 
       - name: Install deploy dependencies
-        run: Rscript -e 'install.packages(c("rsconnect","desc"), repos = "https://cloud.r-project.org")'
+        run: Rscript -e 'install.packages(c("rsconnect","desc","remotes"), repos = "https://cloud.r-project.org")'
+
+      - name: Install app dependencies from DESCRIPTION
+        run: Rscript -e 'remotes::install_deps(dependencies = FALSE, repos = "https://cloud.r-project.org")'
 
       - name: Deploy fisheriesXplorer
         run: Rscript scripts/deploy_shinyapps.R
