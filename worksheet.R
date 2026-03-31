@@ -1012,3 +1012,8 @@ show_shinyapps_logs(appName = "fisheriesXplorer", account = "ices-tools-dev", se
 
 rsconnect::showLogs(appName = "fisheriesXplorer", account = "ices-tools-dev", server = "shinyapps.io",entries = 200)
 rsconnect::accountInfo("ices-tools-dev")
+
+
+renv::deactivate()
+renv::activate()
+renv::restore()
