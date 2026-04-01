@@ -178,13 +178,15 @@ plot_sar_map_app <- function(sar_data, ecoregion_name, ecoregion_shape, land_sha
 
 #' Generate filename for vms download bundle
 #'
-#' @param selected_ecoregion 
-#' @param vms_layer 
+#' @param selected_ecoregion A reactive or function returning the selected ecoregion.
+#' @param vms_layer Character string such as "effort" or "sar".
 #'
-#' @returns character
+#' @return A function that generates the zip filename.
+#' @export
 #'
 #' @examples
-#' vms_bundle_filename("Greater North Sea", "effort")
+#' selected_ecoregion <- function() "Greater North Sea"
+#' vms_bundle_filename(selected_ecoregion, "effort")()
 vms_bundle_filename <- function(selected_ecoregion, vms_layer) {
   function() {
     ecoregion <- selected_ecoregion()
@@ -210,8 +212,16 @@ vms_bundle_content <- function(selected_ecoregion, vms_layer) {
     # date_tag <- format(Sys.Date(), "%d-%b-%y")
     
     # --- 1) zipped shapefiles (with acronym + date)
-    shp_zip_path <- file.path("data/", paste0("vms_", vms_layer ,"_", acronym, ".zip"))
-    
+    # shp_zip_path <- file.path("data/", paste0("vms_", vms_layer ,"_", acronym, ".zip"))
+    shp_zip_path <- system.file(
+      "extdata",
+      paste0("vms_", vms_layer, "_", acronym, ".zip"),
+      package = "fisheriesXplorer"
+    )
+
+    if (shp_zip_path == "") {
+      stop("Could not find shapefile zip for ", acronym, " and layer ", vms_layer)
+    }
     
     # --- 2) Disclaimer.txt (fixed name; no acronym/date)
     # --- Temp workspace

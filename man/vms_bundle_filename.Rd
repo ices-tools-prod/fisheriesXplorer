@@ -7,16 +7,17 @@
 vms_bundle_filename(selected_ecoregion, vms_layer)
 }
 \arguments{
-\item{selected_ecoregion}{}
+\item{selected_ecoregion}{A reactive or function returning the selected ecoregion.}
 
-\item{vms_layer}{}
+\item{vms_layer}{Character string such as "effort" or "sar".}
 }
 \value{
-character
+A function that generates the zip filename.
 }
 \description{
 Generate filename for vms download bundle
 }
 \examples{
-vms_bundle_filename("Greater North Sea", "effort")
+selected_ecoregion <- function() "Greater North Sea"
+vms_bundle_filename(selected_ecoregion, "effort")()
 }
