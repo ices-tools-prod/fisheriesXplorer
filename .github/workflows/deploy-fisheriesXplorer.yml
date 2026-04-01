@@ -54,8 +54,17 @@ jobs:
             libgit2-dev \
             libglpk-dev \
             libnode-dev
+      
+      - name: Setup renv
+        uses: r-lib/actions/setup-renv@v2
 
-      - name: Install deploy dependencies
+      - name: Session info
+        run: Rscript -e 'sessionInfo(); cat("\nRepos:\n"); print(getOption("repos"))'
+
+      - name: Check renv status
+        run: Rscript -e 'renv::status()'
+
+      - name: Install deploy tools
         run: Rscript -e 'install.packages(c("rsconnect","desc"), repos = "https://cloud.r-project.org")'
 
       - name: Show app dependencies
