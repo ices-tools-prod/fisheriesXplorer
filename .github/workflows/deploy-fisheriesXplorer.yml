@@ -47,7 +47,7 @@ jobs:
             libgeos-dev \
             libproj-dev
 
-      - name: Restore renv environment
+      - name: Restore renv packages
         uses: r-lib/actions/setup-renv@v2
 
       - name: Install deploy dependencies
