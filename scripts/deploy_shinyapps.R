@@ -26,13 +26,14 @@ print(rsconnect::appDependencies(appDir = "."))
 rsconnect::writeManifest(appDir = ".")
 
 rsconnect::deployApp(
-  appDir      = ".",
-  appName     = app_name,
-  appTitle    = desc::desc_get_field("Package"),
-  account     = account,
-  server      = "shinyapps.io",
-  appId       = app_id,
-  lint        = FALSE,
-  forceUpdate = TRUE,
-  logLevel    = "verbose"
+  appDir        = ".",
+  appName       = app_name,
+  appTitle      = desc::desc_get_field("Package"),
+  account       = account,
+  server        = "shinyapps.io",
+  appId         = app_id,
+  lint          = FALSE,
+  forceUpdate   = TRUE,
+  logLevel      = "verbose",
+  manifestPath  = "manifest.json"
 )
