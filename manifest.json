@@ -2083,7 +2083,7 @@
         "Date": "2020-08-24",
         "Title": "Functions to support the creation of ICES Fisheries Overviews",
         "Authors@R": "c(person(\"Adriana\", \"Villamor\", role=c(\"aut\",\"cre\"), email=\"adriana.villamor@ices.dk\"),\n             person(\"Colin\", \"Millar\", role=\"aut\"),\n             person(\"Colm\", \"Lordan\", role=\"aut\"),\n             person(\"Youen\", \"Vermard\", role=\"aut\"),\n             person(\"Scott\", \"Large\", role=\"aut\"),\n             person(\"Sarah\", \"Millar\", role=\"ctb\"))",
-        "Imports": "jsonlite, countrycode, flextable, forcats, ggplot2, ggrepel,\nggthemes, icesSAG, officer, plyr, dplyr, purrr, scales, tibble,\ntidyr, sf, data.table, fields, rnaturalearth, httr",
+        "Imports": "jsonlite, countrycode, flextable, forcats, ggplot2, ggrepel,\nggthemes, officer, plyr, dplyr, purrr, scales, tibble,\ntidyr, sf, data.table, fields, rnaturalearth, httr",
         "Description": "Functions to support the creation of ICES Fisheries\n        Overviews.",
         "License": "GPL (>= 2)",
         "Encoding": "UTF-8",
