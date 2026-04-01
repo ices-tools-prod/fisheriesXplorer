@@ -3280,35 +3280,6 @@
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
     },
-    "icesConnect": {
-      "Package": "icesConnect",
-      "Version": "1.2.0",
-      "Source": "unknown",
-      "Title": "Provides User Tokens for Access to ICES Web Services",
-      "Authors@R": "person(given = \"Colin\", family = \"Millar\", role = c(\"aut\", \"cre\"), email = \"colin.millar@ices.dk\")",
-      "Description": "Provides user tokens for ICES web services that require authentication and authorization.  Web services covered by this package are ICES VMS database, the ICES DATSU web services, and the ICES SharePoint site <https://www.ices.dk/data/tools/Pages/WebServices.aspx>.",
-      "Imports": [
-        "httr",
-        "base64enc",
-        "jsonlite"
-      ],
-      "License": "GPL-3",
-      "Encoding": "UTF-8",
-      "Roxygen": "list(markdown = TRUE)",
-      "RoxygenNote": "7.3.2",
-      "URL": "https://www.ices.dk/data/tools/Pages/WebServices.aspx, https://github.com/ices-tools-prod/icesConnect",
-      "BugReports": "https://github.com/ices-tools-prod/icesConnect/issues",
-      "Language": "en-GB",
-      "Config/pak/sysreqs": "libssl-dev",
-      "Repository": "https://ices-tools-prod.r-universe.dev",
-      "NeedsCompilation": "no",
-      "Author": "Colin Millar [aut, cre]",
-      "Maintainer": "Colin Millar <colin.millar@ices.dk>",
-      "RemoteType": "unknown",
-      "RemoteUrl": "https://github.com/ices-tools-prod/icesConnect",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "c5885429394b22190ab02eb9d30eafa77a5f48e5"
-    },
     "icesDatsu": {
       "Package": "icesDatsu",
       "Version": "1.2.1",
@@ -3495,41 +3466,6 @@
       "Author": "Colin Millar [aut, cre]",
       "Maintainer": "Colin Millar <colin.millar@ices.dk>",
       "Repository": "CRAN"
-    },
-    "icesVMS": {
-      "Package": "icesVMS",
-      "Version": "1.1.6",
-      "Source": "unknown",
-      "Title": "Link to the ICES Vessel Monitoring System and Logbook Database Web Services",
-      "Authors@R": "c(person(\"Colin\", \"Millar\", role=c(\"aut\",\"cre\"), email=\"colin.millar@ices.dk\"), person(\"Carlos\", \"Pinto\", role=\"ctb\"))",
-      "Imports": [
-        "glue",
-        "httr",
-        "icesConnect (>= 1.0.0)",
-        "icesVocab",
-        "icesDatsuQC (>= 1.1.0)"
-      ],
-      "Suggests": [
-        "sf"
-      ],
-      "Description": "Links to the ICES Vessel Monitoring System (VMS) and logbook database web services <https://data.ices.dk/vms/webservices> to allow users to download summaries and data products.",
-      "License": "GPL (>= 2)",
-      "URL": "https://data.ices.dk/vms, https://github.com/ices-tools-prod/icesVMS",
-      "Encoding": "UTF-8",
-      "RoxygenNote": "7.3.2",
-      "Depends": [
-        "R (>= 4.0)"
-      ],
-      "BugReports": "https://github.com/ices-tools-prod/icesVMS/issues",
-      "Config/pak/sysreqs": "libssl-dev",
-      "Repository": "https://ices-tools-prod.r-universe.dev",
-      "NeedsCompilation": "no",
-      "Author": "Colin Millar [aut, cre], Carlos Pinto [ctb]",
-      "Maintainer": "Colin Millar <colin.millar@ices.dk>",
-      "RemoteType": "unknown",
-      "RemoteUrl": "https://github.com/ices-tools-prod/icesVMS",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "fae284555597a7876669c2b939f04da13d20f2aa"
     },
     "icesVocab": {
       "Package": "icesVocab",
