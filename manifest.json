@@ -4,9 +4,9 @@
   "platform": "4.4.3",
   "metadata": {
     "appmode": "shiny",
-    "primary_rmd": null,
-    "primary_html": null,
-    "content_category": null,
+    "primary_rmd": {},
+    "primary_html": {},
+    "content_category": {},
     "has_parameters": false
   },
   "environment": {
@@ -2074,39 +2074,6 @@
         "Built": "R 4.4.3; ; 2026-03-23 03:41:38 UTC; windows"
       }
     },
-    "icesDatsu": {
-      "Source": "CRAN",
-      "Repository": "https://ices-tools-prod.r-universe.dev",
-      "description": {
-        "Package": "icesDatsu",
-        "Version": "1.2.1",
-        "Title": "Functions to Interact with the ICES Data Submission Utility\n(DATSU)",
-        "Authors@R": "c(person(\"Colin\", \"Millar\", role=c(\"aut\",\"cre\"), email=\"colin.millar@ices.dk\"),\n             person(\"Carlos\", \"Pinto\", role=\"aut\"),\n             person(\"Laura Andreea\", \"Petre\", role = \"aut\"))",
-        "Description": "Functions to Interact with the ICES Data Submission Utility (DATSU)\n  <https://datsu.ices.dk/web/index.aspx>.",
-        "License": "GPL (>= 2)",
-        "RoxygenNote": "7.3.2",
-        "Suggests": "knitr, rmarkdown",
-        "Imports": "icesConnect (>= 1.1.4), httr, jsonlite, memoise, cachem, rlang",
-        "Encoding": "UTF-8",
-        "URL": "https://datsu.ices.dk/web/index.aspx,\nhttps://github.com/ices-tools-prod/icesDatsu",
-        "BugReports": "https://github.com/ices-tools-prod/icesDatsu/issues",
-        "Language": "en-GB",
-        "NeedsCompilation": "no",
-        "Packaged": "2025-05-02 12:30:20 UTC; colin",
-        "Author": "Colin Millar [aut, cre],\n  Carlos Pinto [aut],\n  Laura Andreea Petre [aut]",
-        "Maintainer": "Colin Millar <colin.millar@ices.dk>",
-        "Repository": "CRAN",
-        "Date/Publication": "2025-05-02 14:30:18 UTC",
-        "Built": "R 4.4.3; ; 2026-03-27 20:48:49 UTC; windows",
-        "RemoteType": "standard",
-        "RemoteRef": "icesDatsu",
-        "RemotePkgRef": "icesDatsu",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemoteReposName": "CRAN",
-        "RemotePkgPlatform": "x86_64-w64-mingw32",
-        "RemoteSha": "1.2.1"
-      }
-    },
     "icesFO": {
       "Source": "ICES",
       "Repository": "https://ices-tools-prod.r-universe.dev",
@@ -2132,40 +2099,6 @@
         "Author": "Adriana Villamor [aut, cre],\n  Colin Millar [aut],\n  Colm Lordan [aut],\n  Youen Vermard [aut],\n  Scott Large [aut],\n  Sarah Millar [ctb]",
         "Maintainer": "Adriana Villamor <adriana.villamor@ices.dk>",
         "Built": "R 4.4.3; ; 2026-03-28 14:31:13 UTC; windows"
-      }
-    },
-    "icesSAG": {
-      "Source": "CRAN",
-      "Repository": "https://ices-tools-prod.r-universe.dev",
-      "description": {
-        "Package": "icesSAG",
-        "Version": "1.6.2",
-        "Title": "Stock Assessment Graphs Database Web Services",
-        "Authors@R": "c(person(\"Colin\", \"Millar\", role=c(\"aut\",\"cre\"), email=\"colin.millar@ices.dk\"),\n             person(\"Scott\", \"Large\", role=\"aut\"),\n             person(\"Arni\", \"Magnusson\", role=\"aut\"),\n             person(\"Carlos\", \"Pinto\", role=\"aut\"),\n             person(\"Laura Andreea\", \"Petre\", role = \"aut\"))",
-        "Depends": "R (>= 4.3)",
-        "Imports": "httr, xml2, icesConnect (>= 1.1.4), icesDatsu (>= 1.2.1),\nmemoise, cachem, rlang",
-        "Suggests": "testthat, icesVocab",
-        "Description": "R interface to access the web services of the ICES Stock Assessment\n             Graphs database <https://sg.ices.dk>.",
-        "License": "GPL (>= 2)",
-        "URL": "https://sg.ices.dk, https://github.com/ices-tools-prod/icesSAG",
-        "BugReports": "https://github.com/ices-tools-prod/icesSAG/issues",
-        "RoxygenNote": "7.3.2",
-        "Encoding": "UTF-8",
-        "Language": "en-GB",
-        "NeedsCompilation": "no",
-        "Packaged": "2025-05-03 12:15:59 UTC; colin",
-        "Author": "Colin Millar [aut, cre],\n  Scott Large [aut],\n  Arni Magnusson [aut],\n  Carlos Pinto [aut],\n  Laura Andreea Petre [aut]",
-        "Maintainer": "Colin Millar <colin.millar@ices.dk>",
-        "Repository": "CRAN",
-        "Date/Publication": "2025-05-03 12:30:01 UTC",
-        "Built": "R 4.4.3; ; 2026-04-01 14:09:03 UTC; windows",
-        "RemoteType": "standard",
-        "RemoteRef": "icesSAG",
-        "RemotePkgRef": "icesSAG",
-        "RemoteRepos": "https://cloud.r-project.org",
-        "RemoteReposName": "CRAN",
-        "RemotePkgPlatform": "source",
-        "RemoteSha": "1.6.2"
       }
     },
     "isoband": {
@@ -6213,5 +6146,5 @@
       "checksum": "10d1d17d3ea5d5809df8d6db059fc518"
     }
   },
-  "users": null
+  "users": {}
 }
