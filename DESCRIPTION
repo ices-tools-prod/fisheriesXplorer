@@ -26,6 +26,7 @@ Imports:
     magrittr,
     plotly,
     plyr,
+    pkgload,
     ragg,
     reactable,
     scales,
@@ -38,7 +39,7 @@ Imports:
     tibble,
     tidyr,
     zip
-Suggests: pkgload,
+Suggests: 
           usethis
 Encoding: UTF-8
 LazyData: true
