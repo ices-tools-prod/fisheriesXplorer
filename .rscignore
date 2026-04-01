@@ -1,3 +1,7 @@
+.github
+scripts
+worksheet.R
+modules_in_development
+renv
 renv.lock
-renv/
 .Rprofile

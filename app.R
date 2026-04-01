@@ -2,5 +2,6 @@
 # To deploy, run: rsconnect::deployApp()
 # Or use the blue button on top of this file
 
+pkgload::load_all(export_all = FALSE, helpers = FALSE)
 options("golem.app.prod" = TRUE)
-fisheriesXplorer::run_app()
+run_app()

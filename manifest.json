@@ -4576,7 +4576,7 @@
       "checksum": "ff04294cca37aa1f04a2bea28e7075f9"
     },
     ".github/workflows/deploy-fisheriesXplorer.yml": {
-      "checksum": "511d3ba213adfbde80378b0c287b6947"
+      "checksum": "561235d73ed3c19c036a8447a081bb34"
     },
     ".Rbuildignore": {
       "checksum": "8583b2b60fd80aa922fd1301f88174b9"
@@ -4585,7 +4585,7 @@
       "checksum": "3be98773dc7353e90ab3535d0e9fae32"
     },
     ".Rprofile": {
-      "checksum": "d899847772f836d08891ad5dc463c4bf"
+      "checksum": "20838216fbd53a9299731eeaa6b63448"
     },
     "app.R": {
       "checksum": "5c2f1b3b07faa83c605e915338179d42"
@@ -5848,7 +5848,7 @@
       "checksum": "16e530b17525183c43a031e3ff6e34fe"
     },
     "scripts/deploy_shinyapps.R": {
-      "checksum": "1733e30961fe605beb09549d571e3eee"
+      "checksum": "0832b15e5db1903cd774d51f46bfb4dc"
     },
     "worksheet.R": {
       "checksum": "02993bcd42c032088a1f7f468d588431"

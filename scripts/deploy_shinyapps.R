@@ -16,11 +16,7 @@ rsconnect::setAccountInfo(
 app_name <- "fisheriesxplorer"
 
 existing <- try(rsconnect::deployments("."), silent = TRUE)
-app_id <- if (inherits(existing, "try-error") || nrow(existing) == 0) {
-  NULL
-} else {
-  existing$appId[1]
-}
+app_id <- if (inherits(existing, "try-error") || nrow(existing) == 0) NULL else existing$appId[1]
 
 rsconnect::deployApp(
   appDir      = ".",
