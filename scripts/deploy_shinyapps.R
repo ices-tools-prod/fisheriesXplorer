@@ -16,24 +16,21 @@ rsconnect::setAccountInfo(
 app_name <- "fisheriesxplorer"
 
 existing <- try(rsconnect::deployments("."), silent = TRUE)
-app_id <- if (inherits(existing, "try-error") || nrow(existing) == 0) NULL else existing$appID[1]
+app_id <- if (inherits(existing, "try-error") || nrow(existing) == 0) {
+  NULL
+} else {
+  existing$appId[1]
+}
+
+print(rsconnect::appDependencies(appDir = "."))
+rsconnect::writeManifest(appDir = ".")
 
 rsconnect::deployApp(
-  appDir    = ".",
-  appName   = app_name,
-  appTitle  = desc::desc_get_field("Package"),
-  account   = account,
-  server    = "shinyapps.io",
-  appFiles  = c(
-    "app.R",
-    "DESCRIPTION",
-    "NAMESPACE",
-    ".Rbuildignore",
-    ".renvignore",
-    "R/",
-    "inst/",
-    "data/"
-  ),
+  appDir      = ".",
+  appName     = app_name,
+  appTitle    = desc::desc_get_field("Package"),
+  account     = account,
+  server      = "shinyapps.io",
   appId       = app_id,
   lint        = FALSE,
   forceUpdate = TRUE,
