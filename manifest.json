@@ -4888,6 +4888,17 @@
         "Built": "R 4.4.3; x86_64-w64-mingw32; 2026-03-23 01:53:15 UTC; windows",
         "Archs": "x64"
       }
+    },
+    "icesConnect": {
+      "Source": "CRAN",
+      "Repository": "https://ices-tools-prod.r-universe.dev",
+      "description": {
+        "Package": "icesConnect",
+        "Version": "1.2.0",
+        "Imports": "httr, base64enc, jsonlite",
+        "NeedsCompilation": "no",
+        "Repository": "https://ices-tools-prod.r-universe.dev"
+      }
     }
   },
   "files": {
