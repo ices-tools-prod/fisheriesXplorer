@@ -37,6 +37,7 @@ Imports:
     stringr,
     tibble,
     tidyr,
+    tidytext,
     zip
 Suggests: 
           usethis
