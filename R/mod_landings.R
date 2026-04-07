@@ -97,8 +97,9 @@ mod_landings_ui <- function(id) {
               )
             ),
             card_body(
-              withSpinner(
-                uiOutput(ns("landings_layer"), height = "65vh")
+              uiOutput(ns("guild_selector_ui")),
+              withSpinner(                
+                plotlyOutput(ns("landings_layer"), height = "65vh")
               )
             )
           )
@@ -294,30 +295,90 @@ mod_landings_server <- function(
     
     ################################## Landings plots #########################################
 
-    output$landings_layer <- renderUI({
-      req(!is.null(input$landings_layer_selector))
+landings_data <- reactive({
+  ecoregion <- selected_ecoregion()
+  acronym <- get_ecoregion_acronym(ecoregion)
+  rda_path <- file.path("data", paste0(acronym, ".rda"))
 
-      plotting_params <- list()
-      plotting_params$landings <- list(
-        "Common name" = list("n" = 10, type = "line"),
-        "Fisheries guild" = list("n" = 6, type = "line"),
-        "Country" = list("n" = 8, type = "line")
-      )
-      params <- plotting_params$landings[[input$landings_layer_selector]]
-      ecoregion <- selected_ecoregion()
-      acronym <- get_ecoregion_acronym(ecoregion)
-      rda_path <- paste0("./data/", acronym, ".rda")
-      load(rda_path)
-      fig <- plot_catch_trends_plotly(get(get_ecoregion_acronym(ecoregion)), type = input$landings_layer_selector, line_count = params$n, dataUpdated = "October, 2025", session = session, ecoregion = acronym) # %>%
-      
+  e <- new.env(parent = emptyenv())
+  load(rda_path, envir = e)
+  get(acronym, envir = e)
+})
 
-      for (i in 1:length(fig$x$data)) {
-        if (!is.null(fig$x$data[[i]]$name)) {
-          fig$x$data[[i]]$name <- gsub("\\(", "", strsplit(fig$x$data[[i]]$name, ",")[[1]][1])
-        }
-      }
-      fig
-    })
+available_guilds <- reactive({
+  dat <- landings_data()
+  names(dat) <- c(
+    "Year", "Country", "iso3", "Fisheries guild", "Ecoregion",
+    "Species name", "Species code", "Common name", "Value"
+  )
+
+  dat %>%
+    dplyr::filter(
+      !is.na(`Fisheries guild`),
+      `Fisheries guild` != "",
+      `Fisheries guild` != "undefined"
+    ) %>%
+    dplyr::pull(`Fisheries guild`) %>%
+    unique() %>%
+    sort()
+})
+
+output$guild_selector_ui <- renderUI({
+  req(input$landings_layer_selector)
+
+  if (identical(input$landings_layer_selector, "Common name")) {
+    guilds <- available_guilds()
+
+    selectizeInput(
+      ns("selected_guild"),
+      "Select fisheries guild:",
+      choices = guilds,
+      selected = guilds[1],
+      multiple = FALSE,
+      options = list(placeholder = "Choose a fisheries guild")
+    )
+  }
+})
+
+output$landings_layer <- renderPlotly({
+  req(input$landings_layer_selector)
+
+  plotting_params <- list(
+    "Common name" = list(n = 10),
+    "Fisheries guild" = list(n = 6),
+    "Country" = list(n = 8)
+  )
+
+  params <- plotting_params[[input$landings_layer_selector]]
+  ecoregion <- selected_ecoregion()
+  acronym <- get_ecoregion_acronym(ecoregion)
+
+  guild_filter <- NULL
+  if (identical(input$landings_layer_selector, "Common name")) {
+    req(input$selected_guild)
+    guild_filter <- input$selected_guild
+  }
+
+  fig <- plot_catch_trends_plotly(
+    x = landings_data(),
+    type = input$landings_layer_selector,
+    line_count = params$n,
+    selected_guild = guild_filter,
+    dataUpdated = "October, 2025",
+    session = session,
+    ecoregion = acronym
+  )
+
+  for (i in seq_along(fig$x$data)) {
+  nm <- fig$x$data[[i]]$name
+  if (!is.null(nm) && nm != "Total") {
+    fig$x$data[[i]]$name <- sub(",.*$", "", nm)
+    fig$x$data[[i]]$name <- gsub("\\(", "", fig$x$data[[i]]$name)
+  }
+}
+
+  fig
+})
 
     ############################### Download landings data bundle ###############################
     output$download_landings_data <- downloadHandler(
@@ -399,9 +460,22 @@ mod_landings_server <- function(
     year <- Sys.Date() %>%
       format("%Y") %>%
       as.numeric()
+    
+    discard_base_data <- reactive({
+      CLD_trends(format_sag(shared$SAG, shared$SID))
+    })
+
+    discard_target_year <- reactive({
+      discard_base_data() %>% 
+      dplyr::filter(Discards > 0) %>%
+        dplyr::mutate(Year = as.numeric(Year)) %>%
+        dplyr::filter(!is.na(Year)) %>%
+        dplyr::summarise(target_year = max(Year, na.rm = TRUE)) %>%
+        dplyr::pull(target_year)
+    })
 
     output$discard_trends <- renderPlotly({
-      fig2 <- ggplotly(plot_discard_trends_app_plotly(CLD_trends(format_sag(shared$SAG, shared$SID)),
+      fig2 <- ggplotly(plot_discard_trends_app_plotly(discard_base_data(),
         year,
         ecoregion = get_ecoregion_acronym(selected_ecoregion())
       ))
@@ -412,21 +486,41 @@ mod_landings_server <- function(
       }
       fig2
     })
+    
+    # output$recorded_discards <- renderPlotly({
+    #   catch_trends2 <- CLD_trends(format_sag(shared$SAG, shared$SID)) %>% filter(Discards > 0)
+    #   plot_discard_current_plotly(catch_trends2,
+    #     year = year,
+    #     position_letter = paste0("Current discards & Landings\nStocks with recorded discards (", year-1, ", ", get_active_region_acronym(selected_ecoregion()), ")"),
+    #     ecoregion = get_ecoregion_acronym(selected_ecoregion())
+    #   )
+    # })
+
+    # output$all_discards <- renderPlotly({
+    #   plot_discard_current_plotly(CLD_trends(format_sag(shared$SAG, shared$SID)),
+    #     year = year,
+    #     position_letter = paste0("Current discards & Landings\nAll Stocks (", year-1, ", ", get_active_region_acronym(selected_ecoregion()), ")") ,
+    #     ecoregion = get_ecoregion_acronym(selected_ecoregion())
+    #   )
+    # })
 
     output$recorded_discards <- renderPlotly({
-      catch_trends2 <- CLD_trends(format_sag(shared$SAG, shared$SID)) %>% filter(Discards > 0)
-      plot_discard_current_plotly(catch_trends2,
-        year = year,
-        position_letter = paste0("Current discards & Landings\nStocks with recorded discards (", year-1, ", ", get_active_region_acronym(selected_ecoregion()), ")"),
-        ecoregion = get_ecoregion_acronym(selected_ecoregion())
+      plot_discard_current_plotly(
+        discard_base_data() %>% dplyr::filter(Discards > 0),
+        target_year = discard_target_year(),
+        plot_type = "withDiscards",
+        ecoregion = get_ecoregion_acronym(selected_ecoregion()),
+        region_label = get_active_region_acronym(selected_ecoregion())
       )
     })
 
     output$all_discards <- renderPlotly({
-      plot_discard_current_plotly(CLD_trends(format_sag(shared$SAG, shared$SID)),
-        year = year,
-        position_letter = paste0("Current discards & Landings\nAll Stocks (", year-1, ", ", get_active_region_acronym(selected_ecoregion()), ")") ,
-        ecoregion = get_ecoregion_acronym(selected_ecoregion())
+      plot_discard_current_plotly(
+        discard_base_data(),
+        target_year = discard_target_year(),
+        plot_type = "all",
+        ecoregion = get_ecoregion_acronym(selected_ecoregion()),
+        region_label = get_active_region_acronym(selected_ecoregion())
       )
     })
 
