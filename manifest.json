@@ -4891,13 +4891,13 @@
     },
     "icesConnect": {
       "Source": "CRAN",
-      "Repository": "https://cloud.r-project.org",
+      "Repository": "https://ices-tools-prod.r-universe.dev",
       "description": {
         "Package": "icesConnect",
-        "Version": "1.1.4",
+        "Version": "1.2.0",
         "Imports": "httr, base64enc, jsonlite",
         "NeedsCompilation": "no",
-        "Repository": "https://cloud.r-project.org"
+        "Repository": "https://ices-tools-prod.r-universe.dev"
       }
     }
   },
