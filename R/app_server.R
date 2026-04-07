@@ -225,11 +225,11 @@ app_server <- function(input, output, session) {
     selected_ecoregion = selected_ecoregion,
     bookmark_qs        = reactive(list()) # parent restores
   )
-  mod_bycatch_server(
-    "bycatch_1",
-    selected_ecoregion = selected_ecoregion,
-    bookmark_qs        = reactive(list()) # parent restores
-  )
+  # mod_bycatch_server(
+  #   "bycatch_1",
+  #   selected_ecoregion = selected_ecoregion,
+  #   bookmark_qs        = reactive(list()) # parent restores
+  # )
   mod_resources_server(
     "resources_1",
     bookmark_qs        = reactive(list()), # parent restores
