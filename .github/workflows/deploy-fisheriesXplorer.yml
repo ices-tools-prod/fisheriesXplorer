@@ -17,7 +17,7 @@ jobs:
       SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
       SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
       SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
-      RENV_CONFIG_REPOS_OVERRIDE: "https://ices-tools-prod.r-universe.dev,https://cloud.r-project.org"
+      RENV_CONFIG_REPOS_OVERRIDE: "https://ices-tools-prod.r-universe.dev;https://cloud.r-project.org"
 
     steps:
 
