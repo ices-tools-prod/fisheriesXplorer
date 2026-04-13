@@ -355,7 +355,7 @@ plot_bycatch_metric_interactive <- function(df,
 
   cap_text <- paste0(
     "ICES Bycatch database.<br>",
-    base::format(base::Sys.Date(), "%d-%b-%y"), ",<br>ICES, Copenhagen."
+    base::format(base::Sys.Date(), "%d-%b-%y"), ", ICES, Copenhagen."
   )
 
   p <- ggplot2::ggplot(
@@ -428,7 +428,7 @@ plot_bycatch_metric_interactive <- function(df,
       ),
       annotations = list(
         list(
-          x = 1, y = -0.8, xref = "paper", yref = "paper",
+          x = 1, y = -0.5, xref = "paper", yref = "paper",
           text = cap_text,
           showarrow = FALSE,
           xanchor = "right",
