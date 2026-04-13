@@ -148,7 +148,11 @@ mod_bycatch_ui <- function(id) {
                       options = list(placeholder = "All species")
                     )
                   )
+                  
                 ),
+                
+                  uiOutput(ns("bpue_plot_note")),
+                  
 
                 withSpinner(
                   plotlyOutput(ns("bpue_plot"), height = "75vh"),
@@ -440,7 +444,13 @@ mod_bycatch_server <- function(
     })
 
     ################################## text summaries #########################################
-
+    output$bpue_plot_note <- renderUI({
+      tagList(
+        tags$p(
+          "Note: Consider filtering to resolve better the y-axis scale."
+        )
+      )
+    })
     output$bpue_text_summary <- renderUI({
       req(bpue_filtered_data(), bpue_taxa())
 
@@ -515,36 +525,85 @@ mod_bycatch_server <- function(
       )
     })
 
-    ################################## downloads #########################################
-
-    output$download_bpue_data <- downloadHandler(
+    
+    ######################### Download bycatch data ##########################################
+    output$download_bycatch_data <- output$download_bpue_data <- downloadHandler(
       filename = function() {
-        paste0(
-          "bpue_",
-          gsub("[^A-Za-z0-9]+", "_", selected_ecoregion()),
-          "_",
-          Sys.Date(),
-          ".csv"
-        )
+        ecoregion <- selected_ecoregion()
+        acronym <- get_ecoregion_acronym(ecoregion)
+        date_tag <- format(Sys.Date(), "%d-%b-%y")
+        paste0("bycatch_data_bundle_", acronym, "_", date_tag, ".zip")
       },
       content = function(file) {
-        readr::write_csv(bpue_filtered_data(), file)
-      }
-    )
+        # --- Temp workspace
+        td <- tempfile("bycatch_data_bundle_")
+        dir.create(td, showWarnings = FALSE)
+        on.exit(unlink(td, recursive = TRUE, force = TRUE), add = TRUE)
 
-    output$download_bycatch_data <- downloadHandler(
-      filename = function() {
-        paste0(
-          "bycatch_",
-          gsub("[^A-Za-z0-9]+", "_", selected_ecoregion()),
-          "_",
-          Sys.Date(),
-          ".csv"
-        )
+        
+
+        # --- Naming tokens
+        ecoregion <- selected_ecoregion()
+        acronym <- get_ecoregion_acronym(ecoregion)
+        date_tag <- format(Sys.Date(), "%d-%b-%y")
+
+        # --- 1) CSV (includes acronym + date)
+        dat <- bycatch_data()
+        csv_name <- paste0("bycatch_data_", acronym, "_", date_tag, ".csv")
+        csv_path <- file.path(td, csv_name)
+        utils::write.csv(dat, csv_path, row.names = FALSE)
+
+        # --- 2) Disclaimer.txt (fixed name; no acronym/date)
+        disc_path <- file.path(td, "Disclaimer.txt")
+        disc_url <- "https://raw.githubusercontent.com/ices-tools-prod/disclaimers/master/Disclaimer_fisheriesXplorer.txt"
+        if (!safe_download(disc_url, disc_path)) {
+          writeLines(c(
+            "Disclaimer for fisheriesXplorer bycatch data.",
+            "The official disclaimer could not be fetched automatically.",
+            paste("Please see:", disc_url)
+          ), con = disc_path)
+        }
+
+        # --- Zip bundle
+        files_to_zip <- c(csv_path, disc_path)
+        if (requireNamespace("zip", quietly = TRUE) && "zipr" %in% getNamespaceExports("zip")) {
+          zip::zipr(zipfile = file, files = files_to_zip, root = td)
+        } else {
+          owd <- setwd(td)
+          on.exit(setwd(owd), add = TRUE)
+          zip::zip(zipfile = file, files = basename(files_to_zip))
+        }
       },
-      content = function(file) {
-        readr::write_csv(total_bycatch_filtered_data(), file)
-      }
+      contentType = "application/zip"
     )
+    # output$download_bpue_data <- downloadHandler(
+    #   filename = function() {
+    #     paste0(
+    #       "bpue_",
+    #       gsub("[^A-Za-z0-9]+", "_", selected_ecoregion()),
+    #       "_",
+    #       Sys.Date(),
+    #       ".csv"
+    #     )
+    #   },
+    #   content = function(file) {
+    #     readr::write_csv(bpue_filtered_data(), file)
+    #   }
+    # )
+
+    # output$download_bycatch_data <- downloadHandler(
+    #   filename = function() {
+    #     paste0(
+    #       "bycatch_",
+    #       gsub("[^A-Za-z0-9]+", "_", selected_ecoregion()),
+    #       "_",
+    #       Sys.Date(),
+    #       ".csv"
+    #     )
+    #   },
+    #   content = function(file) {
+    #     readr::write_csv(total_bycatch_filtered_data(), file)
+    #   }
+    # )
   })
 }
