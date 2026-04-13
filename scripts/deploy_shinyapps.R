@@ -7,6 +7,9 @@ secret  <- Sys.getenv("SHINYAPPS_SECRET")
 
 stopifnot(nzchar(account), nzchar(token), nzchar(secret))
 
+options(
+  rsconnect.httr2 = FALSE
+)
 rsconnect::setAccountInfo(
   name   = account,
   token  = token,
