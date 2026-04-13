@@ -395,7 +395,7 @@ plot_bycatch_metric_interactive <- function(df,
     ggplot2::theme(
       axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 20)),
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 20)),
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1),
+      axis.text.x = ggplot2::element_text(angle = 30, hjust = 1, vjust = 1),
       panel.grid.major = ggplot2::element_line(
         colour = "grey85",
         linewidth = 0.4
