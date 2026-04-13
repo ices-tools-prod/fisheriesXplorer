@@ -949,3 +949,8 @@ details summary {
 .fx-actionlink {
   font-size: clamp(14px, 2vw, 18px);
 }
+
+
+.form-group {
+    margin-bottom: 4px !important;
+  }

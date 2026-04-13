@@ -526,6 +526,7 @@ SUBTAB_INPUTS <- list(
   overview     = "overview_1-tabs_overview",
   landings     = "landings_1-main_tabset",
   stock_status = "stock_status_1-main_tabset",
+  bycatch      = "bycatch_1-bycatch_tabset",
   resources    = "resources_1-resources_nav"
 )
 

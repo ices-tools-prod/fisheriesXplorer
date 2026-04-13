@@ -3,86 +3,17 @@ mod_bycatch_ui <- function(id) {
 
   tagList(
     mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
-    navset_tab(
+    tabsetPanel(
       id = ns("bycatch_tabset"),
-      nav_panel(
-        "Bycatch per unit effort (BPUE)",
-        value = "bpue",
-        layout_sidebar(
-          sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black",
-            open = FALSE,
-            uiOutput(ns("bpue_text_summary"))
-          ),
-          fluidRow(
-            column(
-              12,
-              card(
-                height = "85vh",
-                full_screen = TRUE,
-                card_header(
-                  div(
-                    style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
-                    radioButtons(
-                      ns("bpue_taxa_selector"),
-                      "Select taxon:",
-                      choices = c("Fish", "Elasmobranchs", "Seabirds", "Turtles", "Mammals"),
-                      selected = "Mammals",
-                      inline = TRUE
-                    ),
-                    download_icon_label(
-                      text = "Download data",
-                      outputId = ns("download_bpue_data"),
-                      hover_text = "BPUE data (.csv & plot)",
-                      size = "large"
-                    )
-                  )
-                ),
-                card_body(
-                  fillable = TRUE,
-                  div(
-                    style = "margin-bottom: 12px;",
-                    fluidRow(
-                      column(
-                        6,
-                        selectizeInput(
-                          ns("bpue_metier_filter"),
-                          "Filter metier:",
-                          choices = NULL,
-                          selected = NULL,
-                          multiple = TRUE,
-                          options = list(placeholder = "All metiers")
-                        )
-                      ),
-                      column(
-                        6,
-                        selectizeInput(
-                          ns("bpue_species_filter"),
-                          "Filter species:",
-                          choices = NULL,
-                          selected = NULL,
-                          multiple = TRUE,
-                          options = list(placeholder = "All species")
-                        )
-                      )
-                    )
-                  ),
-                  withSpinner(
-                    plotlyOutput(ns("bpue_plot"), height = "85vh"),
-                    caption = "Getting BPUE data..."
-                  )
-                )
-              )
-            )
-          )
-        )
-      ),
-      nav_panel(
-        "Total bycatch",
+
+      tabPanel(
+        title = "Total bycatch",
         value = "total_bycatch",
         layout_sidebar(
           sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black",
+            width = "33vw",
+            bg = "white",
+            fg = "black",
             open = FALSE,
             uiOutput(ns("total_bycatch_text"))
           ),
@@ -91,6 +22,7 @@ mod_bycatch_ui <- function(id) {
             card(
               height = "85vh",
               full_screen = TRUE,
+
               card_header(
                 div(
                   style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
@@ -109,38 +41,118 @@ mod_bycatch_ui <- function(id) {
                   )
                 )
               ),
+
               card_body(
                 fillable = TRUE,
+
                 div(
-                  style = "margin-bottom: 12px;",
-                  fluidRow(
-                    column(
-                      6,
-                      selectizeInput(
-                        ns("bycatch_metier_filter"),
-                        "Filter metier:",
-                        choices = NULL,
-                        selected = NULL,
-                        multiple = TRUE,
-                        options = list(placeholder = "All metiers")
-                      )
-                    ),
-                    column(
-                      6,
-                      selectizeInput(
-                        ns("bycatch_species_filter"),
-                        "Filter species:",
-                        choices = NULL,
-                        selected = NULL,
-                        multiple = TRUE,
-                        options = list(placeholder = "All species")
-                      )
+                  style = "margin-bottom: 0px; display: flex; gap: 4px; align-items: flex-start; flex-wrap: wrap;",
+                  div(
+                    style = "width: 320px;",
+                    selectizeInput(
+                      ns("bycatch_metier_filter"),
+                      "Filter metier:",
+                      choices = NULL,
+                      selected = NULL,
+                      multiple = TRUE,
+                      width = "100%",
+                      options = list(placeholder = "All metiers")
+                    )
+                  ),
+                  div(
+                    style = "width: 320px;",
+                    selectizeInput(
+                      ns("bycatch_species_filter"),
+                      "Filter species:",
+                      choices = NULL,
+                      selected = NULL,
+                      multiple = TRUE,
+                      width = "100%",
+                      options = list(placeholder = "All species")
                     )
                   )
                 ),
+
                 withSpinner(
-                  plotlyOutput(ns("total_bycatch_plot"), height = "85vh"),
+                  plotlyOutput(ns("total_bycatch_plot"), height = "75vh"),
                   caption = "Getting total bycatch data..."
+                )
+              )
+            )
+          )
+        )
+      ),
+
+      tabPanel(
+        title = "Bycatch per unit effort (BPUE)",
+        value = "bpue",
+        layout_sidebar(
+          sidebar = sidebar(
+            width = "33vw",
+            bg = "white",
+            fg = "black",
+            open = FALSE,
+            uiOutput(ns("bpue_text_summary"))
+          ),
+          column(
+            12,
+            card(
+              height = "85vh",
+              full_screen = TRUE,
+
+              card_header(
+                div(
+                  style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
+                  radioButtons(
+                    ns("bpue_taxa_selector"),
+                    "Select taxon:",
+                    choices = c("Fish", "Elasmobranchs", "Seabirds", "Turtles", "Mammals"),
+                    selected = "Mammals",
+                    inline = TRUE
+                  ),
+                  download_icon_label(
+                    text = "Download data",
+                    outputId = ns("download_bpue_data"),
+                    hover_text = "BPUE data (.csv & plot)",
+                    size = "large"
+                  )
+                )
+              ),
+
+              card_body(
+                fillable = TRUE,
+
+                div(
+                  style = "margin-bottom: 0px; display: flex; gap: 4px; align-items: flex-start; flex-wrap: wrap;",
+                  div(
+                    style = "width: 320px;",
+                    selectizeInput(
+                      ns("bpue_metier_filter"),
+                      "Filter metier:",
+                      choices = NULL,
+                      selected = NULL,
+                      multiple = TRUE,
+                      width = "100%",
+                      options = list(placeholder = "All metiers")
+                    )
+                  ),
+                  div(
+                    style = "width: 320px;",
+                    selectizeInput(
+                      ns("bpue_species_filter"),
+                      "Filter species:",
+                      choices = NULL,
+                      selected = NULL,
+                      multiple = TRUE,
+                      width = "100%",
+                      options = list(placeholder = "All species")
+                    )
+                  )
+                ),
+
+                withSpinner(
+                  plotlyOutput(ns("bpue_plot"), height = "75vh"),
+                  caption = "Getting BPUE data..."
                 )
               )
             )
@@ -152,7 +164,6 @@ mod_bycatch_ui <- function(id) {
 }
 
 
-
 mod_bycatch_server <- function(
     id,
     selected_ecoregion,
@@ -161,28 +172,34 @@ mod_bycatch_server <- function(
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    `%||%` <- function(x, y) {
-      if (is.null(x)) y else x
-    }
+    # `%||%` <- function(x, y) {
+    #   if (is.null(x)) y else x
+    # }
 
     ################################## bookmarking #########################################
 
     observeEvent(bookmark_qs(), once = TRUE, ignoreInit = TRUE, {
       qs <- bookmark_qs()
       wanted <- qs$subtab
-      valid <- c("bpue", "total_bycatch")
+      valid <- c("total_bycatch", "bpue")
 
+      # if (!is.null(wanted) && nzchar(wanted) && wanted %in% valid) {
+      #   session$onFlushed(function() {
+      #     if (utils::packageVersion("bslib") >= "0.5.0") {
+      #       bslib::nav_select(
+      #         id = "bycatch_tabset",
+      #         selected = wanted,
+      #         session = session
+      #       )
+      #     } else {
+      #       updateTabsetPanel(session, "bycatch_tabset", selected = wanted)
+      #     }
+      #     isolate(set_subtab(wanted))
+      #   }, once = TRUE)
+      # }
       if (!is.null(wanted) && nzchar(wanted) && wanted %in% valid) {
         session$onFlushed(function() {
-          if (utils::packageVersion("bslib") >= "0.5.0") {
-            bslib::nav_select(
-              id = "bycatch_tabset",
-              selected = wanted,
-              session = session
-            )
-          } else {
-            updateTabsetPanel(session, "bycatch_tabset", selected = wanted)
-          }
+          updateTabsetPanel(session, "bycatch_tabset", selected = wanted)
           isolate(set_subtab(wanted))
         }, once = TRUE)
       }
@@ -246,7 +263,7 @@ mod_bycatch_server <- function(
     bycatch_data <- reactive({
       eco <- selected_ecoregion()
       req(eco)
-      
+
       out <- tryCatch(
         {
           raw <- get_bycatch_ecoregion(eco)
@@ -403,7 +420,8 @@ mod_bycatch_server <- function(
 
       plot_bpue_interactive(
         df = bpue_filtered_data(),
-        taxon = bpue_taxa()
+        taxon = bpue_taxa(),
+        ecoregion = selected_ecoregion()
       )
     })
 
@@ -416,7 +434,8 @@ mod_bycatch_server <- function(
 
       plot_bycatch_interactive(
         df = total_bycatch_filtered_data(),
-        taxon = bycatch_taxa()
+        taxon = bycatch_taxa(),
+        ecoregion = selected_ecoregion()
       )
     })
 
