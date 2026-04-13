@@ -217,7 +217,7 @@ plot_catch_trends_plotly <- function(
   )
 
   cap_text <- paste0(
-    "Historical Nominal Catches 1950–2006.<br>",
+    "Historical Nominal Catches 1950–2005.<br>",
     "Official Nominal Catches 2006–2023.<br>",
     dataUpdated, ", ICES, Copenhagen."
   )

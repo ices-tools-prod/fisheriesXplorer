@@ -269,116 +269,6 @@ prepare_bycatch_plot_data <- function(df,
     )
 }
 
-# plot_bycatch_metric_interactive <- function(df,
-#                                             taxon,
-#                                             value_col,
-#                                             lower_col,
-#                                             upper_col,
-#                                             y_label,
-#                                             empty_title = "No data available",
-#                                             legend_title = "Metier level 4",
-#                                             palette = metier_palette) {
-
-#   data_subset <- prepare_bycatch_plot_data(
-#     df = df,
-#     taxa_selected = taxon,
-#     value_col = value_col,
-#     lower_col = lower_col,
-#     upper_col = upper_col
-#   )
-
-#   if (nrow(data_subset) == 0) {
-#     return(
-#       plotly::plot_ly() %>%
-#         plotly::layout(
-#           title = list(text = empty_title),
-#           xaxis = list(visible = FALSE),
-#           yaxis = list(visible = FALSE)
-#         )
-#     )
-#   }
-
-#   p <- ggplot(
-#     data_subset,
-#     aes(
-#       x = label_reordered,
-#       y = .data[[value_col]],
-#       fill = metier_L4,
-#       text = tooltip
-#     )
-#   ) +
-#     geom_linerange(
-#       aes(
-#         ymin = .data[[lower_col]],
-#         ymax = .data[[upper_col]]
-#       ),
-#       linewidth = 0.8,
-#       colour = "black"
-#     ) +
-#     geom_point(
-#       shape = 21,
-#       size = 4,
-#       stroke = 0.2,
-#       colour = "black"
-#     ) +
-#     facet_wrap(
-#       ~ taxon,
-#       ncol = 1,
-#       scales = "free_x",
-#       strip.position = "top"
-#     ) +
-#     tidytext::scale_x_reordered() +
-#     scale_fill_manual(
-#       values = palette,
-#       na.value = "grey70",
-#       name = legend_title
-#     ) +
-#     labs(
-#       x = "Metier level 4 and species",
-#       y = y_label
-#     ) +
-#     theme_classic(base_size = 13) +
-#     theme(
-#       # # 1) axis label spacing
-#       axis.title.x = element_text(margin = margin(t = 30)),
-#       axis.title.y = element_text(margin = margin(r = 30)),
-
-#       # 2) spacing between facets
-#       panel.spacing = unit(2, "lines"),
-
-#       # x tick labels
-#       axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-
-#       # 3) grid lines
-#       panel.grid.major = element_line(
-#         colour = "grey85",
-#         linewidth = 0.4
-#       ),
-#       panel.grid.minor = element_blank(),
-#       panel.grid.major.x = element_blank(), 
-#       strip.background = element_blank(),
-#       strip.placement = "outside",
-#       strip.text = element_text(hjust = 0)
-#     )
-
-#   n_taxa <- length(unique(data_subset$taxon))
-#   plot_height <- 100 + n_taxa * 300
-#   ggplotly(p, tooltip = "text", height = plot_height) %>%
-#     layout(
-#       # height = plot_height,
-#       margin = list(r = 150),
-#       legend = list(
-#         orientation = "h",
-#         y = 1.12, 
-#         x = .5, 
-#         xanchor = "center", 
-#         yanchor = "bottom"
-#       )
-#     )
-# }
-
-
-
 
 #' Create an interactive bycatch metric plot
 #'
@@ -441,7 +331,8 @@ plot_bycatch_metric_interactive <- function(df,
                                             y_label,
                                             empty_title = "No data available",
                                             legend_title = "Metier level 4",
-                                            palette = metier_palette) {
+                                            palette = metier_palette,
+                                            ecoregion) {
 
   data_subset <- prepare_bycatch_plot_data(
     df = df,
@@ -461,6 +352,11 @@ plot_bycatch_metric_interactive <- function(df,
         )
     )
   }
+
+  cap_text <- paste0(
+    "ICES Bycatch database.<br>",
+    base::format(base::Sys.Date(), "%d-%b-%y"), ",<br>ICES, Copenhagen."
+  )
 
   p <- ggplot2::ggplot(
     data_subset,
@@ -529,6 +425,24 @@ plot_bycatch_metric_interactive <- function(df,
       ),
       xaxis = list(
         automargin = TRUE
+      ),
+      annotations = list(
+        list(
+          x = 1, y = -0.8, xref = "paper", yref = "paper",
+          text = cap_text,
+          showarrow = FALSE,
+          xanchor = "right",
+          yanchor = "bottom",
+          font = list(size = 10, color = "black")
+        ),
+        list(
+          text = paste0("Bycatch: ", taxon, " (", ecoregion, ")"),
+          x = 0.01, y = 0.99, xref = "paper", yref = "paper",
+          showarrow = FALSE,
+          xanchor = "left",
+          yanchor = "top",
+          font = list(size = 18, color = "black")
+        )
       )
     )
 }
@@ -561,7 +475,8 @@ plot_bycatch_metric_interactive <- function(df,
 #' @export
 plot_bpue_interactive <- function(df,
                                   taxon,
-                                  palette = metier_palette) {
+                                  palette = metier_palette,
+                                  ecoregion) {
   plot_bycatch_metric_interactive(
     df = df,
     taxon = taxon,
@@ -570,7 +485,8 @@ plot_bpue_interactive <- function(df,
     upper_col = "bpuE_upper_CI_Numeric",
     y_label = "Bycatch per unit effort \n BPUE (individuals/DaS)",
     empty_title = "No BPUE data available",
-    palette = palette
+    palette = palette,
+    ecoregion = get_ecoregion_acronym(ecoregion)
   )
 }
 
@@ -604,7 +520,8 @@ plot_bpue_interactive <- function(df,
 #' @export
 plot_bycatch_interactive <- function(df,
                                      taxon,
-                                     palette = metier_palette) {
+                                     palette = metier_palette,
+                                     ecoregion) {
   plot_bycatch_metric_interactive(
     df = df,
     taxon = taxon,
@@ -613,7 +530,8 @@ plot_bycatch_interactive <- function(df,
     upper_col = "bycatch_upper_CI",
     y_label = "Total Bycatch in 2024 \n (individuals)",
     empty_title = "No bycatch data available",
-    palette = palette
+    palette = palette,
+    ecoregion = get_ecoregion_acronym(ecoregion)
   )
 }
 
