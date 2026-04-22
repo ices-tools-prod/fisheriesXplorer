@@ -354,7 +354,7 @@ plot_bycatch_metric_interactive <- function(df,
   }
 
   cap_text <- paste0(
-    "ICES Bycatch database.<br>",
+    "2025 ICES Advice on bycatch of endangered, <br>threatened and protected (ETP) species.<br>",
     base::format(base::Sys.Date(), "%d-%b-%y"), ", ICES, Copenhagen."
   )
 
@@ -408,7 +408,7 @@ plot_bycatch_metric_interactive <- function(df,
   plotly::ggplotly(p, tooltip = "text") %>%
     plotly::layout(
       autosize = TRUE,
-      margin = list(l = 110, r = 40, t = 90, b = 140),
+      margin = list(l = 110, r = 40, t = 90, b = 150),
       legend = list(
         orientation = "h",
         y = 1.08,
@@ -428,12 +428,13 @@ plot_bycatch_metric_interactive <- function(df,
       ),
       annotations = list(
         list(
-          x = 1, y = -0.5, xref = "paper", yref = "paper",
+          x = 0.01, y = 0.93, xref = "paper", yref = "paper",
           text = cap_text,
           showarrow = FALSE,
-          xanchor = "right",
-          yanchor = "bottom",
-          font = list(size = 10, color = "black")
+          xanchor = "left",
+          yanchor = "top",
+          align = "left",
+          font = list(size = 11, color = "black")
         ),
         list(
           text = paste0("Bycatch: ", taxon, " (", ecoregion, ")"),
@@ -441,6 +442,7 @@ plot_bycatch_metric_interactive <- function(df,
           showarrow = FALSE,
           xanchor = "left",
           yanchor = "top",
+          align = "left",
           font = list(size = 18, color = "black")
         )
       )
