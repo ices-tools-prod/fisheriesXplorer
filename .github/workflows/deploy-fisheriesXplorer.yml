@@ -60,19 +60,14 @@ jobs:
             libglpk-dev \
             libnode-dev
       
-      - name: Setup renv
+      - name: Install deploy tools
+        run: Rscript -e 'install.packages(c("rsconnect","desc","pkgload", "processx"), repos = "https://cloud.r-project.org")'
+
+      - name: Restore renv packages
         uses: r-lib/actions/setup-renv@v2
 
-      - name: Debug renv state
-        run: |
-          Rscript -e 'print(.libPaths())'
-          Rscript -e 'renv::status()'
-          Rscript -e 'packageVersion("renv")'
-          Rscript -e 'packageVersion("rlang")'
-          Rscript -e 'packageVersion("rsconnect")'
-          Rscript -e 'packageVersion("desc")'
-          Rscript -e 'packageVersion("pkgload")'
-          Rscript -e 'packageVersion("processx")'
+      - name: Install deploy dependencies
+        run: Rscript -e 'install.packages(c("rsconnect","desc","pkgload", "processx"), repos="https://cloud.r-project.org")'
 
       - name: Deploy fisheriesXplorer
         run: Rscript scripts/deploy_shinyapps.R
