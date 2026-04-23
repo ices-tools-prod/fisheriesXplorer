@@ -451,77 +451,18 @@ mod_bycatch_server <- function(
         )
       )
     })
-    output$bpue_text_summary <- renderUI({
-      req(bpue_filtered_data(), bpue_taxa())
-
-      metier_sel <- input$bpue_metier_filter %||% character(0)
-      species_sel <- input$bpue_species_filter %||% character(0)
-
-      tagList(
-        tags$p(
-          paste0(
-            "This panel shows bycatch per unit effort (BPUE) for the selected taxa in ",
-            selected_ecoregion(),
-            "."
-          )
-        ),
-        tags$p(
-          paste0("Current taxa: ", paste(bpue_taxa(), collapse = ", "), ".")
-        ),
-        tags$p(
-          paste0(
-            "Metier filter: ",
-            if (length(metier_sel) == 0) "All" else paste(metier_sel, collapse = ", "),
-            "."
-          )
-        ),
-        tags$p(
-          paste0(
-            "Species filter: ",
-            if (length(species_sel) == 0) "All" else paste(species_sel, collapse = ", "),
-            "."
-          )
-        ),
-        tags$p(
-          paste0("Number of records available: ", nrow(bpue_filtered_data()), ".")
-        )
+    
+    output$total_bycatch_text <- renderUI({
+      div(
+        class = "sidebar-text",
+      HTML(select_text(texts, paste0("bycatch_", get_ecoregion_acronym(selected_ecoregion())), "total_bycatch"))
       )
     })
 
-    output$total_bycatch_text <- renderUI({
-      req(total_bycatch_filtered_data(), bycatch_taxa())
-
-      metier_sel <- input$bycatch_metier_filter %||% character(0)
-      species_sel <- input$bycatch_species_filter %||% character(0)
-
-      tagList(
-        tags$p(
-          paste0(
-            "This panel shows total bycatch estimates for the selected taxa in ",
-            selected_ecoregion(),
-            "."
-          )
-        ),
-        tags$p(
-          paste0("Current taxa: ", paste(bycatch_taxa(), collapse = ", "), ".")
-        ),
-        tags$p(
-          paste0(
-            "Metier filter: ",
-            if (length(metier_sel) == 0) "All" else paste(metier_sel, collapse = ", "),
-            "."
-          )
-        ),
-        tags$p(
-          paste0(
-            "Species filter: ",
-            if (length(species_sel) == 0) "All" else paste(species_sel, collapse = ", "),
-            "."
-          )
-        ),
-        tags$p(
-          paste0("Number of records available: ", nrow(total_bycatch_filtered_data()), ".")
-        )
+    output$bpue_text_summary <- renderUI({
+      div(
+        class = "sidebar-text",
+      HTML(select_text(texts, paste0("bycatch_", get_ecoregion_acronym(selected_ecoregion())), "bpue"))
       )
     })
 
