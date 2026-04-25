@@ -60,6 +60,9 @@ jobs:
             libglpk-dev \
             libnode-dev
       
+      - name: Install deploy tools
+        run: Rscript -e 'install.packages(c("rsconnect","desc","pkgload", "processx"), repos = "https://cloud.r-project.org")'
+
       - name: Restore renv packages
         uses: r-lib/actions/setup-renv@v2
 
