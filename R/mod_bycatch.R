@@ -1,3 +1,46 @@
+#' Bycatch module UI
+#'
+#' Creates the user interface for the bycatch module. The module contains two
+#' tabs: one for total bycatch and one for bycatch per unit effort (BPUE). Each
+#' tab includes a collapsible explanatory sidebar, taxon selector, metier and
+#' species filters, a Plotly output, and a data download control.
+#'
+#' @param id Character string. Module namespace ID.
+#'
+#' @return A Shiny UI object.
+#'
+#' @details
+#' The UI defines the following main outputs:
+#' \itemize{
+#'   \item \code{total_bycatch_text}: explanatory text shown in the sidebar for
+#'   the Total bycatch tab.
+#'   \item \code{total_bycatch_plot}: Plotly output for total bycatch.
+#'   \item \code{bpue_text_summary}: explanatory text shown in the sidebar for
+#'   the BPUE tab.
+#'   \item \code{bpue_plot_note}: optional note displayed above the BPUE plot.
+#'   \item \code{bpue_plot}: Plotly output for BPUE.
+#' }
+#'
+#' The UI also defines the following inputs:
+#' \itemize{
+#'   \item \code{bycatch_taxa_selector}: taxon selector for total bycatch.
+#'   \item \code{bycatch_metier_filter}: metier filter for total bycatch.
+#'   \item \code{bycatch_species_filter}: species filter for total bycatch.
+#'   \item \code{bpue_taxa_selector}: taxon selector for BPUE.
+#'   \item \code{bpue_metier_filter}: metier filter for BPUE.
+#'   \item \code{bpue_species_filter}: species filter for BPUE.
+#' }
+#'
+#' Download handlers are expected to be implemented server-side for
+#' \code{download_bycatch_data} and \code{download_bpue_data}.
+#'
+#' @importFrom shiny NS tagList tabsetPanel tabPanel column div radioButtons
+#' selectizeInput uiOutput
+#' @importFrom bslib layout_sidebar sidebar card card_header card_body
+#' @importFrom plotly plotlyOutput
+#' @importFrom shinycssloaders withSpinner
+#'
+#' @export
 mod_bycatch_ui <- function(id) {
   ns <- NS(id)
 
@@ -167,7 +210,83 @@ mod_bycatch_ui <- function(id) {
   )
 }
 
-
+#' Bycatch module server
+#'
+#' Server logic for the bycatch module. This module retrieves, cleans, filters,
+#' plots, describes, bookmarks, and exports bycatch data for the selected ICES
+#' ecoregion.
+#'
+#' @param id Character string. Module namespace ID.
+#' @param selected_ecoregion Reactive expression returning the currently selected
+#' ICES ecoregion.
+#' @param bookmark_qs Reactive expression returning bookmark query-string values.
+#' Defaults to \code{reactive(NULL)}.
+#' @param set_subtab Function used to record the currently selected bycatch
+#' subtab for bookmarking or URL state management. Defaults to a no-op function.
+#'
+#' @return No return value. Called for its Shiny server-side effects.
+#'
+#' @details
+#' The server performs the following tasks:
+#' \itemize{
+#'   \item Restores the selected subtab from bookmarked query-string values.
+#'   \item Updates the flexible module header with the selected ecoregion,
+#'   ecoregion acronym, last data update date, and glossary link.
+#'   \item Retrieves raw bycatch data for the selected ecoregion using
+#'   \code{get_bycatch_ecoregion()} and cleans it using
+#'   \code{clean_bycatch_data()}.
+#'   \item Creates tab-specific datasets for total bycatch and BPUE.
+#'   \item Updates metier and species filter choices according to the selected
+#'   taxon and available data.
+#'   \item Applies user-selected metier and species filters.
+#'   \item Renders interactive Plotly outputs for total bycatch and BPUE.
+#'   \item Renders explanatory sidebar text from the \code{texts} object.
+#'   \item Provides a zipped download bundle containing the bycatch dataset and
+#'   disclaimer file.
+#' }
+#'
+#' The module expects the UI to define inputs and outputs with IDs matching those
+#' created in \code{mod_bycatch_ui()}, including \code{bycatch_tabset},
+#' \code{bycatch_taxa_selector}, \code{bpue_taxa_selector},
+#' \code{bycatch_metier_filter}, \code{bycatch_species_filter},
+#' \code{bpue_metier_filter}, \code{bpue_species_filter},
+#' \code{total_bycatch_plot}, \code{bpue_plot}, \code{total_bycatch_text},
+#' \code{bpue_text_summary}, \code{bpue_plot_note},
+#' \code{download_bycatch_data}, and \code{download_bpue_data}.
+#'
+#' @section Required helper functions:
+#' This module depends on the following project-level helper functions and data
+#' objects:
+#' \itemize{
+#'   \item \code{get_ecoregion_acronym()}
+#'   \item \code{get_bycatch_ecoregion()}
+#'   \item \code{clean_bycatch_data()}
+#'   \item \code{empty_bycatch_data()}
+#'   \item \code{plot_bpue_interactive()}
+#'   \item \code{plot_bycatch_interactive()}
+#'   \item \code{select_text()}
+#'   \item \code{safe_download()}
+#'   \item \code{texts}
+#' }
+#'
+#' @section Data requirements:
+#' The cleaned bycatch data must contain, at minimum, the following columns:
+#' \itemize{
+#'   \item \code{taxon}
+#'   \item \code{metier_L4}
+#'   \item \code{common_name}
+#'   \item \code{bpuE_Numeric}
+#'   \item \code{bycatch_2024}
+#' }
+#'
+#' @importFrom shiny moduleServer reactive observeEvent req renderUI tagList
+#' tags HTML updateTabsetPanel updateSelectizeInput isolate validate need
+#' downloadHandler
+#' @importFrom plotly renderPlotly
+#' @importFrom dplyr filter
+#' @importFrom utils write.csv
+#'
+#' @export
 mod_bycatch_server <- function(
     id,
     selected_ecoregion,
@@ -517,34 +636,5 @@ mod_bycatch_server <- function(
       },
       contentType = "application/zip"
     )
-    # output$download_bpue_data <- downloadHandler(
-    #   filename = function() {
-    #     paste0(
-    #       "bpue_",
-    #       gsub("[^A-Za-z0-9]+", "_", selected_ecoregion()),
-    #       "_",
-    #       Sys.Date(),
-    #       ".csv"
-    #     )
-    #   },
-    #   content = function(file) {
-    #     readr::write_csv(bpue_filtered_data(), file)
-    #   }
-    # )
-
-    # output$download_bycatch_data <- downloadHandler(
-    #   filename = function() {
-    #     paste0(
-    #       "bycatch_",
-    #       gsub("[^A-Za-z0-9]+", "_", selected_ecoregion()),
-    #       "_",
-    #       Sys.Date(),
-    #       ".csv"
-    #     )
-    #   },
-    #   content = function(file) {
-    #     readr::write_csv(total_bycatch_filtered_data(), file)
-    #   }
-    # )
   })
 }
