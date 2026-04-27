@@ -428,7 +428,7 @@ plot_bycatch_metric_interactive <- function(df,
       ),
       annotations = list(
         list(
-          x = 0.01, y = 0.93, xref = "paper", yref = "paper",
+          x = 0.01, y = 0.89, xref = "paper", yref = "paper",
           text = cap_text,
           showarrow = FALSE,
           xanchor = "left",
@@ -536,17 +536,4 @@ plot_bycatch_interactive <- function(df,
     ecoregion = get_ecoregion_acronym(ecoregion)
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
