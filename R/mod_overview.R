@@ -40,6 +40,7 @@
 #' @importFrom shiny NS tagList tabsetPanel tabPanel uiOutput
 #' @importFrom bslib layout_sidebar sidebar card
 #' @importFrom shinycssloaders withSpinner
+#' @importFrom icesUtils select_text
 #'
 #' @export
 mod_overview_ui <- function(id) {
