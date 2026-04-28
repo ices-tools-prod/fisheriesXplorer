@@ -1,72 +1,3 @@
-#' Select text (or rows) from a list of tables
-#'
-#' Helper to retrieve text snippets or rows from a list of data frames,
-#' typically used to store tab- and section-specific content for a Shiny app.
-#'
-#' @param list_object A named list of data frames, where each element
-#'   corresponds to a tab or content table (e.g. glossary, help text).
-#' @param tab Character scalar giving the name of the element in
-#'   \code{list_object} to use (e.g. `"about"`, `"methods"`, `"glossary"`).
-#' @param section Character scalar specifying the value to match in the
-#'   \code{section} column of the selected data frame.
-#'
-#' @return
-#' If the selected table does not contain a \code{section} column, the
-#' entire data frame is returned (useful for tables such as glossaries).
-#'
-#' If a \code{section} column is present:
-#' \itemize{
-#'   \item If a \code{text} column is present, a character vector of the
-#'     matching \code{text} values is returned. If no rows match, an empty
-#'     string (\code{""}) is returned (which is safe for \code{renderUI(HTML())}).
-#'   \item Otherwise, the filtered data frame (rows where
-#'     \code{section == section}) is returned.
-#' }
-#'
-#' @details
-#' The function first checks that \code{tab} exists in \code{list_object};
-#' if not, it stops with an informative error. It then optionally filters
-#' by \code{section} and, when possible, pulls the \code{text} column as a
-#' character vector.
-#'
-#' @examples
-#' \dontrun{
-#' # Suppose `content_list` is a named list of data frames
-#' # with columns: section, text
-#' select_text(content_list, tab = "about", section = "intro")
-#'
-#' # Glossary table without a `section` column:
-#' glossary_df <- select_text(content_list, tab = "glossary", section = "ignored")
-#' }
-#'
-#' @export
-select_text <- function(list_object, tab, section) {
-  # 1) Existence checks
-  if (is.null(list_object[[tab]])) {
-    stop("Table '", tab, "' not found in the provided list_object.")
-  }
-  df <- list_object[[tab]]
-
-  # 2) If there's no 'section' column, return the whole table (e.g., glossary)
-  if (!"section" %in% names(df)) {
-    return(df)
-  }
-
-  # 3) There is a 'section' column: filter by the requested section
-  df_sub <- dplyr::filter(df, .data$section == !!section)
-
-  # 4) If there's a 'text' column (your normal case), return it as a character vector
-  if ("text" %in% names(df_sub)) {
-    out <- dplyr::pull(df_sub, .data$text)
-    if (length(out) == 0) return("")   # safe empty for renderUI(HTML())
-    # Coerce just in case
-    return(as.character(out))
-  }
-
-  # 5) Fallback: return the filtered data.frame (no 'text' column present)
-  df_sub
-}
-
 #' Map status values to ICES status icons
 #'
 #' Converts status codes (e.g. `"GREEN"`, `"RED"`, `"ORANGE"`, `"GREY"`)
@@ -402,15 +333,15 @@ mod_flex_header_ui <- function(ns, left_id, right_id) {
 #' values.
 #'
 #' @examples
-#' "foo" %||% "bar"           # "foo"
-#' NULL  %||% "default"       # "default"
-#' ""    %||% "fallback"      # "fallback"
-#' NA    %||% 10              # 10
+#' "foo" %|?% "bar"           # "foo"
+#' NULL  %|?% "default"       # "default"
+#' ""    %|?% "fallback"      # "fallback"
+#' NA    %|?% 10              # 10
 #'
 #' @export
-  `%||%` <- function(a, b) if (!is.null(a) && length(a) > 0 && !is.na(a[1]) && nzchar(a[1])) a else b
+  `%|?%` <- function(a, b) if (!is.null(a) && length(a) > 0 && !is.na(a[1]) && nzchar(a[1])) a else b
 
-
+nzchar
 #' Construct base URL from a Shiny session
 #'
 #' Internal helper that reconstructs the base URL of the current Shiny
@@ -453,10 +384,10 @@ mod_flex_header_ui <- function(ns, left_id, right_id) {
 #'
 #' @keywords internal
 .base_url <- function(session) {
-  proto <- session$clientData$url_protocol %||% "https:"
-  host  <- session$clientData$url_hostname %||% ""
+  proto <- session$clientData$url_protocol %|?% "https:"
+  host  <- session$clientData$url_hostname %|?% ""
   port  <- session$clientData$url_port
-  path  <- session$clientData$url_pathname %||% "/"
+  path  <- session$clientData$url_pathname %|?% "/"
   port_part <- if (!is.null(port) && nzchar(port) &&
                     !(proto == "https:" && port == "443") &&
                     !(proto == "http:"  && port == "80")) paste0(":", port) else ""
@@ -514,10 +445,10 @@ parse_nav <- function(hash, search) {
   }
 
   list(
-    eco    = qs$eco    %||% "",
-    tab    = qs$tab    %||% "",
-    subtab = qs$subtab %||% "",
-    stock  = qs$stock  %||% ""
+    eco    = qs$eco    %|?% "",
+    tab    = qs$tab    %|?% "",
+    subtab = qs$subtab %|?% "",
+    stock  = qs$stock  %|?% ""
   )
 }
 
@@ -563,7 +494,7 @@ SUBTAB_INPUTS <- list(
 #' @export
 get_current_subtab <- function(tab, input) {
   id <- SUBTAB_INPUTS[[tab]]
-  if (is.null(id)) "" else as.character(input[[id]] %||% "")
+  if (is.null(id)) "" else as.character(input[[id]] %|?% "")
 }
 
 #' Programmatically select a sub-tab for a main tab
@@ -648,16 +579,16 @@ select_subtab <- function(tab, value, session) {
 #' @export
 # write_hash <- function(eco, tab, sub) {
 #   paste0(
-#     "#eco=", utils::URLencode(eco %||% "", reserved = TRUE),
-#     "&tab=", utils::URLencode(tab %||% "", reserved = TRUE),
-#     if (nzchar(sub %||% "")) paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else ""
+#     "#eco=", utils::URLencode(eco %|?% "", reserved = TRUE),
+#     "&tab=", utils::URLencode(tab %|?% "", reserved = TRUE),
+#     if (nzchar(sub %|?% "")) paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else ""
 #   )
 # }
 write_hash <- function(eco, tab, sub, stock = NULL) {
-  eco   <- eco   %||% ""
-  tab   <- tab   %||% ""
-  sub   <- sub   %||% ""
-  stock <- stock %||% ""
+  eco   <- eco   %|?% ""
+  tab   <- tab   %|?% ""
+  sub   <- sub   %|?% ""
+  stock <- stock %|?% ""
 
   paste0(
     "#eco=", utils::URLencode(eco, reserved = TRUE),

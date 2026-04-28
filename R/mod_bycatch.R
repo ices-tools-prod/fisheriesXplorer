@@ -285,6 +285,7 @@ mod_bycatch_ui <- function(id) {
 #' @importFrom plotly renderPlotly
 #' @importFrom dplyr filter
 #' @importFrom utils write.csv
+#' @importFrom icesUtils get_bycatch_ecoregion select_text
 #'
 #' @export
 mod_bycatch_server <- function(
@@ -295,7 +296,7 @@ mod_bycatch_server <- function(
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # `%||%` <- function(x, y) {
+    # `%|?%` <- function(x, y) {
     #   if (is.null(x)) y else x
     # }
 
@@ -497,8 +498,8 @@ mod_bycatch_server <- function(
     bpue_filtered_data <- reactive({
       dat <- bpue_base_data()
 
-      metier_sel <- input$bpue_metier_filter %||% character(0)
-      species_sel <- input$bpue_species_filter %||% character(0)
+      metier_sel <- input$bpue_metier_filter %|?% character(0)
+      species_sel <- input$bpue_species_filter %|?% character(0)
 
       if (length(metier_sel) > 0) {
         dat <- dat %>%
@@ -516,8 +517,8 @@ mod_bycatch_server <- function(
     total_bycatch_filtered_data <- reactive({
       dat <- total_bycatch_base_data()
 
-      metier_sel <- input$bycatch_metier_filter %||% character(0)
-      species_sel <- input$bycatch_species_filter %||% character(0)
+      metier_sel <- input$bycatch_metier_filter %|?% character(0)
+      species_sel <- input$bycatch_species_filter %|?% character(0)
 
       if (length(metier_sel) > 0) {
         dat <- dat %>%
