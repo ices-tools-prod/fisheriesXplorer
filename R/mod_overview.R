@@ -209,7 +209,7 @@ mod_overview_server <- function(
    mod_glossary_float_server(
      "app_glossary",
      terms = reactive({
-       df <- select_text(texts, "glossary", NULL) # your texts.rda table
+       df <- icesUtils::select_text(texts, "glossary", NULL) # your texts.rda table
        df[, intersect(names(df), c("term", "definition", "source")), drop = FALSE]
      })
    )
