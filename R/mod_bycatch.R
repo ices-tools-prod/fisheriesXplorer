@@ -627,7 +627,7 @@ mod_bycatch_server <- function(
 
         # --- 3) Disclaimer_bycatch.txt (fixed name; no acronym/date)
         disc_path_bycatch <- file.path(td, "Disclaimer_bycatch.txt")
-        disc_url_bycatch <- "https://github.com/ices-tools-prod/disclaimers/blob/master/disclaimer_bycatch_data_ouput.txt"
+        disc_url_bycatch <- "https://raw.githubusercontent.com/ices-tools-prod/disclaimers/master/disclaimer_bycatch_data_ouput.txt"
         if (!safe_download(disc_url_bycatch, disc_path_bycatch)) {
           writeLines(c(
             "Disclaimer for fisheriesXplorer bycatch data.",
