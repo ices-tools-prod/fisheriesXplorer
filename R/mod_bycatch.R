@@ -615,18 +615,29 @@ mod_bycatch_server <- function(
         utils::write.csv(dat, csv_path, row.names = FALSE)
 
         # --- 2) Disclaimer.txt (fixed name; no acronym/date)
-        disc_path <- file.path(td, "Disclaimer.txt")
+        disc_path <- file.path(td, "Disclaimer_fisheriesXplorer.txt")
         disc_url <- "https://raw.githubusercontent.com/ices-tools-prod/disclaimers/master/Disclaimer_fisheriesXplorer.txt"
         if (!safe_download(disc_url, disc_path)) {
           writeLines(c(
-            "Disclaimer for fisheriesXplorer bycatch data.",
+            "Disclaimer for fisheriesXplorer data.",
             "The official disclaimer could not be fetched automatically.",
             paste("Please see:", disc_url)
           ), con = disc_path)
         }
 
+        # --- 3) Disclaimer_bycatch.txt (fixed name; no acronym/date)
+        disc_path_bycatch <- file.path(td, "Disclaimer_bycatch.txt")
+        disc_url_bycatch <- "https://github.com/ices-tools-prod/disclaimers/blob/master/disclaimer_bycatch_data_ouput.txt"
+        if (!safe_download(disc_url_bycatch, disc_path_bycatch)) {
+          writeLines(c(
+            "Disclaimer for fisheriesXplorer bycatch data.",
+            "The official disclaimer could not be fetched automatically.",
+            paste("Please see:", disc_url_bycatch)
+          ), con = disc_path_bycatch)
+        }
+
         # --- Zip bundle
-        files_to_zip <- c(csv_path, disc_path)
+        files_to_zip <- c(csv_path, disc_path, disc_path_bycatch)
         if (requireNamespace("zip", quietly = TRUE) && "zipr" %in% getNamespaceExports("zip")) {
           zip::zipr(zipfile = file, files = files_to_zip, root = td)
         } else {
