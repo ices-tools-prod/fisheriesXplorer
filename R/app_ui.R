@@ -155,6 +155,28 @@ golem_add_external_resources <- function() {
         });
       });
     ")),
+    tags$script(HTML("
+    function removeSidebarResizeText() {
+      document
+        .querySelectorAll('.bslib-sidebar-resize-handle .visually-hidden')
+        .forEach(function(el) {
+          el.remove();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      removeSidebarResizeText();
+
+      const observer = new MutationObserver(function() {
+        removeSidebarResizeText();
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    });
+  ")),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/gothic-a1.css"),
     tags$style("body {font-family: 'Gothic A1', sans-serif;}"),
     tags$link(rel = "stylesheet", type = "text/css", href = "www/styles.css"),
