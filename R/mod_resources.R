@@ -149,10 +149,10 @@ bslib::nav_panel(
 
           # 6) Bycatch Data
           resource_card(
-            title = "Bycatch database",
+            title = "Bycatch dataset",
             description = "Results from ICES advice on bycatch of protected, endangered and threatened species.",
             dataset_url = "https://www.ices.dk/data/data-portals/Pages/Bycatch.aspx",
-            metadata_url = "https://gis.ices.dk/geonetwork/srv/api/records/60d06467-7545-4a06-86ab-2a2ababd3e0a?language=all",
+            metadata_url = "https://gis.ices.dk/geonetwork/srv/api/records/f11f65af-904f-49d7-90c4-8ce8156b375b?language=all",
             services = list(APIs = "https://bycatch.ices.dk/BycatchAdvice"),
             notes = "See dataset page for data access and conditions."
           ),
