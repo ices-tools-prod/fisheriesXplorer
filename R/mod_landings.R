@@ -214,6 +214,7 @@ mod_landings_ui <- function(id) {
 #'   downloadHandler reactive req tags tagList
 #' @importFrom plotly renderPlotly ggplotly
 #' @importFrom utils write.csv
+#' @importFrom icesUtils select_text
 #'
 #' @export
 mod_landings_server <- function(
