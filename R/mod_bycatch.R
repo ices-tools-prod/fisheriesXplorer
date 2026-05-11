@@ -72,8 +72,8 @@ mod_bycatch_ui <- function(id) {
                   radioButtons(
                     ns("bycatch_taxa_selector"),
                     "Select taxon:",
-                    choices = c("Fish", "Elasmobranchs", "Seabirds", "Turtles", "Mammals"),
-                    selected = "Mammals",
+                    choices = character(0),
+                    selected = character(0),
                     inline = TRUE
                   ),
                   download_icon_label(
@@ -149,8 +149,8 @@ mod_bycatch_ui <- function(id) {
                   radioButtons(
                     ns("bpue_taxa_selector"),
                     "Select taxon:",
-                    choices = c("Fish", "Elasmobranchs", "Seabirds", "Turtles", "Mammals"),
-                    selected = "Mammals",
+                    choices = character(0),
+                    selected = character(0),
                     inline = TRUE
                   ),
                   download_icon_label(
@@ -404,16 +404,70 @@ mod_bycatch_server <- function(
 
       out
     })
+    ################################## update selectisize radiobuttons #####################
+    # update selectizise to use only available taxa in the data, to avoid empty plots and confusion for users
+    
+    select_default_taxon <- function(current, valid_taxa) {
+      valid_taxa <- sort(unique(stats::na.omit(valid_taxa)))
 
+      if (length(valid_taxa) == 0) {
+        return(character(0))
+      }
+
+      if (!is.null(current) && length(current) > 0 && current %in% valid_taxa) {
+        return(current)
+      }
+
+      if ("Mammals" %in% valid_taxa) {
+        return("Mammals")
+      }
+
+      valid_taxa[1]
+    }
+    
+    observeEvent(bycatch_data(),
+      {
+        dat <- bycatch_data()
+
+        valid_taxa <- sort(unique(stats::na.omit(dat$taxon)))
+
+        bycatch_selected <- select_default_taxon(
+          isolate(input$bycatch_taxa_selector),
+          valid_taxa
+        )
+
+        bpue_selected <- select_default_taxon(
+          isolate(input$bpue_taxa_selector),
+          valid_taxa
+        )
+
+        updateRadioButtons(
+          session = session,
+          inputId = "bycatch_taxa_selector",
+          choices = valid_taxa,
+          selected = bycatch_selected,
+          inline = TRUE
+        )
+
+        updateRadioButtons(
+          session = session,
+          inputId = "bpue_taxa_selector",
+          choices = valid_taxa,
+          selected = bpue_selected,
+          inline = TRUE
+        )
+      },
+      ignoreInit = FALSE
+    )
     ################################## selected taxa #########################################
 
     bpue_taxa <- reactive({
-      req(input$bpue_taxa_selector)
+      req(length(input$bpue_taxa_selector) > 0)
       input$bpue_taxa_selector
     })
 
     bycatch_taxa <- reactive({
-      req(input$bycatch_taxa_selector)
+      req(length(input$bycatch_taxa_selector) > 0)
       input$bycatch_taxa_selector
     })
 
@@ -536,6 +590,15 @@ mod_bycatch_server <- function(
     ################################## plots #########################################
 
     output$bpue_plot <- renderPlotly({
+      dat <- bycatch_data()
+
+      validate(
+        need(
+          nrow(dat) > 0 && any(!is.na(dat$taxon)),
+          "No BPUE data available for this ecoregion."
+        )
+      )
+
       req(bpue_filtered_data(), bpue_taxa())
 
       validate(
@@ -550,6 +613,15 @@ mod_bycatch_server <- function(
     })
 
     output$total_bycatch_plot <- renderPlotly({
+      dat <- bycatch_data()
+
+      validate(
+        need(
+          nrow(dat) > 0 && any(!is.na(dat$taxon)),
+          "No bycatch data available for this ecoregion."
+        )
+      )
+
       req(total_bycatch_filtered_data(), bycatch_taxa())
 
       validate(
