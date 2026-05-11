@@ -407,24 +407,6 @@ mod_bycatch_server <- function(
     ################################## update selectisize radiobuttons #####################
     # update selectizise to use only available taxa in the data, to avoid empty plots and confusion for users
     
-    select_default_taxon <- function(current, valid_taxa) {
-      valid_taxa <- sort(unique(stats::na.omit(valid_taxa)))
-
-      if (length(valid_taxa) == 0) {
-        return(character(0))
-      }
-
-      if (!is.null(current) && length(current) > 0 && current %in% valid_taxa) {
-        return(current)
-      }
-
-      if ("Mammals" %in% valid_taxa) {
-        return("Mammals")
-      }
-
-      valid_taxa[1]
-    }
-    
     observeEvent(bycatch_data(),
       {
         dat <- bycatch_data()

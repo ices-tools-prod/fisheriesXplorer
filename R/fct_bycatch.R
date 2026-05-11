@@ -502,3 +502,71 @@ plot_bycatch_interactive <- function(df,
   )
 }
 
+
+#' Select a valid default taxon for bycatch UI controls
+#'
+#' Determines which taxon should be selected in the bycatch module radio
+#' buttons after the available taxa are updated for a given ecoregion.
+#'
+#' The function applies the following priority rules:
+#' \enumerate{
+#'   \item Keep the currently selected taxon if it is still available.
+#'   \item Otherwise, select \code{"Mammals"} if available.
+#'   \item Otherwise, select the first available taxon.
+#'   \item If no taxa are available, return an empty character vector.
+#' }
+#'
+#' This helper prevents invalid radio button states when users switch
+#' between ecoregions with different available taxa.
+#'
+#' @param current Character string. The currently selected taxon from the UI.
+#' @param valid_taxa Character vector containing the taxa available in the
+#' current dataset.
+#'
+#' @return
+#' A character string containing the selected taxon, or
+#' \code{character(0)} if no taxa are available.
+#'
+#' @details
+#' Missing values are removed from \code{valid_taxa}, and the remaining taxa
+#' are sorted alphabetically before selection logic is applied.
+#'
+#' The preference for \code{"Mammals"} preserves the previous default
+#' behaviour of the bycatch module while still allowing fully dynamic taxa
+#' selection across ecoregions.
+#'
+#' @examples
+#' select_default_taxon(
+#'   current = "Seabirds",
+#'   valid_taxa = c("Mammals", "Seabirds")
+#' )
+#'
+#' select_default_taxon(
+#'   current = "Turtles",
+#'   valid_taxa = c("Mammals", "Seabirds")
+#' )
+#'
+#' select_default_taxon(
+#'   current = NULL,
+#'   valid_taxa = character(0)
+#' )
+#'
+#' @export
+select_default_taxon <- function(current, valid_taxa) {
+      valid_taxa <- sort(unique(stats::na.omit(valid_taxa)))
+
+      if (length(valid_taxa) == 0) {
+        return(character(0))
+      }
+
+      if (!is.null(current) && length(current) > 0 && current %in% valid_taxa) {
+        return(current)
+      }
+
+      if ("Mammals" %in% valid_taxa) {
+        return("Mammals")
+      }
+
+      valid_taxa[1]
+    }
+
