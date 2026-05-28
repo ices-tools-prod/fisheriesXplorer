@@ -1497,3 +1497,8 @@ dim(unique(test))
 tail(test,20)
 
 write.csv(test, "formatted_catches_dev.csv")
+
+
+
+# file from which to get the changes 
+https://icesit-my.sharepoint.com/:x:/g/personal/luca_lamoni_ices_dk/IQBC1QZIiY6VT7gQb4skJOCaAdJR9ai9Avz-jswSBEyjFJ0?e=Hq8bWF
