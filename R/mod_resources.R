@@ -153,7 +153,7 @@ bslib::nav_panel(
             description = "Results from ICES advice on bycatch of protected, endangered and threatened species.",
             dataset_url = "https://www.ices.dk/data/data-portals/Pages/Bycatch.aspx",
             metadata_url = "https://gis.ices.dk/geonetwork/srv/api/records/f11f65af-904f-49d7-90c4-8ce8156b375b?language=all",
-            services = list(APIs = "https://bycatch.ices.dk/BycatchAdvice"),
+            services = list(APIs = "https://bycatch.ices.dk/webservices"),
             notes = "See dataset page for data access and conditions."
           ),
 
