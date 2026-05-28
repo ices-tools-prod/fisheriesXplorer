@@ -1,0 +1,13 @@
+dev/
+data-raw/
+modules_in_development/
+worksheet.R
+tests/
+vignettes/
+pkgdown/
+docs/
+man/
+.github/
+README.Rmd
+cran-comments.md
+renv.lock

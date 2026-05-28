@@ -152,6 +152,7 @@ mod_stock_status_ui <- function(id) {
                 radioButtons(ns("status_trend_selector"), "Select a fisheries guild:",
                   inline = TRUE,
                   choices = c(
+                    "All guilds" = "All",
                     "Benthic" = "benthic",
                     "Demersal" = "demersal",
                     "Elasmobranchs" = "elasmobranch",
@@ -382,6 +383,7 @@ mod_stock_status_ui <- function(id) {
 #' @importFrom utils write.csv
 #' @importFrom dplyr filter slice_max mutate select
 #' @importFrom tidyr pivot_wider
+#' @importFrom icesUtils select_text
 #'
 #' @export 
 mod_stock_status_server <- function(
@@ -439,10 +441,7 @@ mod_stock_status_server <- function(
 
 
     ################################## header + glossary #########################################
-    # output$ecoregion_label <- renderUI({
-    #   req(selected_ecoregion())
-    #   tags$span(tags$b("ICES ecoregion:"), " ", paste0(selected_ecoregion(), " (", get_ecoregion_acronym(selected_ecoregion()), ")"))
-    # })
+    
     output$ecoregion_label <- renderUI({
       eco <- selected_ecoregion()
       req(eco)
@@ -812,7 +811,7 @@ mod_stock_status_server <- function(
         date_tag <- format(Sys.Date(), "%d-%b-%y")
 
         # --- Inputs for plots (with safe fallbacks)
-        guild <- input$status_kobe_cld_selector %||% "All"
+        guild <- input$status_kobe_cld_selector %|?% "All"
         n_sel <- input$n_selector
         if (is.null(n_sel) || !is.finite(n_sel) || n_sel <= 0) n_sel <- 10L
 
@@ -916,7 +915,7 @@ mod_stock_status_server <- function(
       req(input$main_tabset == "status_lookup")
       annex_data <- format_annex_table(shared$clean_status, as.integer(format(Sys.Date(), "%Y")), shared$SID, shared$SAG)
       
-      sk <- selected_stock() %||% ""
+      sk <- selected_stock() %|?% ""
       if (nzchar(sk)) {
         annex_data <- annex_data %>% dplyr::filter(as.character(AssessmentKey) == sk)
       }
@@ -993,7 +992,7 @@ mod_stock_status_server <- function(
     })
 
     output$selected_stock_js <- renderText({
-      selected_stock() %||% ""
+      selected_stock() %|?% ""
     })
     outputOptions(output, "selected_stock_js", suspendWhenHidden = FALSE)
 

@@ -80,16 +80,16 @@ app_server <- function(input, output, session) {
   observeEvent(session$clientData$url_hash,
     {
       # Hash and query string (e.g. #eco=..., ?tab=..., ?subtab=...)
-      hash <- isolate(session$clientData$url_hash) %||% ""
-      search <- isolate(session$clientData$url_search) %||% ""
+      hash <- isolate(session$clientData$url_hash) %|?% ""
+      search <- isolate(session$clientData$url_search) %|?% ""
       # parse_nav() is a small helper that extracts eco/tab/subtab from hash+query
       p <- parse_nav(hash, search)
       # Store desired state in a single reactiveVal, with empty string as "not set"
       desired(list(
-        eco    = p$eco %||% "",
-        tab    = p$tab %||% "",
-        subtab = p$subtab %||% "",
-        stock  = p$stock %||% ""
+        eco    = p$eco %|?% "",
+        tab    = p$tab %|?% "",
+        subtab = p$subtab %|?% "",
+        stock  = p$stock %|?% ""
       ))
       # Flip the global "restore in progress" flag; the observer below will do the work
       is_restoring(TRUE)
@@ -130,17 +130,17 @@ app_server <- function(input, output, session) {
     if (nzchar(d$stock)) selected_stock(d$stock)
 
     # Check whether the live app state now matches the desired state --------------------
-    cur_tab <- input$`nav-page` %||% ""
+    cur_tab <- input$`nav-page` %|?% ""
     cur_sub <- get_current_subtab(d$tab, input)
 
     # We stop restoring when:
     # - the selected ecoregion is correct
     # - the top-level tab matches (or none was requested)
     # - the subtab matches (or none was requested)
-    if (identical(selected_ecoregion() %||% "", d$eco %||% "") &&
+    if (identical(selected_ecoregion() %|?% "", d$eco %|?% "") &&
       (!nzchar(d$tab) || identical(cur_tab, d$tab)) &&
       (!nzchar(d$subtab) || identical(cur_sub, d$subtab)) &&
-      (!nzchar(d$stock) || identical(selected_stock() %||% "", d$stock))
+      (!nzchar(d$stock) || identical(selected_stock() %|?% "", d$stock))
     ) {
       # Freeze the restore loop; further navigation will be driven by user input
       is_restoring(FALSE)
@@ -225,6 +225,12 @@ app_server <- function(input, output, session) {
     selected_ecoregion = selected_ecoregion,
     bookmark_qs        = reactive(list()) # parent restores
   )
+  mod_bycatch_server(
+    "bycatch_1",
+    selected_ecoregion = selected_ecoregion,
+    bookmark_qs        = reactive(list()), # parent restores
+    set_subtab = function(...) {}
+  )
   mod_resources_server(
     "resources_1",
     bookmark_qs        = reactive(list()), # parent restores
@@ -234,13 +240,13 @@ app_server <- function(input, output, session) {
   ##################################### Single writer: keep URL hash in sync (debounced), except during restore #####################################
   current_state <- reactive({
     list(
-      eco = selected_ecoregion() %||% "",
-      tab = input$`nav-page` %||% "",
+      eco = selected_ecoregion() %|?% "",
+      tab = input$`nav-page` %|?% "",
       subtab = {
-        t <- input$`nav-page` %||% ""
+        t <- input$`nav-page` %|?% ""
         get_current_subtab(t, input)
       },
-      stock = selected_stock() %||% ""
+      stock = selected_stock() %|?% ""
     )
   })
   current_state_deb <- debounce(current_state, millis = 150)
@@ -297,7 +303,7 @@ app_server <- function(input, output, session) {
 
   ########################################## Clipboard handler ##########################################
   observeEvent(input$copy_share_link, {
-    session$sendCustomMessage("copyText", list(text = share_url() %||% ""))
+    session$sendCustomMessage("copyText", list(text = share_url() %|?% ""))
   })
   observeEvent(input$share_copy_success, {
     showNotification("Link copied to clipboard", type = "message")
@@ -318,8 +324,8 @@ app_server <- function(input, output, session) {
         return()
       }
 
-      tab <- input$`nav-page` %||% ""
-      sub <- input$`stock_status_1-main_tabset` %||% ""
+      tab <- input$`nav-page` %|?% ""
+      sub <- input$`stock_status_1-main_tabset` %|?% ""
 
       # 1) Clear stock filter whenever we are NOT on Stock status -> Status lookup
       keep_stock <- identical(tab, "stock_status") && identical(sub, "status_lookup")
@@ -327,7 +333,7 @@ app_server <- function(input, output, session) {
 
       # 2) If ecoregion is missing/invalid at the moment of a tab/subtab change,
       #    fall back to Greater North Sea (but do NOT overwrite a valid choice)
-      eco <- selected_ecoregion() %||% ""
+      eco <- selected_ecoregion() %|?% ""
       acr <- get_ecoregion_acronym(eco)
 
       eco_missing <- identical(eco, "") || isTRUE(is.na(acr))

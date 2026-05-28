@@ -583,7 +583,7 @@ format_sag <- function(sag, sid){
 #'
 #' @export
 extract_custom_refpoint_choices <- function(sag_settings) {
-  sag_settings %>%
+  out <- sag_settings %>%
     dplyr::filter(settingKey == 51, SAGChartKey %in% c(3, 4)) %>%
     dplyr::transmute(
       AssessmentKey = as.integer(AssessmentKey),
@@ -599,13 +599,18 @@ extract_custom_refpoint_choices <- function(sag_settings) {
       names_from = SAGChartKey,
       values_from = settingValue,
       names_prefix = "choice_"
-    ) %>%
+    )
+
+  if (!"choice_3" %in% names(out)) out$choice_3 <- NA_character_
+  if (!"choice_4" %in% names(out)) out$choice_4 <- NA_character_
+
+  out %>%
     dplyr::mutate(
       choice_3 = as.integer(choice_3),
       choice_4 = as.integer(choice_4)
-    )
+    ) %>%
+    dplyr::select(AssessmentKey, choice_3, choice_4)
 }
-
 
 #' Apply proxy reference points to formatted SAG data
 #'
@@ -680,7 +685,7 @@ extract_custom_refpoint_choices <- function(sag_settings) {
 #' @export
 add_proxyRefPoints <- function(sag_formatted, sag_settings) {
   cust_choice <- extract_custom_refpoint_choices(sag_settings)
-
+  
   sag_formatted %>%
     dplyr::left_join(cust_choice, by = "AssessmentKey") %>%
     dplyr::mutate(
@@ -835,7 +840,7 @@ add_proxyRefPoints <- function(sag_formatted, sag_settings) {
 #'   select full_join case_when
 #' @noRd
 stockstatus_CLD_current_proxy <- function(x) {
-
+  
   # --- Ensure proxy columns exist
   for (nm in c("FMSY_is_proxy","FMSY_proxy_name","MSYB_is_proxy","MSYB_proxy_name")) {
     if (!nm %in% names(x)) x[[nm]] <- NA
@@ -904,8 +909,6 @@ stockstatus_CLD_current_proxy <- function(x) {
 
   df4
 }
-
-
 
 #' Compute stock-level and guild-mean trends with proxy reference points
 #'
@@ -1148,7 +1151,6 @@ stock_trends_proxy <- function(x) {
 #' for internal use by the Shiny app to display an appropriate fish
 #' illustration for a stock.
 #'
-#' @importFrom base sapply substr
 #' @noRd
 match_stockcode_to_illustration <- function(StockKeyLabel, df) {
         sapply(StockKeyLabel, function(key) {
@@ -1470,6 +1472,7 @@ plot_status_prop_pies <- function(
 #' @noRd
 plot_GES_pies <- function(x, y, return_data = FALSE, width_px = 800) {
   # --- Responsive sizes
+  
   base_size        <- max(14, min(20, round(width_px / 50)))
   caption_size     <- max(8, base_size - 2)
   value_label_size <- max(4, min(9, round(base_size / 3.0)))   # a bit larger than before
@@ -1599,113 +1602,190 @@ plot_GES_pies <- function(x, y, return_data = FALSE, width_px = 800) {
 
 
 
-#' Plot stock status trends by guild with proxy highlighting
+#' Plot stock status trends by fisheries guild
 #'
-#' Creates an interactive two-panel Plotly time-series figure showing
-#' stock-level status trajectories for a single fisheries guild.
-#' The top panel displays exploitation status (\code{F/F_MS Y}), and
-#' the bottom panel displays stock status
-#' (\code{SSB/MSY B_trigger}) over time.
-#'
-#' Lines corresponding to stocks that use proxy reference points are
-#' drawn with a dotted linetype, and the hover text explicitly
-#' indicates when a proxy is used. A thick black line shows the
-#' fisheries-guild mean in each panel (with the last year truncated
-#' so it is visually distinct from individual-stock series).
-#'
-#' Clicking a stock line in either panel highlights the selected stock
-#' in both panels and dims all other stocks; double-click clears the
-#' selection.
-#'
-#' @param x A data frame of stock-level metrics, typically the output
-#'   of \code{stock_trends_proxy()}, containing at least:
-#'   \itemize{
-#'     \item \code{StockKeyLabel} – stock name or label.
-#'     \item \code{FisheriesGuild} – guild classification.
-#'     \item \code{Metric} – one of \code{"F_FMSY"} or
-#'       \code{"SSB_MSYBtrigger"} (other metrics are ignored).
-#'     \item \code{Year} – assessment year (numeric).
-#'     \item \code{Value} – numeric value of the metric.
-#'     \item \code{Proxy_is_proxy} – logical flag indicating whether
-#'       the metric is based on a proxy reference point for that row.
-#'     \item \code{Proxy_name} – optional description of the proxy
-#'       reference point (character, may be \code{NA}).
-#'   }
-#'   Rows with \code{StockKeyLabel == "Mean"} are interpreted as
-#'   guild-level means.
-#'
-#' @param guild Character scalar; the fisheries guild to display
-#'   (e.g. \code{"demersal"}, \code{"pelagic"}, etc.). Only rows with
-#'   \code{FisheriesGuild == guild} are plotted.
-#' @param return_data Logical; if \code{TRUE}, returns the filtered
-#*   data frame for the requested guild (with the added
-#'   \code{MetricLabel} column) instead of the Plotly object.
-#'   Default is \code{FALSE}.
-#' @param ecoregion Optional character scalar used to annotate the
-#'   title and the export filename (e.g. \code{"Greater North Sea"}).
-#'
-#' @return
-#' If \code{return_data = FALSE} (default), an interactive Plotly
-#' htmlwidget consisting of two vertically stacked panels:
+#' Creates a two-panel interactive Plotly visualization of stock status trends
+#' over time, showing:
 #' \itemize{
-#'   \item Top panel: \code{F/F_MS Y} time series by stock, with a
-#'     horizontal reference line at 1 and a thick black mean line.
-#'   \item Bottom panel: \code{SSB/MSY B_trigger} time series by stock,
-#'     similarly annotated.
+#'   \item Fishing pressure: F/F\eqn{_{MSY}}
+#'   \item Biomass: SSB/MSY B\eqn{_{trigger}}
 #' }
 #'
-#' If there are no rows for the requested \code{guild}, a blank Plotly
-#' object is returned with a central annotation indicating that no data
-#' are available.
+#' The function supports two modes:
+#' \itemize{
+#'   \item \strong{Single guild:} plots individual stock trajectories with a guild-level mean
+#'   \item \strong{All guilds:} plots one mean line per guild (no individual stocks)
+#' }
 #'
-#' If \code{return_data = TRUE}, the function returns the subset of
-#' \code{x} used for plotting (for the selected guild and metrics),
-#' including the derived \code{MetricLabel} column.
+#' @param x Data frame containing stock assessment data. Must include:
+#'   \itemize{
+#'     \item \code{Year}
+#'     \item \code{Value}
+#'     \item \code{Metric} (e.g. "F_FMSY", "SSB_MSYBtrigger")
+#'     \item \code{StockKeyLabel}
+#'     \item \code{FisheriesGuild}
+#'     \item \code{Proxy_is_proxy} (logical)
+#'     \item \code{Proxy_name} (character)
+#'   }
+#' @param guild Character string specifying the fisheries guild to plot.
+#'   Use \code{"All"} to display mean trends for all guilds.
+#' @param return_data Logical. If \code{TRUE}, returns the processed data instead
+#'   of a plot.
+#' @param ecoregion Character string used in plot title and export filename.
+#' @param per_panel_height Numeric. Height (in pixels) of each panel; total plot
+#'   height is twice this value.
 #'
 #' @details
-#' Colours are assigned per \code{StockKeyLabel} using
-#' \code{hcl.colors(..., palette = "Temps")}, excluding the guild
-#' mean row (\code{"Mean"}). Stocks that rely on proxy reference
-#' points (\code{Proxy_is_proxy == TRUE}) are drawn as dotted lines;
-#' other stocks are drawn as solid lines.
+#' \strong{Single guild mode}
+#' \itemize{
+#'   \item Plots individual stock trajectories
+#'   \item Solid lines = observed values
+#'   \item Dotted lines = proxy-based estimates
+#'   \item Includes a thick black mean line
+#'   \item Interactive highlighting allows selecting stocks across panels
+#' }
 #'
-#' Hover text shows the stock name, year, metric value, and—when
-#' applicable—the proxy reference point name. A horizontal reference
-#' line at 1 is added in both panels, along with a rectangular border
-#' around each subplot.
+#' \strong{All guilds mode}
+#' \itemize{
+#'   \item Uses only rows where \code{StockKeyLabel == "Mean"}
+#'   \item Plots one line per guild
+#'   \item No stock-level detail is shown
+#' }
 #'
-#' A random Crosstalk group is created per call to ensure linked
-#' highlighting across both panels without interference between
-#' multiple instances of the plot in a Shiny app. The export filename
-#' for the built-in "Download as PNG" button includes the ecoregion,
-#' guild name, and current date.
+#' In both modes:
+#' \itemize{
+#'   \item A horizontal reference line at y = 1 indicates sustainability thresholds
+#'   \item The final year of each mean series is set to \code{NA} (to avoid misleading projections)
+#'   \item Panels share the same x-axis (Year)
+#'   \item Hover text provides contextual information
+#' }
 #'
-#' @importFrom dplyr filter mutate recode group_by ungroup arrange
-#'   slice_head select
-#' @importFrom grDevices hcl.colors
-#' @importFrom plotly plot_ly add_lines layout subplot highlight
-#'   highlight_key config attrs_selected
-#' @noRd
-plot_stock_trends <- function(x, 
-                              guild, 
-                              return_data = FALSE, 
+#' @return
+#' \itemize{
+#'   \item A Plotly object (default)
+#'   \item A data frame if \code{return_data = TRUE}
+#' }
+#'
+#' @seealso
+#' \code{\link{make_all_guilds_panel}},
+#' \code{\link{make_single_guild_panel}},
+#' \code{\link{build_final_plot}}
+#'
+#' @examples
+#' \dontrun{
+#' # Single guild
+#' plot_stock_trends(df, guild = "Demersal", ecoregion = "NrS")
+#'
+#' # All guilds
+#' plot_stock_trends(df, guild = "All", ecoregion = "NrS")
+#' }
+plot_stock_trends <- function(x,
+                              guild,
+                              return_data = FALSE,
                               ecoregion = NULL,
                               per_panel_height = 330) {
-  # --- helpers
   safe_min <- function(v, pad = 0) {
     m <- suppressWarnings(base::min(v, na.rm = TRUE))
     if (is.infinite(m)) 0 else m - pad
   }
+
   safe_max <- function(v, pad = 0) {
     m <- suppressWarnings(base::max(v, na.rm = TRUE))
     if (is.infinite(m)) 1 else m + pad
   }
+
   rand_id <- function(prefix = "stockkey_") {
     paste0(prefix, paste(sample(c(letters, LETTERS, 0:9), 12, TRUE), collapse = ""))
   }
 
-  # --- Filter for selected guild
+  metric_map <- c(
+    "F_FMSY" = "F/F<sub>MSY</sub>",
+    "SSB_MSYBtrigger" = "SSB/MSY B<sub>trigger</sub>"
+  )
+
+
+
+  # ------------------------------------------------------------
+  # branch 1: All guilds
+  # ------------------------------------------------------------
+  if (!is.null(guild) && guild == "All") {
+    df_all <- x %>%
+      dplyr::filter(
+        Metric %in% names(metric_map),
+        StockKeyLabel == "Mean"
+      ) %>%
+      dplyr::mutate(
+        MetricLabel = dplyr::recode(Metric, !!!metric_map)
+      )
+
+    if (nrow(df_all) == 0) {
+      return(
+        plotly::plot_ly() %>%
+          plotly::layout(
+            xaxis = list(visible = FALSE),
+            yaxis = list(visible = FALSE),
+            annotations = list(list(
+              text = "No mean data available across guilds",
+              xref = "paper", yref = "paper", x = 0.5, y = 0.5,
+              showarrow = FALSE, font = list(size = 20)
+            ))
+          )
+      )
+    }
+
+    # Null last-year mean within each guild and metric
+    df_all <- df_all %>%
+      dplyr::group_by(FisheriesGuild, Metric) %>%
+      dplyr::mutate(
+        last_year = suppressWarnings(max(Year, na.rm = TRUE)),
+        Value = dplyr::if_else(Year == last_year, NA_real_, Value)
+      ) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-last_year)
+
+    if (return_data) {
+      return(df_all)
+    }
+
+    guild_names <- sort(unique(df_all$FisheriesGuild))
+    guild_cols <- grDevices::hcl.colors(length(guild_names), palette = "Temps")
+    names(guild_cols) <- guild_names
+
+    plot1 <- make_all_guilds_panel(
+      df_mean = df_all,
+      metric_raw = "F_FMSY",
+      yaxis_title = metric_map[["F_FMSY"]],
+      colors = guild_cols,
+      showlegend = TRUE
+    )
+
+    plot2 <- make_all_guilds_panel(
+      df_mean = df_all,
+      metric_raw = "SSB_MSYBtrigger",
+      yaxis_title = metric_map[["SSB_MSYBtrigger"]],
+      colors = guild_cols,
+      showlegend = FALSE
+    )
+
+    return(
+      build_final_plot(
+        plot1 = plot1,
+        plot2 = plot2,
+        title_text = paste0("Status trends: All guilds (", ecoregion, ")"),
+        legend_title = "<b>Guild:</b>",
+        filename_stub = paste0(
+          ecoregion, "_StatusTrends_AllGuilds_",
+          base::format(base::Sys.Date(), "%d-%b-%y")
+        )
+      )
+    )
+  }
+
+  # ------------------------------------------------------------
+  # branch 2: one selected guild
+  # ------------------------------------------------------------
   df <- dplyr::filter(x, FisheriesGuild == guild)
+
   if (nrow(df) == 0) {
     return(
       plotly::plot_ly() %>%
@@ -1721,23 +1801,20 @@ plot_stock_trends <- function(x,
     )
   }
 
-  # --- Colors (exclude Mean)
-  adj_names <- base::sort(base::setdiff(base::unique(df$StockKeyLabel), "Mean"))
+  adj_names <- sort(setdiff(unique(df$StockKeyLabel), "Mean"))
   values <- grDevices::hcl.colors(length(adj_names), palette = "Temps")
-  base::names(values) <- adj_names
-  values <- c(values, c(MEAN = "black"))   # not used directly but harmless
+  names(values) <- adj_names
+  values <- c(values, c(MEAN = "black"))
 
-  # --- Keep metrics of interest + pretty labels (retain raw for filtering)
-  metric_map <- c("F_FMSY" = "F/F<sub>MSY</sub>",
-                  "SSB_MSYBtrigger" = "SSB/MSY B<sub>trigger</sub>")
   df <- df %>%
-    dplyr::filter(Metric %in% base::names(metric_map)) %>%
+    dplyr::filter(Metric %in% names(metric_map)) %>%
     dplyr::mutate(MetricLabel = dplyr::recode(Metric, !!!metric_map))
 
-  # --- Mean rows + null last-year mean
   mean_df <- dplyr::filter(df, StockKeyLabel == "Mean")
-  last_year_F <- suppressWarnings(base::max(mean_df$Year[mean_df$Metric == "F_FMSY"], na.rm = TRUE))
-  last_year_B <- suppressWarnings(base::max(mean_df$Year[mean_df$Metric == "SSB_MSYBtrigger"], na.rm = TRUE))
+
+  last_year_F <- suppressWarnings(max(mean_df$Year[mean_df$Metric == "F_FMSY"], na.rm = TRUE))
+  last_year_B <- suppressWarnings(max(mean_df$Year[mean_df$Metric == "SSB_MSYBtrigger"], na.rm = TRUE))
+
   if (is.finite(last_year_F)) {
     mean_df$Value[mean_df$Metric == "F_FMSY" & mean_df$Year == last_year_F] <- NA_real_
   }
@@ -1745,198 +1822,72 @@ plot_stock_trends <- function(x,
     mean_df$Value[mean_df$Metric == "SSB_MSYBtrigger" & mean_df$Year == last_year_B] <- NA_real_
   }
 
-  # --- Non-mean rows + hover text (proxy-aware)
   df2 <- dplyr::filter(df, StockKeyLabel != "Mean") %>%
     dplyr::mutate(
       hover = dplyr::if_else(
-        Proxy_is_proxy & !base::is.na(Proxy_name),
-        paste0("Stock: ", StockKeyLabel,
-               "<br>Year: ", Year,
-               "<br>", MetricLabel, ": ", base::signif(Value, 4),
-               "<br>Proxy: ", Proxy_name),
-        paste0("Stock: ", StockKeyLabel,
-               "<br>Year: ", Year,
-               "<br>", MetricLabel, ": ", base::signif(Value, 4))
+        Proxy_is_proxy & !is.na(Proxy_name),
+        paste0(
+          "Stock: ", StockKeyLabel,
+          "<br>Year: ", Year,
+          "<br>", MetricLabel, ": ", signif(Value, 4),
+          "<br>Proxy: ", Proxy_name
+        ),
+        paste0(
+          "Stock: ", StockKeyLabel,
+          "<br>Year: ", Year,
+          "<br>", MetricLabel, ": ", signif(Value, 4)
+        )
       )
     )
 
-  # --- Determine which stocks appear in which panel
-  stocks_top    <- unique(dplyr::filter(df2, Metric == "F_FMSY")$StockKeyLabel)
+  stocks_top <- unique(dplyr::filter(df2, Metric == "F_FMSY")$StockKeyLabel)
   stocks_bottom <- unique(dplyr::filter(df2, Metric == "SSB_MSYBtrigger")$StockKeyLabel)
-  only_bottom   <- base::setdiff(stocks_bottom, stocks_top)
+  only_bottom <- setdiff(stocks_bottom, stocks_top)
 
-  # --- Fresh Crosstalk group per render (prevents stale linkage)
   ct_group <- rand_id()
 
-  # --- Panel builder (legend shown only for chosen stocks; grouped across panels)
-  make_panel <- function(metric_raw, yaxis_title, legend_stocks = character(), show_mean_in_legend = TRUE) {
-    panel <- dplyr::filter(df2, Metric == metric_raw)
-
-    # Split into non-proxy vs proxy (constant per stock & metric)
-    np <- panel %>%
-      dplyr::group_by(StockKeyLabel) %>%
-      dplyr::filter(!base::any(Proxy_is_proxy, na.rm = TRUE)) %>%
-      dplyr::ungroup()
-
-    pr <- panel %>%
-      dplyr::group_by(StockKeyLabel) %>%
-      dplyr::filter(base::any(Proxy_is_proxy, na.rm = TRUE)) %>%
-      dplyr::ungroup()
-
-    # Further split by whether we want legend entries here
-    np_on  <- dplyr::filter(np, StockKeyLabel %in% legend_stocks)
-    np_off <- dplyr::filter(np, !StockKeyLabel %in% legend_stocks)
-    pr_on  <- dplyr::filter(pr, StockKeyLabel %in% legend_stocks)
-    pr_off <- dplyr::filter(pr, !StockKeyLabel %in% legend_stocks)
-
-    # Keyed data for cross-panel highlight
-    hk_np_on  <- plotly::highlight_key(np_on,  ~StockKeyLabel, group = ct_group)
-    hk_np_off <- plotly::highlight_key(np_off, ~StockKeyLabel, group = ct_group)
-    hk_pr_on  <- plotly::highlight_key(pr_on,  ~StockKeyLabel, group = ct_group)
-    hk_pr_off <- plotly::highlight_key(pr_off, ~StockKeyLabel, group = ct_group)
-
-    p <- plotly::plot_ly() %>%
-      # Non-proxy (solid) — legend ON
-      plotly::add_lines(
-        data = hk_np_on,
-        x = ~Year, y = ~Value,
-        split = ~StockKeyLabel,
-        color = ~StockKeyLabel, colors = values,
-        legendgroup = ~StockKeyLabel, name = ~StockKeyLabel,
-        line = list(width = 3, dash = "solid"),
-        unselected = list(line = list(opacity = 0.3)),
-        text = ~hover, hovertemplate = "%{text}<extra></extra>",
-        showlegend = TRUE
-      ) %>%
-      # Non-proxy (solid) — legend OFF
-      plotly::add_lines(
-        data = hk_np_off,
-        x = ~Year, y = ~Value,
-        split = ~StockKeyLabel,
-        color = ~StockKeyLabel, colors = values,
-        legendgroup = ~StockKeyLabel, name = ~StockKeyLabel,
-        line = list(width = 3, dash = "solid"),
-        unselected = list(line = list(opacity = 0.3)),
-        text = ~hover, hovertemplate = "%{text}<extra></extra>",
-        showlegend = FALSE
-      ) %>%
-      # Proxy (dotted) — legend ON
-      plotly::add_lines(
-        data = hk_pr_on,
-        x = ~Year, y = ~Value,
-        split = ~StockKeyLabel,
-        color = ~StockKeyLabel, colors = values,
-        legendgroup = ~StockKeyLabel, name = ~StockKeyLabel,
-        line = list(width = 3, dash = "dot"),
-        unselected = list(line = list(opacity = 0.3)),
-        text = ~hover, hovertemplate = "%{text}<extra></extra>",
-        showlegend = TRUE
-      ) %>%
-      # Proxy (dotted) — legend OFF
-      plotly::add_lines(
-        data = hk_pr_off,
-        x = ~Year, y = ~Value,
-        split = ~StockKeyLabel,
-        color = ~StockKeyLabel, colors = values,
-        legendgroup = ~StockKeyLabel, name = ~StockKeyLabel,
-        line = list(width = 3, dash = "dot"),
-        unselected = list(line = list(opacity = 0.3)),
-        text = ~hover, hovertemplate = "%{text}<extra></extra>",
-        showlegend = FALSE
-      ) %>%
-      # Mean line (legend only once if desired)
-      plotly::add_lines(
-        data = dplyr::filter(mean_df, Metric == metric_raw),
-        x = ~Year, y = ~Value,
-        name = "Mean", legendgroup = "Mean",
-        line = list(color = "black", width = 5),
-        showlegend = show_mean_in_legend,
-        inherit = FALSE
-      ) %>%
-      plotly::layout(
-        yaxis = list(
-          title = yaxis_title,
-          titlefont = list(size = 16),
-          tickfont = list(size = 14),
-          zeroline = TRUE, zerolinecolor = "black", zerolinewidth = 2
-        ),
-        shapes = list(
-          list(
-            type = "line",
-            x0 = safe_min(df$Year, 0),
-            x1 = safe_max(df$Year, 1),
-            y0 = 1, y1 = 1,
-            line = list(color = "#000000", width = 1)
-          ),
-          list(
-            type = "rect", xref = "paper", yref = "paper",
-            x0 = 0, x1 = 1, y0 = 0, y1 = 1,
-            line = list(color = "black", width = 1),
-            fillcolor = "rgba(0,0,0,0)"
-          )
-        )
-      )
-
-    p
-  }
-
-  # --- Build both panels
-  plot1 <- make_panel(
-    "F_FMSY",
-    metric_map[["F_FMSY"]],
-    legend_stocks = stocks_top,          # legend for top-panel stocks
+  plot1 <- make_single_guild_panel(
+    df2 = df2,
+    mean_df = mean_df,
+    df_all_years = df,
+    metric_raw = "F_FMSY",
+    yaxis_title = metric_map[["F_FMSY"]],
+    legend_stocks = stocks_top,
+    values = values,
+    ct_group = ct_group,
     show_mean_in_legend = TRUE
   )
-  plot2 <- make_panel(
-    "SSB_MSYBtrigger",
-    metric_map[["SSB_MSYBtrigger"]],
-    legend_stocks = only_bottom,         # legend for stocks only in lower panel
-    show_mean_in_legend = FALSE          # avoid duplicate 'Mean'
+
+  plot2 <- make_single_guild_panel(
+    df2 = df2,
+    mean_df = mean_df,
+    df_all_years = df,
+    metric_raw = "SSB_MSYBtrigger",
+    yaxis_title = metric_map[["SSB_MSYBtrigger"]],
+    legend_stocks = only_bottom,
+    values = values,
+    ct_group = ct_group,
+    show_mean_in_legend = FALSE
   )
 
-  # --- Combine + highlight without recoloring
-  final_plot <- plotly::subplot(plot1, plot2, nrows = 2, shareX = TRUE, titleY = TRUE) %>%
-    plotly::layout(
-      height = per_panel_height * 2,
-      xaxis = list(title = "Year", titlefont = list(size = 16), tickfont = list(size = 14)),
-      margin = list(b = 100, r = 50),
-      legend = list(
-        title = list(text = "<b>Stock code:</b>", font = list(size = 16)),
-        orientation = "h",
-        x = 0.5, y = 1.05, xanchor = "center", yanchor = "bottom",
-        font = list(size = 16)
-      ),
-      annotations = list(
-        list(
-          x = 1, y = -0.17, xref = "paper", yref = "paper",
-          text = paste0("ICES Stock Assessment Database, ", base::format(base::Sys.Date(), "%d-%b-%y"), ". ICES, Copenhagen"),
-          showarrow = FALSE, xanchor = "right", yanchor = "bottom"
-        ),
-        list(
-          text = paste0("Status trends: ", guild, " (", ecoregion, ")"),
-          x = 0.01, y = 0.99, xref = "paper", yref = "paper",
-          showarrow = FALSE, xanchor = "left", yanchor = "top",
-          font = list(size = 18, color = "black")
-        )
-      )
-    ) %>%
+  final_plot <- build_final_plot(
+    plot1 = plot1,
+    plot2 = plot2,
+    title_text = paste0("Status trends: ", guild, " (", ecoregion, ")"),
+    legend_title = "<b>Stock code:</b>",
+    filename_stub = paste0(
+      ecoregion, "_StatusTrends_", guild, "_",
+      base::format(base::Sys.Date(), "%d-%b-%y")
+    )
+  ) %>%
     plotly::highlight(
       on = "plotly_click",
       off = "plotly_doubleclick",
-      # dynamic = FALSE (default) -> no brush widget
-      color = NULL,               # keep original trace color on selection
+      color = NULL,
       opacityDim = 0.3,
       selected = plotly::attrs_selected(
         opacity = 1,
         line = list(width = 6)
-      )
-    ) %>%
-    plotly::config(
-      responsive = TRUE,
-      toImageButtonOptions = list(
-        filename = paste0(ecoregion, "_StatusTrends_", guild, "_", base::format(base::Sys.Date(), "%d-%b-%y")),
-        format   = "png",
-        scale    = 3
       )
     )
 
@@ -1945,6 +1896,293 @@ plot_stock_trends <- function(x,
 
 
 
+
+
+
+#' Build final two-panel Plotly layout
+#'
+#' Combines two Plotly panels into a vertically stacked subplot and applies
+#' shared layout elements (axes, legend, annotations, export options).
+#'
+#' @param plot1 A Plotly object representing the upper panel (typically F/F_MSY).
+#' @param plot2 A Plotly object representing the lower panel (typically SSB/Btrigger).
+#' @param title_text Character string. Title annotation shown at the top-left of the figure.
+#' @param legend_title Character string. Title displayed above the legend.
+#' @param filename_stub Character string. Base filename used when exporting the plot as an image.
+#'
+#' @details
+#' This helper standardizes figure appearance across use cases:
+#' \itemize{
+#'   \item Stacks panels with shared x-axis (Year)
+#'   \item Applies consistent font sizes and margins
+#'   \item Adds a data source annotation (ICES)
+#'   \item Adds a contextual title annotation
+#'   \item Configures export settings (PNG, high resolution)
+#' }
+#'
+#' The height of the combined plot is controlled externally via
+#' \code{per_panel_height}.
+#'
+#' @return A Plotly object with combined panels and configured layout.
+build_final_plot <- function(plot1, plot2, title_text, legend_title, filename_stub, per_panel_height = 330) {
+  plotly::subplot(plot1, plot2, nrows = 2, shareX = TRUE, titleY = TRUE) %>%
+    plotly::layout(
+      height = per_panel_height * 2,
+      xaxis = list(
+        title = "Year",
+        titlefont = list(size = 16),
+        tickfont = list(size = 14)
+      ),
+      margin = list(b = 100, r = 50),
+      legend = list(
+        title = list(text = legend_title, font = list(size = 16)),
+        orientation = "h",
+        x = 0.5, y = 1.05, xanchor = "center", yanchor = "bottom",
+        font = list(size = 16)
+      ),
+      annotations = list(
+        list(
+          x = 1, y = -0.17, xref = "paper", yref = "paper",
+          text = paste0(
+            "ICES Stock Assessment Database, ",
+            base::format(base::Sys.Date(), "%d-%b-%y"),
+            ". ICES, Copenhagen"
+          ),
+          showarrow = FALSE,
+          xanchor = "right",
+          yanchor = "bottom"
+        ),
+        list(
+          text = title_text,
+          x = 0.01, y = 0.99, xref = "paper", yref = "paper",
+          showarrow = FALSE,
+          xanchor = "left",
+          yanchor = "top",
+          font = list(size = 18, color = "black")
+        )
+      )
+    ) %>%
+    plotly::config(
+      responsive = TRUE,
+      toImageButtonOptions = list(
+        filename = filename_stub,
+        format   = "png",
+        scale    = 3
+      )
+    )
+}
+
+#' Create panel for "All guilds" view (mean lines only)
+#'
+#' Generates a single Plotly panel showing one line per fisheries guild,
+#' using pre-computed mean values (StockKeyLabel == "Mean").
+#'
+#' @param df_mean Data frame containing mean time series for each guild.
+#'   Must include columns: \code{Year}, \code{Value}, \code{Metric}, \code{FisheriesGuild}.
+#' @param metric_raw Character string. Metric identifier (e.g. "F_FMSY", "SSB_MSYBtrigger").
+#' @param yaxis_title Character string. Label for the y-axis (HTML allowed).
+#' @param colors Named character vector mapping \code{FisheriesGuild} to colors.
+#' @param showlegend Logical. Whether to display legend entries for this panel.
+#'
+#' @details
+#' This helper is used when \code{guild == "All"}:
+#' \itemize{
+#'   \item Only mean series are plotted (no individual stocks)
+#'   \item Each guild is represented as one line
+#'   \item Lines are grouped and colored by \code{FisheriesGuild}
+#'   \item A horizontal reference line at y = 1 is added
+#'   \item A bounding box frame is drawn around the panel
+#' }
+#'
+#' Hover text includes guild, year, and metric value.
+#'
+#' @return A Plotly object representing a single panel.
+make_all_guilds_panel <- function(df_mean, metric_raw, yaxis_title, colors, showlegend = TRUE) {
+  panel <- df_mean %>%
+    dplyr::filter(Metric == metric_raw)
+
+  plotly::plot_ly() %>%
+    plotly::add_lines(
+      data = panel,
+      x = ~Year, y = ~Value,
+      split = ~FisheriesGuild,
+      color = ~FisheriesGuild,
+      colors = colors,
+      legendgroup = ~FisheriesGuild,
+      name = ~FisheriesGuild,
+      line = list(width = 3),
+      text = ~ paste0(
+        "Guild: ", FisheriesGuild,
+        "<br>Year: ", Year,
+        "<br>", yaxis_title, ": ", base::signif(Value, 4)
+      ),
+      hovertemplate = "%{text}<extra></extra>",
+      showlegend = showlegend
+    ) %>%
+    plotly::layout(
+      yaxis = list(
+        title = yaxis_title,
+        titlefont = list(size = 16),
+        tickfont = list(size = 14),
+        zeroline = TRUE,
+        zerolinecolor = "black",
+        zerolinewidth = 2
+      ),
+      shapes = list(
+        list(
+          type = "line",
+          x0 = safe_min(df_mean$Year, 0),
+          x1 = safe_max(df_mean$Year, 1),
+          y0 = 1, y1 = 1,
+          line = list(color = "#000000", width = 1)
+        ),
+        list(
+          type = "rect", xref = "paper", yref = "paper",
+          x0 = 0, x1 = 1, y0 = 0, y1 = 1,
+          line = list(color = "black", width = 1),
+          fillcolor = "rgba(0,0,0,0)"
+        )
+      )
+    )
+}
+
+#' Create panel for a single guild (stock-level lines + mean)
+#'
+#' Generates a Plotly panel for a selected fisheries guild, showing:
+#' individual stock trajectories and the guild-level mean.
+#'
+#' @param df2 Data frame of non-mean stock observations.
+#'   Must include: \code{Year}, \code{Value}, \code{Metric}, \code{StockKeyLabel},
+#'   \code{Proxy_is_proxy}, \code{hover}.
+#' @param mean_df Data frame containing mean time series (StockKeyLabel == "Mean").
+#' @param df_all_years Data frame used only to determine x-axis range (Year).
+#' @param metric_raw Character string. Metric identifier.
+#' @param yaxis_title Character string. Label for the y-axis.
+#' @param legend_stocks Character vector of stock IDs to include in the legend.
+#'   Other stocks are plotted but hidden from the legend.
+#' @param values Named character vector mapping stock IDs to colors.
+#' @param ct_group Character string. Crosstalk group ID for linked highlighting.
+#' @param show_mean_in_legend Logical. Whether to include the mean line in the legend.
+#'
+#' @details
+#' This helper implements the main plotting logic for individual guilds:
+#' \itemize{
+#'   \item Splits stocks into proxy vs non-proxy:
+#'     \itemize{
+#'       \item Solid lines = observed data
+#'       \item Dotted lines = proxy-based data
+#'     }
+#'   \item Separates legend-visible and legend-hidden traces
+#'   \item Uses \code{highlight_key()} to enable cross-panel interaction
+#'   \item Applies dimming for unselected traces
+#'   \item Adds a thick black mean line
+#'   \item Adds reference line at y = 1 and panel border
+#' }
+#'
+#' The function assumes that proxy status is constant within each stock time series.
+#'
+#' @return A Plotly object representing a single panel.
+make_single_guild_panel <- function(df2, mean_df, df_all_years, metric_raw, yaxis_title,
+                                    legend_stocks, values, ct_group, show_mean_in_legend = TRUE) {
+  panel <- dplyr::filter(df2, Metric == metric_raw)
+
+  np <- panel %>%
+    dplyr::group_by(StockKeyLabel) %>%
+    dplyr::filter(!base::any(Proxy_is_proxy, na.rm = TRUE)) %>%
+    dplyr::ungroup()
+
+  pr <- panel %>%
+    dplyr::group_by(StockKeyLabel) %>%
+    dplyr::filter(base::any(Proxy_is_proxy, na.rm = TRUE)) %>%
+    dplyr::ungroup()
+
+  np_on <- dplyr::filter(np, StockKeyLabel %in% legend_stocks)
+  np_off <- dplyr::filter(np, !StockKeyLabel %in% legend_stocks)
+  pr_on <- dplyr::filter(pr, StockKeyLabel %in% legend_stocks)
+  pr_off <- dplyr::filter(pr, !StockKeyLabel %in% legend_stocks)
+
+  hk_np_on <- plotly::highlight_key(np_on, ~StockKeyLabel, group = ct_group)
+  hk_np_off <- plotly::highlight_key(np_off, ~StockKeyLabel, group = ct_group)
+  hk_pr_on <- plotly::highlight_key(pr_on, ~StockKeyLabel, group = ct_group)
+  hk_pr_off <- plotly::highlight_key(pr_off, ~StockKeyLabel, group = ct_group)
+
+  plotly::plot_ly() %>%
+    plotly::add_lines(
+      data = hk_np_on,
+      x = ~Year, y = ~Value,
+      split = ~StockKeyLabel,
+      color = ~StockKeyLabel, colors = values,
+      legendgroup = ~StockKeyLabel, name = ~StockKeyLabel,
+      line = list(width = 3, dash = "solid"),
+      unselected = list(line = list(opacity = 0.3)),
+      text = ~hover, hovertemplate = "%{text}<extra></extra>",
+      showlegend = TRUE
+    ) %>%
+    plotly::add_lines(
+      data = hk_np_off,
+      x = ~Year, y = ~Value,
+      split = ~StockKeyLabel,
+      color = ~StockKeyLabel, colors = values,
+      legendgroup = ~StockKeyLabel, name = ~StockKeyLabel,
+      line = list(width = 3, dash = "solid"),
+      unselected = list(line = list(opacity = 0.3)),
+      text = ~hover, hovertemplate = "%{text}<extra></extra>",
+      showlegend = FALSE
+    ) %>%
+    plotly::add_lines(
+      data = hk_pr_on,
+      x = ~Year, y = ~Value,
+      split = ~StockKeyLabel,
+      color = ~StockKeyLabel, colors = values,
+      legendgroup = ~StockKeyLabel, name = ~StockKeyLabel,
+      line = list(width = 3, dash = "dot"),
+      unselected = list(line = list(opacity = 0.3)),
+      text = ~hover, hovertemplate = "%{text}<extra></extra>",
+      showlegend = TRUE
+    ) %>%
+    plotly::add_lines(
+      data = hk_pr_off,
+      x = ~Year, y = ~Value,
+      split = ~StockKeyLabel,
+      color = ~StockKeyLabel, colors = values,
+      legendgroup = ~StockKeyLabel, name = ~StockKeyLabel,
+      line = list(width = 3, dash = "dot"),
+      unselected = list(line = list(opacity = 0.3)),
+      text = ~hover, hovertemplate = "%{text}<extra></extra>",
+      showlegend = FALSE
+    ) %>%
+    plotly::add_lines(
+      data = dplyr::filter(mean_df, Metric == metric_raw),
+      x = ~Year, y = ~Value,
+      name = "Mean", legendgroup = "Mean",
+      line = list(color = "black", width = 5),
+      showlegend = show_mean_in_legend,
+      inherit = FALSE
+    ) %>%
+    plotly::layout(
+      yaxis = list(
+        title = yaxis_title,
+        titlefont = list(size = 16),
+        tickfont = list(size = 14),
+        zeroline = TRUE, zerolinecolor = "black", zerolinewidth = 2
+      ),
+      shapes = list(
+        list(
+          type = "line",
+          x0 = safe_min(df_all_years$Year, 0),
+          x1 = safe_max(df_all_years$Year, 1),
+          y0 = 1, y1 = 1,
+          line = list(color = "#000000", width = 1)
+        ),
+        list(
+          type = "rect", xref = "paper", yref = "paper",
+          x0 = 0, x1 = 1, y0 = 0, y1 = 1,
+          line = list(color = "black", width = 1),
+          fillcolor = "rgba(0,0,0,0)"
+        )
+      )
+    )
+}
 
 #' Plot catches and landings by stock with proxy reference-point markers
 #'

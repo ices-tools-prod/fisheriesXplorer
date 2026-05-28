@@ -5,30 +5,43 @@ Authors@R: c(person(given = "Neil", family = "Maginnis", role = c("aut", "cre"),
              person(given = "Luca", family = "Lamoni", role = c("aut"), email = "luca.lamoni@ices.dk"))
 Description: What the package does (one paragraph).
 License: GPL-3 + file LICENSE
-Imports: 
+Imports:
     bslib,
     config (>= 0.3.2),
+    curl,
     datamods,
     desc,
     dplyr,
+    forcats,
     ggplot2,
+    ggrepel,
     ggthemes,
     glue,
     golem (>= 0.4.1),
+    htmltools,
     icesFO,
+    icesUtils,
+    jsonlite,
     leaflet,
     lubridate,
     magrittr,
     plotly,
+    plyr,
+    pkgload,
+    ragg,
     reactable,
     scales,
+    sf,
     shiny (>= 1.8.0),
     shinycssloaders,
     shinyjs,
     shinyWidgets,
-    stringr
-Suggests: pkgload,
-          sf,
+    stringr,
+    tibble,
+    tidyr,
+    tidytext,
+    zip
+Suggests: 
           usethis
 Encoding: UTF-8
 LazyData: true
@@ -36,3 +49,6 @@ LazyDataCompression: gzip
 RoxygenNote: 7.3.3
 Depends: 
     R (>= 3.5)
+Additional_repositories: https://ices-tools-prod.r-universe.dev
+
+

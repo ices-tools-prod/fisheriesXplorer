@@ -219,7 +219,7 @@ make_disclaimer_block <- function() {
 #'
 #' @param year Character (or numeric) year of publication / release.
 #'   Defaults to the current calendar year, derived from
-#'   \code{format(Sys.Date(), "%Y")}.
+#'   \code{format(Sys.Date(), "\%Y")}.
 #'
 #' @param app_url Character scalar giving the public URL where the app
 #'   is hosted. Used in all three citation formats.

@@ -147,13 +147,24 @@ bslib::nav_panel(
             notes = "See dataset page for data access and conditions."
           ),
 
-          # 6) Application source code (not a dataset, but important for reuse)
+          # 6) Bycatch Data
+          resource_card(
+            title = "Bycatch dataset",
+            description = "Results from ICES advice on bycatch of protected, endangered and threatened species.",
+            dataset_url = "https://www.ices.dk/data/data-portals/Pages/Bycatch.aspx",
+            metadata_url = "https://gis.ices.dk/geonetwork/srv/api/records/f11f65af-904f-49d7-90c4-8ce8156b375b?language=all",
+            services = list(APIs = "https://bycatch.ices.dk/webservices"),
+            notes = "See dataset page for data access and conditions."
+          ),
+
+          # 7) Application source code (not a dataset, but important for reuse)
           resource_card(
             title = "Application source code",
             description = "Code for this application (versioning, issues, reproducibility).",
             services = list("GitHub" = "https://github.com/ices-tools-dev/fisheriesXplorer"),
             notes = "This application is open source under the MIT license. See the repository for code, issues, and contribution guidelines."
           ),
+          # 8) Connected applications (e.g., adviceXplorer)
           resource_card(
             title = "Connected applications",
             description = "This app integrates with other ICES tools for data or embedded components.",

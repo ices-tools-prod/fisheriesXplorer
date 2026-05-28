@@ -13,6 +13,7 @@
 #' @importFrom icesFO plot_effort_map plot_sar_map
 #' @importFrom zip zip zipr
 #' @importFrom stringr str_starts
+#' @importFrom icesUtils select_text
 mod_vms_ui <- function(id) {
   ns <- NS(id)
 
