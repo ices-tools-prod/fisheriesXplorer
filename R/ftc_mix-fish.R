@@ -937,12 +937,12 @@ plot_catchComp_plotly <- function(dataComposition, refTable, filters=NULL,
   
   # plot
   p <- ggplot(data,aes(x=label,y=VAR,colour=stock,fill=stock))+
-    geom_col(position="fill")+
+    ggplot2::geom_col(position="fill")+
     coord_flip()+ labs(x="",y="",fill="",colour="")+
     theme_bw()+stkColorScale +guides(fill=guide_legend(ncol=1))+guides(colour=guide_legend(ncol=1))
 
   if(!is.null(divider)){
-    p <- p + facet_wrap(divider, scales = "free")
+    p <- p + ggplot2::facet_wrap(divider, scales = "free")
   }
   p <- plotly::ggplotly(p, tooltip = c("label", "VAR", "stock")) %>%
     plotly::layout(xaxis = list(title = ""), yaxis = list(title = ""),
