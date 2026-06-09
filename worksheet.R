@@ -1017,3 +1017,10 @@ rsconnect::accountInfo("ices-tools-dev")
 renv::deactivate()
 renv::activate()
 renv::restore()
+
+
+
+load("data/catchScenarioStk.rda")
+dim(catchScenarioStk)
+names(catchScenarioStk)
+head(catchScenarioStk)
