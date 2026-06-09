@@ -53,7 +53,8 @@ mod_mixfish_ui <- function(id) {
               ),
               "Analysis" = c(
                 "Scenarios" = "plot1",
-                "Effort by fleet & stock" = "plot2"
+                "Effort by fleet & stock" = "plot2",
+                "Variation of effort by fleet & stock" = "plot6"
               )
             ),
             selected = "plot1",
@@ -66,7 +67,7 @@ mod_mixfish_ui <- function(id) {
           uiOutput(ns("filter_ui")),
 
           withSpinner(
-            plotlyOutput(ns("plot"), height = "68vh"),
+            plotlyOutput(ns("plot"), height = "75vh"),
             caption = "Getting mix-fish results..."
           )
         )
@@ -361,7 +362,8 @@ mod_mixfish_server <- function(
               placeholder = "Select fleet"
             )
           )
-        )
+        ),
+        "plot6" =  NULL
       )
 
       if (!identical(plot_name(), "plot4")) {
@@ -391,7 +393,9 @@ mod_mixfish_server <- function(
 
               "plot3" = data_reactive_all()$MetierStockLandings_filtered,
 
-              "plot5" = dataComp()$stfMtStkSum
+              "plot5" = dataComp()$stfMtStkSum,
+
+              "plot6" = data_reactive_all()$EffortByFleetStock_filtered
             )
           }),
 
@@ -407,7 +411,9 @@ mod_mixfish_server <- function(
 
               "plot3" = c("stock", "metier"),
 
-              "plot5" = c("year", "fleet")
+              "plot5" = c("year", "fleet"),
+
+              "plot6" = c("fleet")
             )
           })
         )
@@ -454,7 +460,10 @@ mod_mixfish_server <- function(
           selectors = "year",
           divider = "fleet",
           yvar = "catch"
-        )
+        ),
+        "plot6" = plot_relEffortFltStk_plotly(
+          data = data_filter_module()()
+      )
       )
     })
   })
