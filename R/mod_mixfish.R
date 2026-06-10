@@ -1853,34 +1853,34 @@ mod_mixfish_server <- function(
 
       validate(
         need(
-          eco_acronym %in% catchScenarioStk$ecoregion,
+          eco_acronym %in% mixfish_data$catchScenarioStk$ecoregion,
           "Invalid ecoregion filter."
         )
       )
 
       list(
         catchScenarioStk_filtered =
-          catchScenarioStk %>%
+          mixfish_data$catchScenarioStk %>%
           dplyr::filter(ecoregion == eco_acronym),
 
         catchRange_filtered =
-          catchRange %>%
+          mixfish_data$catchRange %>%
           dplyr::filter(ecoregion == eco_acronym),
 
         EffortByFleetStock_filtered =
-          EffortByFleetStock %>%
+          mixfish_data$EffortByFleetStock %>%
           dplyr::filter(ecoregion == eco_acronym),
 
         MetierStockLandings_filtered =
-          MetierStockLandings %>%
+          mixfish_data$MetierStockLandings %>%
           dplyr::filter(ecoregion == eco_acronym),
 
         StockLandings_filtered =
-          StockLandings %>%
+          mixfish_data$StockLandings %>%
           dplyr::filter(ecoregion == eco_acronym),
 
         refTable_filtered =
-          refTable %>%
+          mixfish_data$refTable %>%
           dplyr::filter(ecoregion == eco_acronym)
       )
     })

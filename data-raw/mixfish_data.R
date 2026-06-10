@@ -203,12 +203,30 @@
 
 
 
-library(dplyr)
-library(readr)
-library(purrr)
-library(gh)
+# library(dplyr)
+# library(readr)
+# library(purrr)
+# library(gh)
 
 
+# # download_github_data <- function(repo_owner, repo_name, file_path) {
+# #   response <- gh::gh(
+# #     "GET /repos/{owner}/{repo}/contents/{path}",
+# #     owner = repo_owner,
+# #     repo = repo_name,
+# #     path = file_path
+# #   )
+
+# #   csv_text <- response$content |>
+# #     gsub("\\n", "", x = _) |>
+# #     base64enc::base64decode() |>
+# #     rawToChar()
+
+# #   tmp <- tempfile(fileext = ".csv")
+# #   writeLines(csv_text, tmp, useBytes = TRUE)
+
+# #   readr::read_csv(tmp, show_col_types = FALSE)
+# # }
 # download_github_data <- function(repo_owner, repo_name, file_path) {
 #   response <- gh::gh(
 #     "GET /repos/{owner}/{repo}/contents/{path}",
@@ -223,10 +241,151 @@ library(gh)
 #     rawToChar()
 
 #   tmp <- tempfile(fileext = ".csv")
+#   on.exit(unlink(tmp), add = TRUE)
+
 #   writeLines(csv_text, tmp, useBytes = TRUE)
 
-#   readr::read_csv(tmp, show_col_types = FALSE)
+#   df <- utils::read.csv(
+#     tmp,
+#     stringsAsFactors = FALSE,
+#     check.names = FALSE
+#   )
+
+#   bad_names <- is.na(names(df)) | names(df) == ""
+
+#   if (any(bad_names)) {
+#     names(df)[bad_names] <- paste0("X", which(bad_names))
+#   }
+
+#   names(df) <- make.unique(names(df))
+
+#   df
 # }
+
+# advice_year <- 2025
+# regions <- c("NrS", "CS", "IrS", "IW", "BoB")
+
+# region_to_ecoregion <- function(region) {
+#   ifelse(region == "CS", "CSx", region)
+# }
+
+# repo_name_for_region <- function(region, year = advice_year) {
+#   paste0(year, "_", region, "_MixedFisheriesAdvice")
+# }
+
+# download_region_dataset <- function(region, file_path, select_cols = NULL, type_fixes = NULL) {
+#   df <- download_github_data(
+#     repo_owner = "ices-taf",
+#     repo_name = repo_name_for_region(region),
+#     file_path = file_path
+#   )
+
+#   message("Downloaded: ", repo_name_for_region(region), " / ", file_path)
+#   print(names(df))
+
+#   if (!is.null(select_cols)) {
+#     df <- df %>%
+#       dplyr::select(dplyr::all_of(select_cols))
+#   }
+
+#   if (!is.null(type_fixes)) {
+#     for (col in names(type_fixes)) {
+#       if (col %in% names(df)) {
+#         df[[col]] <- type_fixes[[col]](df[[col]])
+#       }
+#     }
+#   }
+
+#   df %>%
+#     dplyr::mutate(ecoregion = region_to_ecoregion(region))
+# }
+
+# download_and_combine_dataset <- function(file_path, select_cols = NULL, type_fixes = NULL) {
+#   purrr::map_dfr(
+#     regions,
+#     download_region_dataset,
+#     file_path = file_path,
+#     select_cols = select_cols,
+#     type_fixes = type_fixes
+#   )
+# }
+
+
+
+# dataset_config <- list(
+#   catchScenarioStk = list(
+#     file_path = "shiny/Figure1_HeadlinePlot_data.csv",
+#     select_cols = c("stock", "scenario", "catch"),
+#     type_fixes = NULL
+#   ),
+
+#   catchRange = list(
+#     file_path = "shiny/Figure1_HeadlinePlot_advice.csv",
+#     select_cols = c("stock", "advice", "lower", "upper"),
+#     type_fixes = NULL
+#   ),
+
+#   EffortByFleetStock = list(
+#     file_path = "shiny/Figure2_EffortByFleet_data.csv",
+#     select_cols = NULL,
+#     type_fixes = list(X = as.character)
+#   ),
+
+#   MetierStockLandings = list(
+#     file_path = "shiny/Figure3_MetierLandings.csv",
+#     select_cols = NULL,
+#     type_fixes = list(X = as.character)
+#   ),
+
+#   StockLandings = list(
+#     file_path = "shiny/Figure4_StockLandings.csv",
+#     select_cols = NULL,
+#     type_fixes = list(X = as.character)
+#   ),
+
+#   refTable = list(
+#     file_path = "shiny/refTable.csv",
+#     select_cols = NULL,
+#     type_fixes = list(ref = as.character)
+#   )
+# )
+
+
+# if (!dir.exists("data")) {
+#   dir.create("data", recursive = TRUE)
+# }
+
+# for (dataset_name in names(dataset_config)) {
+#   cfg <- dataset_config[[dataset_name]]
+
+#   message("\nPreparing ", dataset_name)
+#   message("  File: ", cfg$file_path)
+
+#   obj <- download_and_combine_dataset(
+#     file_path = cfg$file_path,
+#     select_cols = cfg$select_cols,
+#     type_fixes = cfg$type_fixes
+#   )
+
+#   message("  Dimensions: ", paste(dim(obj), collapse = " x "))
+#   message("  Columns: ", paste(names(obj), collapse = ", "))
+
+#   assign(dataset_name, obj, envir = .GlobalEnv)
+
+#   save(
+#     list = dataset_name,
+#     file = file.path("data", paste0(dataset_name, ".rda")),
+#     envir = .GlobalEnv
+#   )
+
+#   message("  Saved: data/", dataset_name, ".rda")
+# }
+
+library(dplyr)
+library(readr)
+library(purrr)
+library(gh)
+
 download_github_data <- function(repo_owner, repo_name, file_path) {
   response <- gh::gh(
     "GET /repos/{owner}/{repo}/contents/{path}",
@@ -281,9 +440,23 @@ download_region_dataset <- function(region, file_path, select_cols = NULL, type_
   )
 
   message("Downloaded: ", repo_name_for_region(region), " / ", file_path)
-  print(names(df))
+  message("Columns: ", paste(names(df), collapse = ", "))
 
   if (!is.null(select_cols)) {
+    missing_cols <- setdiff(select_cols, names(df))
+
+    if (length(missing_cols) > 0) {
+      stop(
+        "Missing columns in ",
+        repo_name_for_region(region),
+        " / ",
+        file_path,
+        ": ",
+        paste(missing_cols, collapse = ", "),
+        call. = FALSE
+      )
+    }
+
     df <- df %>%
       dplyr::select(dplyr::all_of(select_cols))
   }
@@ -309,8 +482,6 @@ download_and_combine_dataset <- function(file_path, select_cols = NULL, type_fix
     type_fixes = type_fixes
   )
 }
-
-
 
 dataset_config <- list(
   catchScenarioStk = list(
@@ -350,33 +521,29 @@ dataset_config <- list(
   )
 )
 
-
 if (!dir.exists("data")) {
   dir.create("data", recursive = TRUE)
 }
 
-for (dataset_name in names(dataset_config)) {
-  cfg <- dataset_config[[dataset_name]]
+mixfish_data <- purrr::imap(
+  dataset_config,
+  function(cfg, dataset_name) {
+    message("\nPreparing ", dataset_name)
+    message("  File: ", cfg$file_path)
 
-  message("\nPreparing ", dataset_name)
-  message("  File: ", cfg$file_path)
+    obj <- download_and_combine_dataset(
+      file_path = cfg$file_path,
+      select_cols = cfg$select_cols,
+      type_fixes = cfg$type_fixes
+    )
 
-  obj <- download_and_combine_dataset(
-    file_path = cfg$file_path,
-    select_cols = cfg$select_cols,
-    type_fixes = cfg$type_fixes
-  )
+    message("  Dimensions: ", paste(dim(obj), collapse = " x "))
+    message("  Columns: ", paste(names(obj), collapse = ", "))
 
-  message("  Dimensions: ", paste(dim(obj), collapse = " x "))
-  message("  Columns: ", paste(names(obj), collapse = ", "))
+    obj
+  }
+)
 
-  assign(dataset_name, obj, envir = .GlobalEnv)
+save(mixfish_data, file = "data/mixfish_data.rda")
 
-  save(
-    list = dataset_name,
-    file = file.path("data", paste0(dataset_name, ".rda")),
-    envir = .GlobalEnv
-  )
-
-  message("  Saved: data/", dataset_name, ".rda")
-}
+message("\nSaved combined mixfish data to data/mixfish_data.rda")
