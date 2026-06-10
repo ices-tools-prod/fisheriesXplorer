@@ -11,7 +11,7 @@ data-raw/*
 !data-raw/
 !data-raw/*.R
 
-data/*
+
 !data/*.zip
 !data/annex_data.rda
 
