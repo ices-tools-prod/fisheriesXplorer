@@ -575,27 +575,39 @@ apply_manual_attributions <- function(dat, manual_attributions) {
 
   for (i in seq_len(nrow(rules))) {
 
-    target_col <- rules$target_col[i]
-    match_col  <- rules$match_col[i]
-    match_val  <- rules$match_val[i]
-    new_val    <- rules$new_val[i]
+  target_col <- rules$target_col[i]
+  match_col  <- rules$match_col[i]
+  match_val  <- rules$match_val[i]
+  new_val    <- rules$new_val[i]
 
-    if (!target_col %in% names(dat)) {
-      warning("Skipping rule ", rules$Order[i], ": target column not found: ", target_col)
-      next
-    }
-
-    if (!match_col %in% names(dat)) {
-      warning("Skipping rule ", rules$Order[i], ": match column not found: ", match_col)
-      next
-    }
-
-    idx <- which(!is.na(dat[[match_col]]) & as.character(dat[[match_col]]) == match_val)
-
-    if (length(idx) > 0) {
-      dat[[target_col]][idx] <- new_val
-    }
+  if (!target_col %in% names(dat)) {
+    warning("Skipping rule ", rules$Order[i], ": target column not found: ", target_col)
+    next
   }
+
+  if (!match_col %in% names(dat)) {
+    warning("Skipping rule ", rules$Order[i], ": match column not found: ", match_col)
+    next
+  }
+
+  if (match_col == "GUILD") {
+    idx <- which(
+      !is.na(dat[[match_col]]) &
+        tolower(trimws(as.character(dat[[match_col]]))) ==
+        tolower(trimws(as.character(match_val)))
+    )
+  } else {
+    idx <- which(
+      !is.na(dat[[match_col]]) &
+        trimws(as.character(dat[[match_col]])) ==
+        trimws(as.character(match_val))
+    )
+  }
+
+  if (length(idx) > 0) {
+    dat[[target_col]][idx] <- new_val
+  }
+}
 
   if ("GUILD" %in% names(dat)) {
     dat$GUILD <- normalise_guild(dat$GUILD)
@@ -607,15 +619,16 @@ apply_manual_attributions <- function(dat, manual_attributions) {
 normalise_guild <- function(x) {
   x <- as.character(x)
   x <- trimws(x)
+  x_lower <- tolower(x)
 
   dplyr::case_when(
     is.na(x) | x == "" ~ "Undefined",
-    tolower(x) == "undefined" ~ "Undefined",
-    tolower(x) == "pelagic" ~ "Pelagic",
-    tolower(x) == "demersal" ~ "Demersal",
-    tolower(x) == "benthic" ~ "Benthic",
-    tolower(x) == "elasmobranch" ~ "Elasmobranch",
-    tolower(x) == "crustacean" ~ "Crustacean",
+    x_lower == "undefined" ~ "Undefined",
+    x_lower == "pelagic" ~ "Pelagic",
+    x_lower == "demersal" ~ "Demersal",
+    x_lower == "benthic" ~ "Benthic",
+    x_lower == "elasmobranch" ~ "Elasmobranch",
+    x_lower %in% c("crustacean", "crustaceans", "shellfish") ~ "Shellfish",
     TRUE ~ x
   )
 }
