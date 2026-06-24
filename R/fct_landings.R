@@ -229,25 +229,51 @@ plot_catch_trends_plotly <- function(
   df <- x %>%
     dplyr::filter(!is.na(Year))
 
+  # if (type == "Common name") {
+  #   if (!is.null(selected_guild) && nzchar(selected_guild)) {
+  #     df <- df %>% dplyr::filter(`Fisheries guild` == selected_guild)
+  #   }
+
+  #   df <- df %>%
+  #     dplyr::mutate(
+  #       type_var = `Common name`,
+  #       type_var = gsub("European ", "", type_var),
+  #       type_var = gsub("Sandeels.*", "sandeel", type_var),
+  #       type_var = gsub("Finfishes nei", "undefined finfish", type_var),
+  #       type_var = gsub("Blue whiting.*", "blue whiting", type_var),
+  #       type_var = gsub("Saithe.*", "saithe", type_var),
+  #       type_var = ifelse(grepl("Norway", type_var), type_var, tolower(type_var))
+  #     )
+  # } else if (type == "Country") {
+  #   df <- df %>% dplyr::mutate(type_var = Country)
+  # } else if (type == "Fisheries guild") {
+  #   df <- df %>% dplyr::mutate(type_var = `Fisheries guild`)
+  # }
   if (type == "Common name") {
-    if (!is.null(selected_guild) && nzchar(selected_guild)) {
-      df <- df %>% dplyr::filter(`Fisheries guild` == selected_guild)
-    }
+
+  if (!is.null(selected_guild) && nzchar(selected_guild)) {
+    df <- df %>%
+      dplyr::filter(`Fisheries guild` == selected_guild)
+  }
+
+  df <- df %>%
+    dplyr::mutate(
+      type_var = `Common name`
+    )
+
+  } else if (type == "Country") {
 
     df <- df %>%
       dplyr::mutate(
-        type_var = `Common name`,
-        type_var = gsub("European ", "", type_var),
-        type_var = gsub("Sandeels.*", "sandeel", type_var),
-        type_var = gsub("Finfishes nei", "undefined finfish", type_var),
-        type_var = gsub("Blue whiting.*", "blue whiting", type_var),
-        type_var = gsub("Saithe.*", "saithe", type_var),
-        type_var = ifelse(grepl("Norway", type_var), type_var, tolower(type_var))
+        type_var = Country
       )
-  } else if (type == "Country") {
-    df <- df %>% dplyr::mutate(type_var = Country)
+
   } else if (type == "Fisheries guild") {
-    df <- df %>% dplyr::mutate(type_var = `Fisheries guild`)
+
+    df <- df %>%
+      dplyr::mutate(
+        type_var = `Fisheries guild`
+      )
   }
 
   total_df <- df %>%
@@ -258,7 +284,7 @@ plot_catch_trends_plotly <- function(
     dplyr::group_by(type_var) %>%
     dplyr::summarise(typeTotal = sum(Value, na.rm = TRUE), .groups = "drop") %>%
     dplyr::arrange(dplyr::desc(typeTotal)) %>%
-    dplyr::filter(typeTotal >= 1) %>%
+    # dplyr::filter(typeTotal >= 1) %>%
     dplyr::mutate(RANK = dplyr::row_number())
 
   plot_df <- df %>%

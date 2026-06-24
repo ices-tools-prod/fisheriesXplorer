@@ -530,10 +530,107 @@ load_official_catches<- function(){
 #' @param manual_attributions Data frame read from the Excel attribution sheet.
 #'
 #' @return Catch data with manual corrections applied.
+# apply_manual_attributions <- function(dat, manual_attributions) {
+
+#   if (is.null(manual_attributions)) {
+#     dat$GUILD <- normalise_guild(dat$GUILD)
+#     return(dat)
+#   }
+
+#   required_cols <- c(
+#     "Order",
+#     "Target column",
+#     "Match column",
+#     "Match value",
+#     "New value / assignment"
+#   )
+
+#   missing_cols <- setdiff(required_cols, names(manual_attributions))
+
+#   if (length(missing_cols) > 0) {
+#     stop(
+#       "manual_attributions is missing required columns: ",
+#       paste(missing_cols, collapse = ", ")
+#     )
+#   }
+
+#   rules <- manual_attributions %>%
+#     dplyr::mutate(
+#       Order = as.numeric(.data$Order),
+#       target_col = trimws(as.character(.data$`Target column`)),
+#       match_col  = trimws(as.character(.data$`Match column`)),
+#       match_val  = as.character(.data$`Match value`),
+#       new_val    = as.character(.data$`New value / assignment`)
+#     ) %>%
+#     dplyr::filter(
+#       !is.na(.data$Order),
+#       !is.na(.data$target_col),
+#       !is.na(.data$match_col),
+#       !is.na(.data$match_val),
+#       !is.na(.data$new_val),
+#       .data$target_col != "",
+#       .data$match_col != ""
+#     ) %>%
+#     dplyr::arrange(.data$Order)
+
+#   for (i in seq_len(nrow(rules))) {
+
+#     target_col <- rules$target_col[i]
+#     match_col  <- rules$match_col[i]
+#     match_val  <- rules$match_val[i]
+#     new_val    <- rules$new_val[i]
+
+#     if (!(target_col %in% names(dat))) {
+#       warning("Skipping rule ", rules$Order[i], ": target column not found: ", target_col)
+#       next
+#     }
+
+#     if (!(match_col %in% names(dat))) {
+#       warning("Skipping rule ", rules$Order[i], ": match column not found: ", match_col)
+#       next
+#     }
+
+#     if (match_col == "GUILD") {
+#       idx <- which(
+#         !is.na(dat[[match_col]]) &
+#           tolower(trimws(as.character(dat[[match_col]]))) ==
+#           tolower(trimws(as.character(match_val)))
+#       )
+#     } else {
+#       idx <- which(
+#         !is.na(dat[[match_col]]) &
+#           trimws(as.character(dat[[match_col]])) ==
+#           trimws(as.character(match_val))
+#       )
+#     }
+
+#     if (length(idx) > 0) {
+#       dat[[target_col]][idx] <- new_val
+#     }
+#   }
+
+#   if ("GUILD" %in% names(dat)) {
+#     dat$GUILD <- normalise_guild(dat$GUILD)
+#   }
+
+#   dat
+# }
+
 apply_manual_attributions <- function(dat, manual_attributions) {
 
+  if ("COMMON_NAME" %in% names(dat)) {
+    dat$COMMON_NAME <- normalise_common_name(dat$COMMON_NAME)
+    common_name_key <- dat$COMMON_NAME
+  } else {
+    common_name_key <- NULL
+  }
+
   if (is.null(manual_attributions)) {
-    dat$GUILD <- normalise_guild(dat$GUILD)
+
+    if ("GUILD" %in% names(dat)) {
+      dat$GUILD <- normalise_guild(dat$GUILD)
+    }
+
     return(dat)
   }
 
@@ -560,7 +657,13 @@ apply_manual_attributions <- function(dat, manual_attributions) {
       target_col = trimws(as.character(.data$`Target column`)),
       match_col  = trimws(as.character(.data$`Match column`)),
       match_val  = as.character(.data$`Match value`),
-      new_val    = as.character(.data$`New value / assignment`)
+      new_val    = as.character(.data$`New value / assignment`),
+
+      # Precompute normalised versions only once
+      match_val_common = normalise_common_name(.data$match_val),
+      new_val_common   = normalise_common_name(.data$new_val),
+
+      match_val_guild = tolower(trimws(as.character(.data$match_val)))
     ) %>%
     dplyr::filter(
       !is.na(.data$Order),
@@ -581,22 +684,42 @@ apply_manual_attributions <- function(dat, manual_attributions) {
     new_val    <- rules$new_val[i]
 
     if (!(target_col %in% names(dat))) {
-      warning("Skipping rule ", rules$Order[i], ": target column not found: ", target_col)
+      warning(
+        "Skipping rule ",
+        rules$Order[i],
+        ": target column not found: ",
+        target_col
+      )
       next
     }
 
     if (!(match_col %in% names(dat))) {
-      warning("Skipping rule ", rules$Order[i], ": match column not found: ", match_col)
+      warning(
+        "Skipping rule ",
+        rules$Order[i],
+        ": match column not found: ",
+        match_col
+      )
       next
     }
 
-    if (match_col == "GUILD") {
+    if (match_col == "COMMON_NAME") {
+
+      idx <- which(
+        !is.na(common_name_key) &
+          common_name_key == rules$match_val_common[i]
+      )
+
+    } else if (match_col == "GUILD") {
+
       idx <- which(
         !is.na(dat[[match_col]]) &
           tolower(trimws(as.character(dat[[match_col]]))) ==
-          tolower(trimws(as.character(match_val)))
+          rules$match_val_guild[i]
       )
+
     } else {
+
       idx <- which(
         !is.na(dat[[match_col]]) &
           trimws(as.character(dat[[match_col]])) ==
@@ -605,12 +728,26 @@ apply_manual_attributions <- function(dat, manual_attributions) {
     }
 
     if (length(idx) > 0) {
+
+      if (target_col == "COMMON_NAME") {
+        new_val <- rules$new_val_common[i]
+      }
+
       dat[[target_col]][idx] <- new_val
+
+      # Keep the cached COMMON_NAME key in sync if a rule changes COMMON_NAME
+      if (target_col == "COMMON_NAME") {
+        common_name_key[idx] <- new_val
+      }
     }
   }
 
   if ("GUILD" %in% names(dat)) {
     dat$GUILD <- normalise_guild(dat$GUILD)
+  }
+
+  if ("COMMON_NAME" %in% names(dat)) {
+    dat$COMMON_NAME <- common_name_key
   }
 
   dat
@@ -631,6 +768,26 @@ normalise_guild <- function(x) {
     x_lower %in% c("crustacean", "crustaceans", "shellfish") ~ "Shellfish",
     TRUE ~ x
   )
+}
+
+# normalise_common_name <- function(x) {
+#   x <- as.character(x)
+#   x <- trimws(x)
+#   x <- tolower(x)
+#   x
+# }
+normalise_common_name <- function(x) {
+  x <- as.character(x)
+  x <- trimws(x)
+  x <- tolower(x)
+
+  # Remove "european" only when it appears as a separate word
+  x <- gsub("\\beuropean\\b", "", x)
+
+  # Clean repeated spaces created by removal
+  x <- trimws(gsub("\\s+", " ", x))
+
+  x
 }
 
 format_catches_dev <- function(year,
@@ -999,7 +1156,8 @@ format_catches_dev <- function(year,
   df <- df %>%
     dplyr::ungroup() %>%
     dplyr::mutate(
-      GUILD = ifelse(is.na(GUILD), "Undefined", GUILD)
+      GUILD = ifelse(is.na(GUILD), "Undefined", GUILD),
+      COMMON_NAME = normalise_common_name(COMMON_NAME)
       # replace "crustacean" with "shellfish" in GUILD column
       # GUILD = ifelse(GUILD == "crustacean", "shellfish", GUILD)
     ) %>%
@@ -1018,6 +1176,20 @@ format_catches_dev <- function(year,
 
   df <- apply_manual_attributions(df, manual_attributions)
 
+  df <- df %>%
+    dplyr::mutate(COMMON_NAME = normalise_common_name(COMMON_NAME)) %>%
+    dplyr::group_by(
+      YEAR,
+      COUNTRY,
+      ISO3,
+      GUILD,
+      ECOREGION,
+      SPECIES_NAME,
+      SPECIES_CODE,
+      COMMON_NAME
+    ) %>%
+    dplyr::summarise(VALUE = sum(VALUE, na.rm = TRUE), .groups = "drop")
+  
   return(df)
 
 }
