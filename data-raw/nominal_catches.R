@@ -1,6 +1,8 @@
 ## Load required libraries
 library(dplyr)
 library(icesTAF)
+library(tidyr)
+library(countrycode)
 
 
 #' List of ICES ecoregions
