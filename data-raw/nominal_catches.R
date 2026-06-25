@@ -1126,31 +1126,7 @@ format_catches_dev <- function(year,
     df <- bind_rows(catch_dat_2010, catch_dat_1950, catch_dat_prelim)
   }
   
-  # # -----------------------------
-  # # final cleanup
-  # # -----------------------------
-  # df <- df %>%
-  #   ungroup() %>%
-  #   mutate(
-  #     GUILD = ifelse(is.na(GUILD), "undefined", GUILD),
-  #     COUNTRY = gsub("Russian Federation", "Russia", COUNTRY),
-  #     COUNTRY = gsub("^Russia$", "Russian Federation", COUNTRY)
-  #   ) %>%
-  #   select(
-  #     YEAR,
-  #     COUNTRY,
-  #     ISO3,
-  #     GUILD,
-  #     ECOREGION,
-  #     SPECIES_NAME,
-  #     SPECIES_CODE,
-  #     COMMON_NAME,
-  #     VALUE
-  #   ) %>%
-  #   filter(ECOREGION %in% ecoregion)
-  
-  # return(df)
-    # -----------------------------
+  # -----------------------------
   # final cleanup
   # -----------------------------
   df <- df %>%
