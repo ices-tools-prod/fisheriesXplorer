@@ -1098,8 +1098,8 @@ for (ecoregion in ecoregions) {
         acronym <- get_ecoregion_acronym(ecoregion)
         mkdir(paste0("./data-raw/", acronym))
 
-        
-        catch_dat <- format_catches_dev(
+        if (ecoregion == "Bay of Biscay and the Iberian Coast") {
+          catch_dat <- format_catches_dev(
           year = as.numeric(format(Sys.Date(), "%Y")),
           ecoregion = ecoregion,
           historical = hist,
@@ -1109,7 +1109,21 @@ for (ecoregion in ecoregions) {
           sid = sid,
           manual_attributions = manual_attributions
         )
+        } else {
+          catch_dat <- format_catches(as.numeric(format(Sys.Date(), "%Y")), ecoregion, hist, official, NULL, species_list, sid)
+        }
         
+        # catch_dat <- format_catches_dev(
+        #   year = as.numeric(format(Sys.Date(), "%Y")),
+        #   ecoregion = ecoregion,
+        #   historical = hist,
+        #   official = official,
+        #   preliminary = NULL,
+        #   species_list = species_list,
+        #   sid = sid,
+        #   manual_attributions = manual_attributions
+        # )
+        # catch_dat <- format_catches(as.numeric(format(Sys.Date(), "%Y")), ecoregion, hist, official, NULL, species_list, sid)
         catch_dat <- unique(catch_dat)
         msg("Saving folder: ", acronym)
         write.taf(catch_dat, file = paste0("catch_dat_", acronym, ".csv"), dir = paste0("./data-raw/", acronym, "/"), quote = TRUE)
