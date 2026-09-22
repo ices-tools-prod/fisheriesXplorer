@@ -1691,14 +1691,30 @@ mod_mixfish_ui <- function(id) {
             full_screen = TRUE,
             fill = FALSE,
 
-            card_header("Mixed fisheries - history of fleet activity"),
+            card_header(
+              div(
+                style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
+                # tags$span("Mixed fisheries - history of fleet activity"),
+                radioButtons(
+                  ns("subRegion_history"),
+                  "Select case study:",
+                  choices = character(0),
+                  selected = character(0),
+                  inline = TRUE
+                ),
+                download_icon_label(
+                    text = "Download data",
+                    outputId = ns("download_mixfish_data"),
+                    hover_text = "Total mix-fish data (.csv)",
+                    size = "large"
+                  )
+              )
+            ),
 
             card_body(
               fillable = TRUE,
               fill = TRUE,
               class = "p-1",
-
-              uiOutput(ns("subregion_ui_history")),
 
               selectizeInput(
                 inputId = ns("plot_selected_history"),
@@ -1746,14 +1762,30 @@ mod_mixfish_ui <- function(id) {
             full_screen = TRUE,
             fill = FALSE,
 
-            card_header("Mixed fisheries forecasts"),
+            card_header(
+              div(
+                style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
+                # tags$span("Mixed fisheries forecasts"),
+                radioButtons(
+                  ns("subRegion_forecast"),
+                  "Select case study:",
+                  choices = character(0),
+                  selected = character(0),
+                  inline = TRUE
+                ),
+                download_icon_label(
+                    text = "Download data",
+                    outputId = ns("download_mixfish_data"),
+                    hover_text = "Total mix-fish data (.csv)",
+                    size = "large"
+                  )
+              )
+            ),
 
             card_body(
               fillable = TRUE,
               fill = TRUE,
               class = "p-1",
-
-              uiOutput(ns("subregion_ui_forecast")),
 
               selectizeInput(
                 inputId = ns("plot_selected_forecast"),
@@ -2185,51 +2217,33 @@ mod_mixfish_server <- function(
         acr,
         "CS" = c("Celtic Sea", "Irish Sea"),
         "BI" = c("Bay of Biscay", "Iberian Waters"),
-        NULL
+        selected_ecoregion()
       )
     })
 
-    output$subregion_ui_history <- renderUI({
-      choices <- subregion_choices()
+    # keep both card-header radio buttons populated with the available case studies
+    observeEvent(
+      subregion_choices(),
+      {
+        choices <- subregion_choices()
 
-      if (is.null(choices)) {
-        return(NULL)
-      }
+        if (is.null(choices)) {
+          choices <- character(0)
+        }
 
-      sel <- if (!is.null(selected_subRegion()) && selected_subRegion() %in% choices) {
-        selected_subRegion()
-      } else {
-        choices[1]
-      }
+        sel <- if (!is.null(selected_subRegion()) && selected_subRegion() %in% choices) {
+          selected_subRegion()
+        } else if (length(choices) > 0) {
+          choices[1]
+        } else {
+          character(0)
+        }
 
-      selectInput(
-        inputId = ns("subRegion_history"),
-        label = "Select case study:",
-        choices = choices,
-        selected = sel
-      )
-    })
-
-    output$subregion_ui_forecast <- renderUI({
-      choices <- subregion_choices()
-
-      if (is.null(choices)) {
-        return(NULL)
-      }
-
-      sel <- if (!is.null(selected_subRegion()) && selected_subRegion() %in% choices) {
-        selected_subRegion()
-      } else {
-        choices[1]
-      }
-
-      selectInput(
-        inputId = ns("subRegion_forecast"),
-        label = "Select case study:",
-        choices = choices,
-        selected = sel
-      )
-    })
+        updateRadioButtons(session, "subRegion_history", choices = choices, selected = sel, inline = TRUE)
+        updateRadioButtons(session, "subRegion_forecast", choices = choices, selected = sel, inline = TRUE)
+      },
+      ignoreInit = FALSE
+    )
 
     observeEvent(
       selected_ecoregion(),
@@ -2238,11 +2252,7 @@ mod_mixfish_server <- function(
 
         choices <- subregion_choices()
 
-        if (is.null(choices)) {
-          selected_subRegion(NULL)
-        } else {
-          selected_subRegion(choices[1])
-        }
+        selected_subRegion(choices[1])
 
         session$onFlushed(function() {
           region_ready(TRUE)
@@ -2259,7 +2269,7 @@ mod_mixfish_server <- function(
 
         if (!identical(input$subRegion_history, selected_subRegion())) {
           selected_subRegion(input$subRegion_history)
-          updateSelectInput(session, "subRegion_forecast", selected = input$subRegion_history)
+          updateRadioButtons(session, "subRegion_forecast", selected = input$subRegion_history)
         }
 
         region_ready(TRUE)
@@ -2274,7 +2284,7 @@ mod_mixfish_server <- function(
 
         if (!identical(input$subRegion_forecast, selected_subRegion())) {
           selected_subRegion(input$subRegion_forecast)
-          updateSelectInput(session, "subRegion_history", selected = input$subRegion_forecast)
+          updateRadioButtons(session, "subRegion_history", selected = input$subRegion_forecast)
         }
 
         region_ready(TRUE)
