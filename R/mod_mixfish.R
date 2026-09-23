@@ -71,7 +71,8 @@ mod_mixfish_ui <- function(id) {
                 choices = c(
                   "Landings by métier & stock" = "plot3",
                   "Landings by stock" = "plot4",
-                  "Landings composition by fleet" = "plot5"
+                  "Landings composition by fleet" = "plot5",
+                  "Landings affluvial by stock" = "plot6"
                 ),
                 selected = "plot3",
                 multiple = FALSE,
@@ -1447,6 +1448,7 @@ mod_mixfish_server <- function(
         "plot2" = data_reactive_all()$EffortByFleetStock_filtered,
         "plot3" = data_reactive_all()$MetierStockLandings_filtered,
         "plot5" = dataComp()$stfMtStkSum,
+        "plot6" = dataComp()$stfMtStkSum,
         NULL
       )
     }
@@ -1525,9 +1527,7 @@ mod_mixfish_server <- function(
 
       df <- filter_source_data_history()
 
-      switch(
-        plot_name_history(),
-
+      switch(plot_name_history(),
         "plot3" = div(
           style = "
             margin-bottom: 0px;
@@ -1536,7 +1536,6 @@ mod_mixfish_server <- function(
             align-items: flex-start;
             flex-wrap: wrap;
           ",
-
           div(
             style = "width: 320px;",
             filter_selectize(
@@ -1545,7 +1544,6 @@ mod_mixfish_server <- function(
               choices = safe_choices(df, "stock")
             )
           ),
-
           div(
             style = "width: 320px;",
             filter_selectize(
@@ -1555,9 +1553,7 @@ mod_mixfish_server <- function(
             )
           )
         ),
-
         "plot4" = NULL,
-
         "plot5" = div(
           style = "
             margin-bottom: 0px;
@@ -1566,7 +1562,6 @@ mod_mixfish_server <- function(
             align-items: flex-start;
             flex-wrap: wrap;
           ",
-
           div(
             style = "width: 260px;",
             selectizeInput(
@@ -1582,7 +1577,6 @@ mod_mixfish_server <- function(
               )
             )
           ),
-
           div(
             style = "width: 260px;",
             selectizeInput(
@@ -1594,7 +1588,6 @@ mod_mixfish_server <- function(
               width = "100%"
             )
           ),
-
           div(
             style = "width: 260px;",
             selectizeInput(
@@ -1610,7 +1603,6 @@ mod_mixfish_server <- function(
               )
             )
           ),
-
           div(
             style = "width: 260px;",
             selectizeInput(
@@ -1624,6 +1616,56 @@ mod_mixfish_server <- function(
                 plugins = list("remove_button"),
                 placeholder = "All countries"
               )
+            )
+          )
+        ),
+        "plot6" = div(
+          style = "
+            margin-bottom: 0px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+          ",
+          div(
+            style = "width: 260px;",
+            selectizeInput(
+              ns("plot6_year_filter"),
+              "Year:",
+              choices = safe_choices(df, "year"),
+              selected = tail(safe_choices(df, "year"), 1),
+              multiple = FALSE,
+              width = "100%"
+            )
+          ),
+          div(
+            style = "width: 260px;",
+            selectizeInput(
+              ns("plot6_country_filter"),
+              "Country:",
+              choices = safe_choices(df, "country"),
+              selected = NULL,
+              multiple = TRUE,
+              width = "100%",
+              options = list(
+                plugins = list("remove_button"),
+                placeholder = "All countries"
+              )
+            )
+          ),
+          div(
+            style = "width: 260px;",
+            selectizeInput(
+              ns("plot6_scenario_filter"),
+              "Scenario:",
+              choices = safe_choices(df, "scenario"),
+              selected = if ("min" %in% safe_choices(df, "scenario")) {
+                "min"
+              } else {
+                safe_choices(df, "scenario")[1]
+              },
+              multiple = FALSE,
+              width = "100%"
             )
           )
         )
@@ -1699,6 +1741,54 @@ mod_mixfish_server <- function(
         selected = current_divider
       )
     }, ignoreInit = TRUE)
+
+
+    ################################## Plot 6 alluvial data ##################################
+
+    plot6_data <- reactive({
+      req(plot_name_history() == "plot6")
+      req(input$plot6_year_filter)
+      req(input$plot6_scenario_filter)
+
+      df <- dataComp()$stfMtStkSum
+
+      # Year
+      df <- df %>%
+        dplyr::filter(as.character(year) == as.character(input$plot6_year_filter))
+
+      # Scenario
+      df <- df %>%
+        dplyr::filter(as.character(scenario) == as.character(input$plot6_scenario_filter))
+
+      # Country: optional; no selection means all countries
+      if (!is.null(input$plot6_country_filter) &&
+        length(input$plot6_country_filter) > 0) {
+        df <- df %>%
+          dplyr::filter(country %in% input$plot6_country_filter)
+      }
+
+      validate(
+        need(nrow(df) > 0, "No data available for the selected filters.")
+      )
+
+      # plot_alluvial_plotly expects fleet, metier, stock and value
+      df <- df %>%
+        dplyr::select(fleet, metier, stock, landings)
+
+      # stfMtStkSum uses the short stock code.
+      # Convert it to the stock identifier used by refTable.
+      ref <- data_reactive_all()$refTable_filtered
+
+      if ("stock_short" %in% names(ref)) {
+        df$stock <- ref$stock[match(df$stock, ref$stock_short)]
+      }
+
+      df <- df %>%
+        dplyr::filter(!is.na(stock)) %>%
+        dplyr::rename(value = landings)
+
+      df
+    })
 
     ################################## Dynamic filter UI: Forecast ##################################
 
@@ -2028,9 +2118,7 @@ mod_mixfish_server <- function(
       req(plot_name_history())
       req(region_ready())
 
-      switch(
-        plot_name_history(),
-
+      switch(plot_name_history(),
         "plot3" = {
           req(current_plot_data_history())
 
@@ -2039,14 +2127,12 @@ mod_mixfish_server <- function(
             refTable = data_reactive_all()$refTable_filtered
           )
         },
-
         "plot4" = {
           plot_landByStock_plotly(
             data = data_reactive_all()$StockLandings_filtered,
             refTable = data_reactive_all()$refTable_filtered
           )
         },
-
         "plot5" = {
           df <- filter_source_data_history()
 
@@ -2060,6 +2146,20 @@ mod_mixfish_server <- function(
             selectors = plot5_selectors(),
             divider = plot5_divider(),
             yvar = "catch"
+          )
+        },
+        "plot6" = {
+          df <- plot6_data()
+
+          plot_alluvial_plotly(
+            data = df,
+            refTable = data_reactive_all()$refTable_filtered,
+            group_vars = c("fleet", "metier", "stock"),
+            fill_var = "stock",
+            group_labs = c("Fleet", "Métier", "Stock"),
+            ylab = "Landings [t]",
+            fillLegendTitle = "Stock",
+            addLegend = TRUE
           )
         }
       )
