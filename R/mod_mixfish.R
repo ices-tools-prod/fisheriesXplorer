@@ -11,6 +11,274 @@
 #' @return A Shiny UI tag list.
 #'
 #' @export
+# mod_mixfish_ui <- function(id) {
+#   ns <- NS(id)
+
+#   tagList(
+#     mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
+#     tabsetPanel(
+#       id = ns("main_tabset"),
+#       tabPanel(
+#         title = "History of fleet activity", value = "history",
+#         layout_sidebar(
+#           bg = "white",
+#           fg = "black",
+#           sidebar = sidebar(
+#             width = "33vw",
+#             bg = "white",
+#             fg = "black",
+#             open = FALSE,
+#             uiOutput(ns("mixfish_text_history"))
+#           ),
+#           card(
+#             height = "85vh",
+#             full_screen = TRUE,
+#             fill = FALSE,
+#             card_header(
+#               div(
+#                 style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
+#                 # tags$span("Mixed fisheries - history of fleet activity"),
+#                 radioButtons(
+#                   ns("subRegion_history"),
+#                   "Select case study:",
+#                   choices = character(0),
+#                   selected = character(0),
+#                   inline = TRUE
+#                 ),
+#                 download_icon_label(
+#                   text = "Download data",
+#                   outputId = ns("download_mixfish_data"),
+#                   hover_text = "Total mix-fish data (.csv)",
+#                   size = "large"
+#                 )
+#               )
+#             ),
+#             card_body(
+#   fillable = TRUE,
+#   fill = TRUE,
+#   class = "p-1",
+
+#   div(
+#     style = "
+#       display: flex;
+#       gap: 12px;
+#       align-items: flex-start;
+#       width: 100%;
+#       margin-bottom: 8px;
+#     ",
+
+#     div(
+#       style = "width: 320px; flex: 0 0 320px;",
+#       selectizeInput(
+#         inputId = ns("plot_selected_history"),
+#         label = "Select plot:",
+#         choices = c(
+#           "Landings by métier & stock" = "plot3",
+#           "Landings by stock" = "plot4",
+#           "Landings composition by fleet" = "plot5",
+#           "Landings alluvial by stock" = "plot6"
+#         ),
+#         selected = "plot3",
+#         multiple = FALSE,
+#         width = "100%"
+#       )
+#     ),
+
+#     div(
+#       style = "
+#         flex: 1 1 auto;
+#         min-width: 0;
+#         padding-top: 25px;
+#       ",
+
+#       tags$details(
+#         style = "
+#           width: 100%;
+#           background-color: #eef4f8;
+#           border: 1px solid #d5e2ea;
+#           border-radius: 6px;
+#           overflow: hidden;
+#         ",
+
+#         tags$summary(
+#           style = "
+#             padding: 9px 14px;
+#             cursor: pointer;
+#             font-weight: 600;
+#             background-color: #dceaf2;
+#           ",
+#           "About this module"
+#         ),
+
+#         div(
+#           style = "padding: 12px 16px;",
+#           p(
+#             style = "margin: 0;",
+#             "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
+#             "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
+#             "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
+#             "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
+#             "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
+#             "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>. "
+#           )
+#           )
+#         )
+#       )
+#     )
+#   ),
+#               uiOutput(ns("filter_ui_history")),
+#               withSpinner(
+#                 plotlyOutput(ns("plot_history"), height = "75vh"),
+#                 caption = "Getting mix-fish results..."
+#               )
+#             )
+#           )
+#         )
+#       ),
+#       tabPanel(
+#         title = "Forecast", value = "forecast",
+#         layout_sidebar(
+#           bg = "white",
+#           fg = "black",
+#           sidebar = sidebar(
+#             width = "33vw",
+#             bg = "white",
+#             fg = "black",
+#             open = FALSE,
+#             uiOutput(ns("mixfish_text_forecast"))
+#           ),
+#           card(
+#             height = "85vh",
+#             full_screen = TRUE,
+#             fill = FALSE,
+#             card_header(
+#               div(
+#                 style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
+#                 # tags$span("Mixed fisheries forecasts"),
+#                 radioButtons(
+#                   ns("subRegion_forecast"),
+#                   "Select case study:",
+#                   choices = character(0),
+#                   selected = character(0),
+#                   inline = TRUE
+#                 ),
+#                 download_icon_label(
+#                   text = "Download data",
+#                   outputId = ns("download_mixfish_data"),
+#                   hover_text = "Total mix-fish data (.csv)",
+#                   size = "large"
+#                 )
+#               )
+#             ),
+
+#             # card_body(
+#             #   fillable = TRUE,
+#             #   fill = TRUE,
+#             #   class = "p-1",
+
+#             #   selectizeInput(
+#             #     inputId = ns("plot_selected_forecast"),
+#             #     label = "Select plot:",
+#             #     choices = c(
+#             #       "Scenarios" = "plot1",
+#             #       "Effort by fleet & stock" = "plot2"
+#             #       # "Variation of effort by fleet & stock" = "plot6"
+#             #     ),
+#             #     selected = "plot1",
+#             #     multiple = FALSE,
+#             #     options = list(
+#             #       placeholder = "Choose a plot"
+#             #     )
+#             #   ),
+#             card_body(
+#   fillable = TRUE,
+#   fill = TRUE,
+#   class = "p-1",
+
+#   div(
+#     style = "
+#       display: flex;
+#       gap: 12px;
+#       align-items: flex-start;
+#       width: 100%;
+#       margin-bottom: 8px;
+#     ",
+
+#     # Plot selector
+#     div(
+#       style = "width: 320px; flex: 0 0 320px;",
+#       selectizeInput(
+#         inputId = ns("plot_selected_forecast"),
+#         label = "Select plot:",
+#         choices = c(
+#           "Scenarios" = "plot1",
+#           "Effort by fleet & stock" = "plot2"
+#         ),
+#         selected = "plot1",
+#         multiple = FALSE,
+#         width = "100%",
+#         options = list(
+#           placeholder = "Choose a plot"
+#         )
+#       )
+#     ),
+
+#     # Module description
+#     div(
+#       style = "
+#         flex: 1 1 auto;
+#         min-width: 0;
+#         padding-top: 25px;
+#       ",
+
+#       tags$details(
+#         style = "
+#           width: 100%;
+#           background-color: #eef4f8;
+#           border: 1px solid #d5e2ea;
+#           border-radius: 6px;
+#           overflow: hidden;
+#         ",
+
+#         tags$summary(
+#           style = "
+#             padding: 9px 14px;
+#             cursor: pointer;
+#             font-weight: 600;
+#             background-color: #dceaf2;
+#             list-style-position: inside;
+#           ",
+#           "About this module"
+#         ),
+
+#         div(
+#           style = "
+#             padding: 12px 16px;
+#             background-color: #eef4f8;
+#           ",
+#           p(
+#             style = "margin: 0;",
+#             "Explore mixed-fisheries forecasts and management scenarios. ",
+#             "The module shows expected catches and fishing effort across ",
+#             "stocks and fleets, allowing different scenarios and fleet ",
+#             "components to be compared."
+#           )
+#         )
+#       )
+#     )
+#   ),
+#               uiOutput(ns("filter_ui_forecast")),
+#               withSpinner(
+#                 plotlyOutput(ns("plot_forecast"), height = "75vh"),
+#                 caption = "Getting mix-fish results..."
+#               )
+#             )
+#           )
+#         )
+#       )
+#     )
+#   )
+# }
 mod_mixfish_ui <- function(id) {
   ns <- NS(id)
 
@@ -20,8 +288,11 @@ mod_mixfish_ui <- function(id) {
     tabsetPanel(
       id = ns("main_tabset"),
 
+      ################################## History ##################################
+
       tabPanel(
-        title = "History of fleet activity", value = "history",
+        title = "History of fleet activity",
+        value = "history",
 
         layout_sidebar(
           bg = "white",
@@ -42,8 +313,15 @@ mod_mixfish_ui <- function(id) {
 
             card_header(
               div(
-                style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
-                # tags$span("Mixed fisheries - history of fleet activity"),
+                style = "
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  gap: 12px;
+                  width: 100%;
+                  flex-wrap: wrap;
+                ",
+
                 radioButtons(
                   ns("subRegion_history"),
                   "Select case study:",
@@ -51,12 +329,13 @@ mod_mixfish_ui <- function(id) {
                   selected = character(0),
                   inline = TRUE
                 ),
+
                 download_icon_label(
-                    text = "Download data",
-                    outputId = ns("download_mixfish_data"),
-                    hover_text = "Total mix-fish data (.csv)",
-                    size = "large"
-                  )
+                  text = "Download data",
+                  outputId = ns("download_mixfish_data"),
+                  hover_text = "Total mix-fish data (.csv)",
+                  size = "large"
+                )
               )
             ),
 
@@ -65,19 +344,79 @@ mod_mixfish_ui <- function(id) {
               fill = TRUE,
               class = "p-1",
 
-              selectizeInput(
-                inputId = ns("plot_selected_history"),
-                label = "Select plot:",
-                choices = c(
-                  "Landings by métier & stock" = "plot3",
-                  "Landings by stock" = "plot4",
-                  "Landings composition by fleet" = "plot5",
-                  "Landings affluvial by stock" = "plot6"
+              div(
+                style = "
+                  display: flex;
+                  gap: 12px;
+                  align-items: flex-start;
+                  width: 100%;
+                  margin-bottom: 8px;
+                ",
+
+                # Plot selector
+                div(
+                  style = "width: 320px; flex: 0 0 320px;",
+
+                  selectizeInput(
+                    inputId = ns("plot_selected_history"),
+                    label = "Select plot:",
+                    choices = c(
+                      "Landings by métier & stock" = "plot3",
+                      "Landings by stock" = "plot4",
+                      "Landings composition by fleet" = "plot5",
+                      "Landings alluvial by stock" = "plot6"
+                    ),
+                    selected = "plot3",
+                    multiple = FALSE,
+                    width = "100%"
+                  )
                 ),
-                selected = "plot3",
-                multiple = FALSE,
-                options = list(
-                  placeholder = "Choose a plot"
+
+                # Module description
+                div(
+                  style = "
+                    flex: 1 1 auto;
+                    min-width: 0;
+                    padding-top: 25px;
+                  ",
+
+                  tags$details(
+                    style = "
+                      width: 100%;
+                      background-color: #eef4f8;
+                      border: 1px solid #d5e2ea;
+                      border-radius: 6px;
+                      overflow: hidden;
+                    ",
+
+                    tags$summary(
+                      style = "
+                        padding: 9px 14px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        background-color: #dceaf2;
+                        list-style-position: inside;
+                      ",
+                      "About this module"
+                    ),
+
+                    div(
+                      style = "
+                        padding: 12px 16px;
+                        background-color: #eef4f8;
+                      ",
+
+                      p(
+                        style = "margin: 0;",
+                        "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
+                        "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
+                        "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
+                        "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
+                        "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
+                        "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>."
+                      )
+                    )
+                  )
                 )
               ),
 
@@ -92,8 +431,11 @@ mod_mixfish_ui <- function(id) {
         )
       ),
 
+      ################################## Forecast ##################################
+
       tabPanel(
-        title = "Forecast", value = "forecast",
+        title = "Forecast",
+        value = "forecast",
 
         layout_sidebar(
           bg = "white",
@@ -114,8 +456,15 @@ mod_mixfish_ui <- function(id) {
 
             card_header(
               div(
-                style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
-                # tags$span("Mixed fisheries forecasts"),
+                style = "
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  gap: 12px;
+                  width: 100%;
+                  flex-wrap: wrap;
+                ",
+
                 radioButtons(
                   ns("subRegion_forecast"),
                   "Select case study:",
@@ -123,12 +472,13 @@ mod_mixfish_ui <- function(id) {
                   selected = character(0),
                   inline = TRUE
                 ),
+
                 download_icon_label(
-                    text = "Download data",
-                    outputId = ns("download_mixfish_data"),
-                    hover_text = "Total mix-fish data (.csv)",
-                    size = "large"
-                  )
+                  text = "Download data",
+                  outputId = ns("download_mixfish_data"),
+                  hover_text = "Total mix-fish data (.csv)",
+                  size = "large"
+                )
               )
             ),
 
@@ -137,18 +487,80 @@ mod_mixfish_ui <- function(id) {
               fill = TRUE,
               class = "p-1",
 
-              selectizeInput(
-                inputId = ns("plot_selected_forecast"),
-                label = "Select plot:",
-                choices = c(
-                  "Scenarios" = "plot1",
-                  "Effort by fleet & stock" = "plot2"
-                  # "Variation of effort by fleet & stock" = "plot6"
+              div(
+                style = "
+                  display: flex;
+                  gap: 12px;
+                  align-items: flex-start;
+                  width: 100%;
+                  margin-bottom: 8px;
+                ",
+
+                # Plot selector
+                div(
+                  style = "width: 320px; flex: 0 0 320px;",
+
+                  selectizeInput(
+                    inputId = ns("plot_selected_forecast"),
+                    label = "Select plot:",
+                    choices = c(
+                      "Scenarios" = "plot1",
+                      "Effort by fleet & stock" = "plot2"
+                    ),
+                    selected = "plot1",
+                    multiple = FALSE,
+                    width = "100%",
+                    options = list(
+                      placeholder = "Choose a plot"
+                    )
+                  )
                 ),
-                selected = "plot1",
-                multiple = FALSE,
-                options = list(
-                  placeholder = "Choose a plot"
+
+                # Module description
+                div(
+                  style = "
+                    flex: 1 1 auto;
+                    min-width: 0;
+                    padding-top: 25px;
+                  ",
+
+                  tags$details(
+                    style = "
+                      width: 100%;
+                      background-color: #eef4f8;
+                      border: 1px solid #d5e2ea;
+                      border-radius: 6px;
+                      overflow: hidden;
+                    ",
+
+                    tags$summary(
+                      style = "
+                        padding: 9px 14px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        background-color: #dceaf2;
+                        list-style-position: inside;
+                      ",
+                      "About this module"
+                    ),
+
+                    div(
+                      style = "
+                        padding: 12px 16px;
+                        background-color: #eef4f8;
+                      ",
+
+                      p(
+                        style = "margin: 0;",
+                        "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
+                        "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
+                        "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
+                        "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
+                        "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
+                        "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>."
+                      )
+                    )
+                  )
                 )
               ),
 
@@ -165,7 +577,6 @@ mod_mixfish_ui <- function(id) {
     )
   )
 }
-
 
 
 #' Server logic for the mixed fisheries module
