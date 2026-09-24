@@ -64,7 +64,10 @@ jobs:
         run: Rscript -e 'install.packages(c("rsconnect","desc","pkgload", "processx"), repos = "https://cloud.r-project.org")'
 
       - name: Restore renv packages
-        uses: r-lib/actions/setup-renv@v2
+        env:
+          RENV_CONFIG_INSTALL_VERBOSE: "TRUE"
+        run: |
+          Rscript -e 'renv::restore()'
 
       - name: Check renv status
         run: Rscript -e 'renv::status()'
