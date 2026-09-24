@@ -25,6 +25,7 @@ Imports:
     leaflet,
     lubridate,
     magrittr,
+    mixfishtools,
     plotly,
     plyr,
     pkgload,
