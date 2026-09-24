@@ -3275,15 +3275,15 @@
     "mixfishtools": {
       "Package": "mixfishtools",
       "Version": "0.5.1",
-      "Source": "GitHub",
+      "Source": "Repository",
       "Type": "Package",
       "Title": "WGMIXFISH tools for reproducibility",
       "Date": "2025-09-29",
       "Author": "Marc Taylor, Mikel Aristegui, Johnathan Ball, Harriet Cole, Paul Dolder",
       "Maintainer": "Marc Taylor <marc.taylor@thuenen.de>",
-      "Description": "Contains plot templates used in WGMIXFISH-ADVICE and Fisheries  Overviews.",
+      "Description": "Contains plot templates used in WGMIXFISH-ADVICE and Fisheries Overviews.",
       "Depends": [
-        "R (>= 4.0)",
+        "R (>= 4.1.0)",
         "ggplot2",
         "ggrepel",
         "ggalluvial",
@@ -3301,20 +3301,21 @@
         "ggplotFL",
         "FLfse",
         "stockassessment",
-        "spict"
+        "spict",
+        "mgcv"
       ],
       "License": "GPL-3 + file LICENSE",
       "Encoding": "UTF-8",
       "LazyData": "false",
-      "RoxygenNote": "7.3.2",
+      "RoxygenNote": "7.3.3",
       "VignetteBuilder": "knitr",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "mixfishtools",
-      "RemoteUsername": "ices-tools-dev",
+      "Config/pak/sysreqs": "libicu-dev",
+      "Repository": "https://ices-tools-prod.r-universe.dev",
+      "NeedsCompilation": "no",
+      "RemoteType": "repository",
+      "RemoteUrl": "https://github.com/ices-tools-dev/mixfishtools",
       "RemoteRef": "HEAD",
-      "RemoteSha": "d3cfef90c12ccea7236f64d5749a7989b917aee6",
-      "NeedsCompilation": "no"
+      "RemoteSha": "f5ab209ba9b23ba863c2789de554a0c493c7cd9d"
     },
     "officer": {
       "Package": "officer",
