@@ -1625,6 +1625,7 @@ mod_mixfish_server <- function(
             c(
               "Scenario",
               "Mixed fisheries effort assumption",
+              "Basis for catch limit in forecast year",
               "case_study"
             ) %in% names(df)
           ),
@@ -1639,7 +1640,8 @@ mod_mixfish_server <- function(
         ) %>%
         dplyr::select(
           Scenario,
-          `Mixed fisheries effort assumption`          
+          `Mixed fisheries effort assumption`,
+          `Basis for catch limit in forecast year`
         )
 
       validate(
