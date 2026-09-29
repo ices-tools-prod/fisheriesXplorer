@@ -1058,13 +1058,14 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
       margin = list(
         l = 80,
         b = 110,
-        t = 60,
+        t = 110,
         r = 20
       ),
       
       title = list(
         text = title,
         x = 0.5,
+        y = 1.2,
         xanchor = "center"
       ),
       
@@ -1596,7 +1597,7 @@ plot_catchComp_plotly <- function(
     yvar = "landings",
     scenario_value = "min",
     label_wrap = 35,
-    facet_ncol = 1,
+    facet_ncol = 3,
     min_height = 650,
     row_height = 32
 ) {
