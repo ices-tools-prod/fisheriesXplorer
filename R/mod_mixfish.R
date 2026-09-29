@@ -1,284 +1,95 @@
-#' Mixed fisheries UI module (tabbed: History of fleet activity / Forecast)
-#'
-#' This module UI creates the Mixed Fisheries section of fisheriesXplorer,
-#' split into two top-level tabs: "History of fleet activity" (previously
-#' the "Data" plot group) and "Forecast" (previously the "Analysis" plot
-#' group). The case-study (sub-region) selector is available at the top of
-#' both tabs.
-#'
-#' @param id A character string used as the module namespace.
-#'
-#' @return A Shiny UI tag list.
-#'
-#' @export
-# mod_mixfish_ui <- function(id) {
-#   ns <- NS(id)
 
-#   tagList(
-#     mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
-#     tabsetPanel(
-#       id = ns("main_tabset"),
-#       tabPanel(
-#         title = "History of fleet activity", value = "history",
-#         layout_sidebar(
-#           bg = "white",
-#           fg = "black",
-#           sidebar = sidebar(
-#             width = "33vw",
-#             bg = "white",
-#             fg = "black",
-#             open = FALSE,
-#             uiOutput(ns("mixfish_text_history"))
-#           ),
-#           card(
-#             height = "85vh",
-#             full_screen = TRUE,
-#             fill = FALSE,
-#             card_header(
-#               div(
-#                 style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
-#                 # tags$span("Mixed fisheries - history of fleet activity"),
-#                 radioButtons(
-#                   ns("subRegion_history"),
-#                   "Select case study:",
-#                   choices = character(0),
-#                   selected = character(0),
-#                   inline = TRUE
-#                 ),
-#                 download_icon_label(
-#                   text = "Download data",
-#                   outputId = ns("download_mixfish_data"),
-#                   hover_text = "Total mix-fish data (.csv)",
-#                   size = "large"
-#                 )
-#               )
-#             ),
-#             card_body(
-#   fillable = TRUE,
-#   fill = TRUE,
-#   class = "p-1",
 
-#   div(
-#     style = "
-#       display: flex;
-#       gap: 12px;
-#       align-items: flex-start;
-#       width: 100%;
-#       margin-bottom: 8px;
-#     ",
+mixfish_about_box <- function() {
+  div(
+    # Same wrapper + label as a Shiny input, so the box starts where the dropdown starts
+    class = "form-group shiny-input-container",
+    style = "flex: 1 1 auto; min-width: 0; width: auto;",
 
-#     div(
-#       style = "width: 320px; flex: 0 0 320px;",
-#       selectizeInput(
-#         inputId = ns("plot_selected_history"),
-#         label = "Select plot:",
-#         choices = c(
-#           "Landings by métier & stock" = "plot3",
-#           "Landings by stock" = "plot4",
-#           "Landings composition by fleet" = "plot5",
-#           "Landings alluvial by stock" = "plot6"
-#         ),
-#         selected = "plot3",
-#         multiple = FALSE,
-#         width = "100%"
-#       )
-#     ),
+    tags$label(
+      class = "control-label",
+      style = "visibility: hidden;",
+      `aria-hidden` = "true",
+      HTML("&nbsp;")
+    ),
 
-#     div(
-#       style = "
-#         flex: 1 1 auto;
-#         min-width: 0;
-#         padding-top: 25px;
-#       ",
+    tags$details(
+      style = "
+        width: 100%;
+        padding: 0;
+        background-color: #eef4f8;
+        border: 1px solid #d5e2ea;
+        border-radius: 6px;
+        overflow: hidden;
+      ",
+      # 6 + 20 + 6 + 2px border = 34px, same height as the dropdown
+      tags$summary(
+        style = "
+          margin: 0;
+          padding: 6px 12px;
+          line-height: 20px;
+          font-weight: 600;
+          cursor: pointer;
+          background-color: #dceaf2;
+          list-style-position: inside;
+        ",
+        "About this module"
+      ),
+      div(
+        style = "padding: 12px 16px; background-color: #eef4f8;",
+        p(
+          style = "margin: 0;",
+          "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
+          "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
+          "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
+          "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
+          "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
+          "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>."
+        )
+      )
+    )
+  )
+}
 
-#       tags$details(
-#         style = "
-#           width: 100%;
-#           background-color: #eef4f8;
-#           border: 1px solid #d5e2ea;
-#           border-radius: 6px;
-#           overflow: hidden;
-#         ",
+mixfish_scenarios_box <- function(ns) {
 
-#         tags$summary(
-#           style = "
-#             padding: 9px 14px;
-#             cursor: pointer;
-#             font-weight: 600;
-#             background-color: #dceaf2;
-#           ",
-#           "About this module"
-#         ),
+  tags$details(
+    style = "
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 0;
+      background-color: #eef4f8;
+      border: 1px solid #d5e2ea;
+      border-radius: 6px;
+      overflow: hidden;
+    ",
 
-#         div(
-#           style = "padding: 12px 16px;",
-#           p(
-#             style = "margin: 0;",
-#             "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
-#             "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
-#             "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
-#             "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
-#             "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
-#             "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>. "
-#           )
-#           )
-#         )
-#       )
-#     )
-#   ),
-#               uiOutput(ns("filter_ui_history")),
-#               withSpinner(
-#                 plotlyOutput(ns("plot_history"), height = "75vh"),
-#                 caption = "Getting mix-fish results..."
-#               )
-#             )
-#           )
-#         )
-#       ),
-#       tabPanel(
-#         title = "Forecast", value = "forecast",
-#         layout_sidebar(
-#           bg = "white",
-#           fg = "black",
-#           sidebar = sidebar(
-#             width = "33vw",
-#             bg = "white",
-#             fg = "black",
-#             open = FALSE,
-#             uiOutput(ns("mixfish_text_forecast"))
-#           ),
-#           card(
-#             height = "85vh",
-#             full_screen = TRUE,
-#             fill = FALSE,
-#             card_header(
-#               div(
-#                 style = "display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; flex-wrap:wrap;",
-#                 # tags$span("Mixed fisheries forecasts"),
-#                 radioButtons(
-#                   ns("subRegion_forecast"),
-#                   "Select case study:",
-#                   choices = character(0),
-#                   selected = character(0),
-#                   inline = TRUE
-#                 ),
-#                 download_icon_label(
-#                   text = "Download data",
-#                   outputId = ns("download_mixfish_data"),
-#                   hover_text = "Total mix-fish data (.csv)",
-#                   size = "large"
-#                 )
-#               )
-#             ),
+    tags$summary(
+      style = "
+        margin: 0;
+        padding: 6px 12px;
+        line-height: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        background-color: #dceaf2;
+        list-style-position: inside;
+      ",
+      "Scenario definitions"
+    ),
 
-#             # card_body(
-#             #   fillable = TRUE,
-#             #   fill = TRUE,
-#             #   class = "p-1",
+    div(
+      style = "
+        padding: 12px 16px;
+        background-color: #eef4f8;
+        overflow-x: auto;
+      ",
 
-#             #   selectizeInput(
-#             #     inputId = ns("plot_selected_forecast"),
-#             #     label = "Select plot:",
-#             #     choices = c(
-#             #       "Scenarios" = "plot1",
-#             #       "Effort by fleet & stock" = "plot2"
-#             #       # "Variation of effort by fleet & stock" = "plot6"
-#             #     ),
-#             #     selected = "plot1",
-#             #     multiple = FALSE,
-#             #     options = list(
-#             #       placeholder = "Choose a plot"
-#             #     )
-#             #   ),
-#             card_body(
-#   fillable = TRUE,
-#   fill = TRUE,
-#   class = "p-1",
+      tableOutput(ns("mixfish_scenarios_table"))
+    )
+  )
+}
 
-#   div(
-#     style = "
-#       display: flex;
-#       gap: 12px;
-#       align-items: flex-start;
-#       width: 100%;
-#       margin-bottom: 8px;
-#     ",
 
-#     # Plot selector
-#     div(
-#       style = "width: 320px; flex: 0 0 320px;",
-#       selectizeInput(
-#         inputId = ns("plot_selected_forecast"),
-#         label = "Select plot:",
-#         choices = c(
-#           "Scenarios" = "plot1",
-#           "Effort by fleet & stock" = "plot2"
-#         ),
-#         selected = "plot1",
-#         multiple = FALSE,
-#         width = "100%",
-#         options = list(
-#           placeholder = "Choose a plot"
-#         )
-#       )
-#     ),
-
-#     # Module description
-#     div(
-#       style = "
-#         flex: 1 1 auto;
-#         min-width: 0;
-#         padding-top: 25px;
-#       ",
-
-#       tags$details(
-#         style = "
-#           width: 100%;
-#           background-color: #eef4f8;
-#           border: 1px solid #d5e2ea;
-#           border-radius: 6px;
-#           overflow: hidden;
-#         ",
-
-#         tags$summary(
-#           style = "
-#             padding: 9px 14px;
-#             cursor: pointer;
-#             font-weight: 600;
-#             background-color: #dceaf2;
-#             list-style-position: inside;
-#           ",
-#           "About this module"
-#         ),
-
-#         div(
-#           style = "
-#             padding: 12px 16px;
-#             background-color: #eef4f8;
-#           ",
-#           p(
-#             style = "margin: 0;",
-#             "Explore mixed-fisheries forecasts and management scenarios. ",
-#             "The module shows expected catches and fishing effort across ",
-#             "stocks and fleets, allowing different scenarios and fleet ",
-#             "components to be compared."
-#           )
-#         )
-#       )
-#     )
-#   ),
-#               uiOutput(ns("filter_ui_forecast")),
-#               withSpinner(
-#                 plotlyOutput(ns("plot_forecast"), height = "75vh"),
-#                 caption = "Getting mix-fish results..."
-#               )
-#             )
-#           )
-#         )
-#       )
-#     )
-#   )
-# }
 mod_mixfish_ui <- function(id) {
   ns <- NS(id)
 
@@ -299,10 +110,10 @@ mod_mixfish_ui <- function(id) {
           fg = "black",
 
           sidebar = sidebar(
-            width = "33vw",
+            width = "20vw",
             bg = "white",
             fg = "black",
-            open = FALSE,
+            open = TRUE,
             uiOutput(ns("mixfish_text_history"))
           ),
 
@@ -352,10 +163,57 @@ mod_mixfish_ui <- function(id) {
                   width: 100%;
                   margin-bottom: 8px;
                 ",
+                
+                mixfish_about_box(),
+                # # Module description
+                # div(
+                #   style = "
+                #     flex: 1 1 auto;
+                #     min-width: 0;
+                #     padding-top: 25px;
+                #   ",
 
+                #   tags$details(
+                #     style = "
+                #       width: 100%;
+                #       background-color: #eef4f8;
+                #       border: 1px solid #d5e2ea;
+                #       border-radius: 6px;
+                #       overflow: hidden;
+                #     ",
+
+                #     tags$summary(
+                #       style = "
+                #         padding: 9px 14px;
+                #         cursor: pointer;
+                #         font-weight: 600;
+                #         background-color: #dceaf2;
+                #         list-style-position: inside;
+                #       ",
+                #       "About this module"
+                #     ),
+
+                #     div(
+                #       style = "
+                #         padding: 12px 16px;
+                #         background-color: #eef4f8;
+                #       ",
+
+                #       p(
+                #         style = "margin: 0;",
+                #         "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
+                #         "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
+                #         "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
+                #         "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
+                #         "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
+                #         "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>."
+                #       )
+                #     )
+                #   )
+                # ),
                 # Plot selector
                 div(
-                  style = "width: 320px; flex: 0 0 320px;",
+                  style = "flex: 0 0 300px; width: 300px;",
 
                   selectizeInput(
                     inputId = ns("plot_selected_history"),
@@ -370,54 +228,9 @@ mod_mixfish_ui <- function(id) {
                     multiple = FALSE,
                     width = "100%"
                   )
-                ),
-
-                # Module description
-                div(
-                  style = "
-                    flex: 1 1 auto;
-                    min-width: 0;
-                    padding-top: 25px;
-                  ",
-
-                  tags$details(
-                    style = "
-                      width: 100%;
-                      background-color: #eef4f8;
-                      border: 1px solid #d5e2ea;
-                      border-radius: 6px;
-                      overflow: hidden;
-                    ",
-
-                    tags$summary(
-                      style = "
-                        padding: 9px 14px;
-                        cursor: pointer;
-                        font-weight: 600;
-                        background-color: #dceaf2;
-                        list-style-position: inside;
-                      ",
-                      "About this module"
-                    ),
-
-                    div(
-                      style = "
-                        padding: 12px 16px;
-                        background-color: #eef4f8;
-                      ",
-
-                      p(
-                        style = "margin: 0;",
-                        "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
-                        "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
-                        "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
-                        "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
-                        "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
-                        "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>."
-                      )
-                    )
-                  )
                 )
+
+                
               ),
 
               uiOutput(ns("filter_ui_history")),
@@ -442,10 +255,10 @@ mod_mixfish_ui <- function(id) {
           fg = "black",
 
           sidebar = sidebar(
-            width = "33vw",
+            width = "20vw",
             bg = "white",
             fg = "black",
-            open = FALSE,
+            open = TRUE,
             uiOutput(ns("mixfish_text_forecast"))
           ),
 
@@ -496,9 +309,57 @@ mod_mixfish_ui <- function(id) {
                   margin-bottom: 8px;
                 ",
 
+                mixfish_about_box(),
+
+                # Module description
+                # div(
+                #   style = "
+                #     flex: 1 1 auto;
+                #     min-width: 0;
+                #     padding-top: 25px;
+                #   ",
+
+                #   tags$details(
+                #     style = "
+                #       width: 100%;
+                #       background-color: #eef4f8;
+                #       border: 1px solid #d5e2ea;
+                #       border-radius: 6px;
+                #       overflow: hidden;
+                #     ",
+
+                #     tags$summary(
+                #       style = "
+                #         padding: 9px 14px;
+                #         cursor: pointer;
+                #         font-weight: 600;
+                #         background-color: #dceaf2;
+                #         list-style-position: inside;
+                #       ",
+                #       "About this module"
+                #     ),
+
+                #     div(
+                #       style = "
+                #         padding: 12px 16px;
+                #         background-color: #eef4f8;
+                #       ",
+
+                #       p(
+                #         style = "margin: 0;",
+                #         "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
+                #         "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
+                #         "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
+                #         "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
+                #         "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
+                #         "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>."
+                #       )
+                #     )
+                #   )
+                # ),
                 # Plot selector
                 div(
-                  style = "width: 320px; flex: 0 0 320px;",
+                  style = "flex: 0 0 300px; width: 300px;",
 
                   selectizeInput(
                     inputId = ns("plot_selected_forecast"),
@@ -514,55 +375,9 @@ mod_mixfish_ui <- function(id) {
                       placeholder = "Choose a plot"
                     )
                   )
-                ),
-
-                # Module description
-                div(
-                  style = "
-                    flex: 1 1 auto;
-                    min-width: 0;
-                    padding-top: 25px;
-                  ",
-
-                  tags$details(
-                    style = "
-                      width: 100%;
-                      background-color: #eef4f8;
-                      border: 1px solid #d5e2ea;
-                      border-radius: 6px;
-                      overflow: hidden;
-                    ",
-
-                    tags$summary(
-                      style = "
-                        padding: 9px 14px;
-                        cursor: pointer;
-                        font-weight: 600;
-                        background-color: #dceaf2;
-                        list-style-position: inside;
-                      ",
-                      "About this module"
-                    ),
-
-                    div(
-                      style = "
-                        padding: 12px 16px;
-                        background-color: #eef4f8;
-                      ",
-
-                      p(
-                        style = "margin: 0;",
-                        "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
-                        "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
-                        "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
-                        "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
-                        "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
-                        "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>."
-                      )
-                    )
-                  )
                 )
               ),
+              mixfish_scenarios_box(ns),
 
               uiOutput(ns("filter_ui_forecast")),
 
@@ -1790,6 +1605,60 @@ mod_mixfish_server <- function(
       region_ready(TRUE)
     }, ignoreInit = TRUE)
 
+
+
+    ################################## Forecast scenario definitions ##################################
+
+    output$mixfish_scenarios_table <- renderTable({
+
+      req(selected_subRegion())
+
+      df <- select_text(
+        texts,
+        "mixfish_scenarios",
+        NULL
+      )
+
+      validate(
+        need(
+          all(
+            c(
+              "Scenario",
+              "Mixed fisheries effort assumption",
+              "case_study"
+            ) %in% names(df)
+          ),
+          "Scenario definitions are not available."
+        )
+      )
+
+      df <- df %>%
+        dplyr::filter(
+          as.character(case_study) ==
+            as.character(selected_subRegion())
+        ) %>%
+        dplyr::select(
+          Scenario,
+          `Mixed fisheries effort assumption`          
+        )
+
+      validate(
+        need(
+          nrow(df) > 0,
+          "No scenario definitions are available for this case study."
+        )
+      )
+
+      df
+
+    },
+    rownames = FALSE,
+    striped = TRUE,
+    hover = TRUE,
+    bordered = FALSE,
+    spacing = "s"
+    )
+
     ################################## Data preparation ##################################
 
     data_reactive_all <- reactive({
@@ -2591,7 +2460,8 @@ mod_mixfish_server <- function(
           plot_catchScenStk_plotly(
             data = current_plot_data_forecast(),
             adv = data_reactive_all()$catchRange_filtered,
-            refTable = data_reactive_all()$refTable_filtered
+            refTable = data_reactive_all()$refTable_filtered,
+            title = "Mixed-fisheries projections of potential 2026 catches"
           )
         },
 
