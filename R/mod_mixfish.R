@@ -141,10 +141,16 @@ mod_mixfish_ui <- function(id) {
                   inline = TRUE
                 ),
 
+                # download_icon_label(
+                #   text = "Download data",
+                #   outputId = ns("download_mixfish_data"),
+                #   hover_text = "Total mix-fish data (.csv)",
+                #   size = "large"
+                # )
                 download_icon_label(
                   text = "Download data",
-                  outputId = ns("download_mixfish_data"),
-                  hover_text = "Total mix-fish data (.csv)",
+                  outputId = ns("download_mixfish_data_history"),
+                  hover_text = "Selected plot data (.csv)",
                   size = "large"
                 )
               )
@@ -241,10 +247,16 @@ mod_mixfish_ui <- function(id) {
                   inline = TRUE
                 ),
 
+                # download_icon_label(
+                #   text = "Download data",
+                #   outputId = ns("download_mixfish_data"),
+                #   hover_text = "Total mix-fish data (.csv)",
+                #   size = "large"
+                # )
                 download_icon_label(
                   text = "Download data",
-                  outputId = ns("download_mixfish_data"),
-                  hover_text = "Total mix-fish data (.csv)",
+                  outputId = ns("download_mixfish_data_forecast"),
+                  hover_text = "Selected plot data (.csv)",
                   size = "large"
                 )
               )
@@ -765,7 +777,7 @@ mod_mixfish_server <- function(
               "X-axis variable(s):",
               choices = available_comp_vars,
               selected = "year",
-              multiple = TRUE,
+              multiple = FALSE,
               width = "100%",
               options = list(
                 plugins = list("remove_button"),
@@ -1391,5 +1403,117 @@ mod_mixfish_server <- function(
         }
       )
     })
+
+    ################################## Download bundles: per-plot data ##################################
+
+    # Resolves the data frame + a short label for whichever plot is currently
+    # selected on the History tab, falling back to the unfiltered source data
+    # if the user has not touched the optional filters yet.
+    export_data_history <- reactive({
+      req(plot_name_history())
+      req(region_ready())
+
+      switch(
+        plot_name_history(),
+        "plot3" = {
+          df <- current_plot_data_history()
+          if (is.null(df)) df <- filter_source_data_history()
+          list(data = df, label = "landings_by_metier_stock")
+        },
+        "plot4" = list(
+          data = data_reactive_all()$StockLandings_filtered,
+          label = "landings_by_stock"
+        ),
+        "plot5" = list(
+          data = filter_source_data_history(),
+          label = "landings_composition_by_fleet"
+        ),
+        "plot6" = list(
+          data = plot6_data(),
+          label = "landings_alluvial_by_stock"
+        ),
+        list(data = NULL, label = "mixfish_history")
+      )
+    })
+
+    # Same idea for the Forecast tab.
+    export_data_forecast <- reactive({
+      req(plot_name_forecast())
+      req(region_ready())
+
+      switch(
+        plot_name_forecast(),
+        "plot1" = {
+          df <- current_plot_data_forecast()
+          if (is.null(df)) df <- filter_source_data_forecast()
+          list(data = df, label = "catch_scenarios")
+        },
+        "plot2" = {
+          df <- current_plot_data_forecast()
+          if (is.null(df)) df <- filter_source_data_forecast()
+          list(data = df, label = "effort_by_fleet_stock")
+        },
+        list(data = NULL, label = "mixfish_forecast")
+      )
+    })
+
+    build_mixfish_bundle <- function(file, exp) {
+      td <- tempfile("mixfish_bundle_")
+      dir.create(td, showWarnings = FALSE)
+      on.exit(unlink(td, recursive = TRUE, force = TRUE), add = TRUE)
+
+      acronym <- get_ecoregion_acronym(selected_ecoregion())
+      date_tag <- format(Sys.Date(), "%d-%b-%y")
+
+      dat <- exp$data
+      validate(need(!is.null(dat) && NROW(dat) > 0, "No data available for download."))
+
+      csv_name <- paste0("mixfish_", exp$label, "_", acronym, "_", date_tag, ".csv")
+      csv_path <- file.path(td, csv_name)
+      utils::write.csv(dat, csv_path, row.names = FALSE)
+
+      disc_path <- file.path(td, "Disclaimer.txt")
+      disc_url <- "https://raw.githubusercontent.com/ices-tools-prod/disclaimers/master/Disclaimer_fisheriesXplorer.txt"
+      if (!safe_download(disc_url, disc_path)) {
+        writeLines(c(
+          "Disclaimer for fisheriesXplorer mixed-fisheries data.",
+          "The official disclaimer could not be fetched automatically.",
+          paste("Please see:", disc_url)
+        ), con = disc_path)
+      }
+
+      files_to_zip <- c(csv_path, disc_path)
+      if (requireNamespace("zip", quietly = TRUE) && "zipr" %in% getNamespaceExports("zip")) {
+        zip::zipr(zipfile = file, files = files_to_zip, root = td)
+      } else {
+        owd <- setwd(td)
+        on.exit(setwd(owd), add = TRUE)
+        zip::zip(zipfile = file, files = basename(files_to_zip))
+      }
+    }
+
+    output$download_mixfish_data_history <- downloadHandler(
+      filename = function() {
+        acronym <- get_ecoregion_acronym(selected_ecoregion())
+        date_tag <- format(Sys.Date(), "%d-%b-%y")
+        paste0("mixfish_history_", export_data_history()$label, "_", acronym, "_", date_tag, ".zip")
+      },
+      content = function(file) {
+        build_mixfish_bundle(file, export_data_history())
+      },
+      contentType = "application/zip"
+    )
+
+    output$download_mixfish_data_forecast <- downloadHandler(
+      filename = function() {
+        acronym <- get_ecoregion_acronym(selected_ecoregion())
+        date_tag <- format(Sys.Date(), "%d-%b-%y")
+        paste0("mixfish_forecast_", export_data_forecast()$label, "_", acronym, "_", date_tag, ".zip")
+      },
+      content = function(file) {
+        build_mixfish_bundle(file, export_data_forecast())
+      },
+      contentType = "application/zip"
+    )
   })
 }

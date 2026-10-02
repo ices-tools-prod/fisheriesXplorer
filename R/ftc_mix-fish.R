@@ -1770,14 +1770,14 @@ plot_catchComp_plotly <- function(
   plotly::ggplotly(p, tooltip = "text", height = plot_height) %>%
     plotly::layout(
       autosize = TRUE,
-      margin = list(l = 160, r = 30, b = 90, t = 30),
+      margin = list(l = 30, r = 30, b = 30, t = 40),
       legend = list(
         orientation = "h",
         x = 0,
-        y = -0.15,
+        y = 1.009, # was 1.05; lower value tightens the gap above the plot
         xanchor = "left",
-        yanchor = "top",
-        title = list(text = "Stock")
+        yanchor = "bottom", # anchor at its own bottom edge, not top
+        title = list(text = "Stock:")
       )
     )
 }
