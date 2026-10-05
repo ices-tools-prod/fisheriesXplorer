@@ -479,7 +479,8 @@ parse_nav <- function(hash, search) {
     tab    = qs$tab    %|?% "",
     subtab = qs$subtab %|?% "",
     stock  = qs$stock  %|?% "",
-    plot   = qs$plot   %|?% ""
+    plot   = qs$plot   %|?% "",
+    subregion = qs$subregion %|?% ""
   )
 }
 
@@ -619,13 +620,14 @@ select_subtab <- function(tab, value, session) {
 #     if (nzchar(stock)) paste0("&stock=",  utils::URLencode(stock, reserved = TRUE)) else ""
 #   )
 # }
-write_hash <- function(eco, tab, sub, stock = NULL, plot = NULL) {
+write_hash <- function(eco, tab, sub, stock = NULL, plot = NULL, subregion = NULL) {
 
   eco   <- eco   %|?% ""
   tab   <- tab   %|?% ""
   sub   <- sub   %|?% ""
   stock <- stock %|?% ""
   plot  <- plot  %|?% ""
+  subregion <- subregion %|?% ""
 
   paste0(
     "#eco=", utils::URLencode(eco, reserved = TRUE),
@@ -638,6 +640,9 @@ write_hash <- function(eco, tab, sub, stock = NULL, plot = NULL) {
     else "",
     if (nzchar(plot))
       paste0("&plot=", utils::URLencode(plot, reserved = TRUE))
+    else "",
+    if (nzchar(subregion))
+      paste0("&subregion=", utils::URLencode(subregion, reserved = TRUE))
     else ""
   )
 }

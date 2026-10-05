@@ -389,6 +389,7 @@ mod_mixfish_server <- function(
 
       wanted_subtab <- qs$subtab
       wanted_plot <- qs$plot
+      wanted_subregion <- qs$subregion
 
       if (wanted_subtab %in% c("history", "forecast")) {
         session$onFlushed(function() {
@@ -398,10 +399,35 @@ mod_mixfish_server <- function(
             selected = wanted_subtab
           )
 
-          plot_id <- mixfish_plot_from_url(
-            wanted_subtab,
-            wanted_plot
-          )
+          if (!is.null(wanted_subregion) && nzchar(wanted_subregion)) {
+            choices <- subregion_choices()
+
+            if (wanted_subregion %in% choices) {
+              selected_subRegion(wanted_subregion)
+
+              updateRadioButtons(
+                session,
+                "subRegion_history",
+                selected = wanted_subregion
+              )
+
+              updateRadioButtons(
+                session,
+                "subRegion_forecast",
+                selected = wanted_subregion
+              )
+            }
+          }
+
+
+          plot_id <- NULL
+
+          if (!is.null(wanted_plot) && nzchar(wanted_plot)) {
+            plot_id <- mixfish_plot_from_url(
+              wanted_subtab,
+              wanted_plot
+            )
+          }
 
           if (!is.null(plot_id)) {
             if (wanted_subtab == "history") {
