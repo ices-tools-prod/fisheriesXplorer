@@ -339,29 +339,93 @@ mod_mixfish_server <- function(
     id,
     selected_ecoregion,
     bookmark_qs = reactive(NULL),
-    set_subtab = function(...) {}) {
+    set_subtab = function(...) {},
+    set_plot = function(...) {}) {
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+
+    ################################## Mapping plots from URL ##################################
+    mixfish_plot_from_url <- function(subtab, plot) {
+      mappings <- list(
+        history = c(
+          landings_by_metier_stock = "plot3",
+          landings_by_stock = "plot4",
+          landings_composition_by_fleet = "plot5",
+          landings_alluvial_by_stock = "plot6"
+        ),
+        forecast = c(
+          scenarios = "plot1",
+          effort_by_fleet_stock = "plot2"
+        )
+      )
+
+      x <- mappings[[subtab]][[plot]]
+
+      if (is.null(x)) NULL else x
+    }
+
     ################################## Bookmarking ##################################
 
+    # observeEvent(bookmark_qs(), once = TRUE, ignoreInit = TRUE, {
+    #   qs <- bookmark_qs()
+    #   wanted <- qs$subtab
+    #   valid <- c("history", "forecast")
+
+    #   if (!is.null(wanted) && nzchar(wanted) && wanted %in% valid) {
+    #     session$onFlushed(function() {
+    #       updateTabsetPanel(session, "main_tabset", selected = wanted)
+    #       isolate(set_subtab(wanted))
+    #     }, once = TRUE)
+    #   }
+    # })
+
+    # observeEvent(input$main_tabset, {
+    #   set_subtab(input$main_tabset)
+    # }, ignoreInit = TRUE)
     observeEvent(bookmark_qs(), once = TRUE, ignoreInit = TRUE, {
       qs <- bookmark_qs()
-      wanted <- qs$subtab
-      valid <- c("history", "forecast")
 
-      if (!is.null(wanted) && nzchar(wanted) && wanted %in% valid) {
+      wanted_subtab <- qs$subtab
+      wanted_plot <- qs$plot
+
+      if (wanted_subtab %in% c("history", "forecast")) {
         session$onFlushed(function() {
-          updateTabsetPanel(session, "main_tabset", selected = wanted)
-          isolate(set_subtab(wanted))
+          updateTabsetPanel(
+            session,
+            "mixfish_tabset",
+            selected = wanted_subtab
+          )
+
+          plot_id <- mixfish_plot_from_url(
+            wanted_subtab,
+            wanted_plot
+          )
+
+          if (!is.null(plot_id)) {
+            if (wanted_subtab == "history") {
+              updateSelectizeInput(
+                session,
+                "plot_selected_history",
+                selected = plot_id
+              )
+            }
+
+            if (wanted_subtab == "forecast") {
+              updateSelectizeInput(
+                session,
+                "plot_selected_forecast",
+                selected = plot_id
+              )
+            }
+          }
+
+          isolate(set_subtab(wanted_subtab))
         }, once = TRUE)
       }
     })
 
-    observeEvent(input$main_tabset, {
-      set_subtab(input$main_tabset)
-    }, ignoreInit = TRUE)
 
     ################################## Header + glossary ##################################
 
