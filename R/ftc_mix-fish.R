@@ -508,11 +508,18 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
   
   unique_stocks <- unique(data$stock) 
   n_stocks <- length(unique_stocks) 
+  if (n_stocks == 0) stop("No stock data available to plot.") 
   n_cols <- min(3, n_stocks) 
   n_rows <- ceiling(n_stocks / n_cols) 
   
-  # Global scenario order + numeric x index
-  global_x <- as.character(unique(data$scenario)) 
+  # Global scenario order + numeric x index.
+  # Known scenarios come first in this fixed order; any others are appended alphabetically.
+  data_scenarios <- as.character(unique(data$scenario))
+  priority_order <- c("min", "max", "sq_E", "min_exzero", "min_range")
+  known <- intersect(priority_order, data_scenarios)
+  other <- sort(setdiff(data_scenarios, priority_order))
+  global_x <- c(known, other)
+
   idx_map  <- setNames(seq_along(global_x), global_x) 
   n_cat    <- length(global_x) 
   

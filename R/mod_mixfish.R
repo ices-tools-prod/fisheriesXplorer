@@ -1394,6 +1394,7 @@ mod_mixfish_server <- function(
 
         "plot1" = {
           req(current_plot_data_forecast())
+          req(nrow(current_plot_data_forecast()) > 0)
 
           plot_catchScenStk_plotly(
             data = current_plot_data_forecast(),
