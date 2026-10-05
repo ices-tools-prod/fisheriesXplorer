@@ -412,27 +412,37 @@ mod_mixfish_server <- function(
 
     ################################## Sidebar text ##################################
 
-    mixfish_text_content <- reactive({
+    # New approach: one row per plot in the texts sheet (section = "plot1", "plot2", ...),
+    # looked up using whichever plot is currently selected on each subtab.
+    # Uses get_active_region_acronym() (not get_ecoregion_acronym() alone) so
+    # that case studies with their own acronym (e.g. Celtic Sea "CSx" vs Irish
+    # Sea "IrS") get their own text instead of sharing the parent CS/BI sheet.
+    mixfish_text_for_plot <- function(plot_name) {
       req(selected_ecoregion())
+      req(region_ready())
+      req(plot_name)
 
       div(
         class = "sidebar-text",
         HTML(
           select_text(
             texts,
-            paste0("mixfish_", get_ecoregion_acronym(selected_ecoregion())),
-            "overview"
+            paste0(
+              "mixfish_",
+              get_active_region_acronym(selected_subRegion(), selected_ecoregion())
+            ),
+            plot_name
           )
         )
       )
-    })
+    }
 
     output$mixfish_text_history <- renderUI({
-      mixfish_text_content()
+      mixfish_text_for_plot(plot_name_history())
     })
 
     output$mixfish_text_forecast <- renderUI({
-      mixfish_text_content()
+      mixfish_text_for_plot(plot_name_forecast())
     })
 
     ################################## Plot selection ##################################
