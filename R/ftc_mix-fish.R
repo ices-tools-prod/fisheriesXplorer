@@ -496,7 +496,9 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
                                      ofwhich = FALSE, 
                                      xlab = "Scenarios", 
                                      ylab = "Catch (tonnes)", 
-                                     title = NULL) { 
+                                     title = NULL,
+                                     min_height = 600,
+                                     row_height = 300) { 
   
   stopifnot(all(c("stock", "scenario", "catch") %in% names(data))) 
   stopifnot(all(c("stock", "advice") %in% names(adv))) 
@@ -508,11 +510,19 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
   
   unique_stocks <- unique(data$stock) 
   n_stocks <- length(unique_stocks) 
+  if (n_stocks == 0) stop("No stock data available to plot.") 
   n_cols <- min(3, n_stocks) 
   n_rows <- ceiling(n_stocks / n_cols) 
+  fig_height <- max(min_height, n_rows * row_height) 
   
-  # Global scenario order + numeric x index
-  global_x <- as.character(unique(data$scenario)) 
+  # Global scenario order + numeric x index.
+  # Known scenarios come first in this fixed order; any others are appended alphabetically.
+  data_scenarios <- as.character(unique(data$scenario))
+  priority_order <- c("min", "max", "sq_E", "min_exzero", "min_range")
+  known <- intersect(priority_order, data_scenarios)
+  other <- sort(setdiff(data_scenarios, priority_order))
+  global_x <- c(known, other)
+
   idx_map  <- setNames(seq_along(global_x), global_x) 
   n_cat    <- length(global_x) 
   
@@ -1041,6 +1051,8 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
     
     plotly::layout( 
       
+      height = fig_height,
+      
       barmode = "group", 
       
       showlegend = TRUE,
@@ -1049,7 +1061,8 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
         orientation = "h", 
         
         x = 0.5,
-        y = 1.05,
+        y = 1.04,
+        yref = "paper",
         
         xanchor = "center",
         yanchor = "bottom"
@@ -1057,16 +1070,18 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
       
       margin = list(
         l = 80,
-        b = 110,
-        t = 110,
+        b = 140,
+        t = 160,
         r = 20
       ),
       
       title = list(
         text = title,
         x = 0.5,
-        y = 1.2,
-        xanchor = "center"
+        y = 1.4,
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom"
       ),
       
       annotations = list( 
@@ -1770,14 +1785,14 @@ plot_catchComp_plotly <- function(
   plotly::ggplotly(p, tooltip = "text", height = plot_height) %>%
     plotly::layout(
       autosize = TRUE,
-      margin = list(l = 160, r = 30, b = 90, t = 30),
+      margin = list(l = 30, r = 30, b = 30, t = 40),
       legend = list(
         orientation = "h",
         x = 0,
-        y = -0.15,
+        y = 1.009, # was 1.05; lower value tightens the gap above the plot
         xanchor = "left",
-        yanchor = "top",
-        title = list(text = "Stock")
+        yanchor = "bottom", # anchor at its own bottom edge, not top
+        title = list(text = "Stock:")
       )
     )
 }

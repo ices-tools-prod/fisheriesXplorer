@@ -435,6 +435,36 @@ nzchar
 #   else if (nzchar(search)) shiny::parseQueryString(search)
 #   else list()
 # }
+
+
+
+# parse_nav <- function(hash, search) {
+#   qs <- if (nzchar(hash)) {
+#     shiny::parseQueryString(sub("^#", "", hash))
+#   } else if (nzchar(search)) {
+#     shiny::parseQueryString(sub("^\\?", "", search))
+#   } else {
+#     list()
+#   }
+
+#   list(
+#     eco    = qs$eco    %|?% "",
+#     tab    = qs$tab    %|?% "",
+#     subtab = qs$subtab %|?% "",
+#     stock  = qs$stock  %|?% ""
+#   )
+# }
+
+# Map subtab input ids (read) & selectors (write)
+SUBTAB_INPUTS <- list(
+  overview     = "overview_1-tabs_overview",
+  landings     = "landings_1-main_tabset",
+  stock_status = "stock_status_1-main_tabset",
+  bycatch      = "bycatch_1-bycatch_tabset",
+  mixfish      = "mixfish_1-mixfish_tabset",
+  resources    = "resources_1-resources_nav"
+)
+
 parse_nav <- function(hash, search) {
   qs <- if (nzchar(hash)) {
     shiny::parseQueryString(sub("^#", "", hash))
@@ -448,19 +478,10 @@ parse_nav <- function(hash, search) {
     eco    = qs$eco    %|?% "",
     tab    = qs$tab    %|?% "",
     subtab = qs$subtab %|?% "",
-    stock  = qs$stock  %|?% ""
+    stock  = qs$stock  %|?% "",
+    plot   = qs$plot   %|?% ""
   )
 }
-
-# Map subtab input ids (read) & selectors (write)
-SUBTAB_INPUTS <- list(
-  overview     = "overview_1-tabs_overview",
-  landings     = "landings_1-main_tabset",
-  stock_status = "stock_status_1-main_tabset",
-  bycatch      = "bycatch_1-bycatch_tabset",
-  mixfish      = "mixfish_1-mixfish_tabset",
-  resources    = "resources_1-resources_nav"
-)
 
 #' Get current sub-tab for a main tab
 #'
@@ -585,17 +606,39 @@ select_subtab <- function(tab, value, session) {
 #     if (nzchar(sub %|?% "")) paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else ""
 #   )
 # }
-write_hash <- function(eco, tab, sub, stock = NULL) {
+# write_hash <- function(eco, tab, sub, stock = NULL) {
+#   eco   <- eco   %|?% ""
+#   tab   <- tab   %|?% ""
+#   sub   <- sub   %|?% ""
+#   stock <- stock %|?% ""
+
+#   paste0(
+#     "#eco=", utils::URLencode(eco, reserved = TRUE),
+#     "&tab=", utils::URLencode(tab, reserved = TRUE),
+#     if (nzchar(sub))   paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else "",
+#     if (nzchar(stock)) paste0("&stock=",  utils::URLencode(stock, reserved = TRUE)) else ""
+#   )
+# }
+write_hash <- function(eco, tab, sub, stock = NULL, plot = NULL) {
+
   eco   <- eco   %|?% ""
   tab   <- tab   %|?% ""
   sub   <- sub   %|?% ""
   stock <- stock %|?% ""
+  plot  <- plot  %|?% ""
 
   paste0(
     "#eco=", utils::URLencode(eco, reserved = TRUE),
     "&tab=", utils::URLencode(tab, reserved = TRUE),
-    if (nzchar(sub))   paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else "",
-    if (nzchar(stock)) paste0("&stock=",  utils::URLencode(stock, reserved = TRUE)) else ""
+    if (nzchar(sub))
+      paste0("&subtab=", utils::URLencode(sub, reserved = TRUE))
+    else "",
+    if (nzchar(stock))
+      paste0("&stock=", utils::URLencode(stock, reserved = TRUE))
+    else "",
+    if (nzchar(plot))
+      paste0("&plot=", utils::URLencode(plot, reserved = TRUE))
+    else ""
   )
 }
 ####################################### End bookmarking Helpers #######################################
