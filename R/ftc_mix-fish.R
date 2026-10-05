@@ -496,7 +496,9 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
                                      ofwhich = FALSE, 
                                      xlab = "Scenarios", 
                                      ylab = "Catch (tonnes)", 
-                                     title = NULL) { 
+                                     title = NULL,
+                                     min_height = 600,
+                                     row_height = 300) { 
   
   stopifnot(all(c("stock", "scenario", "catch") %in% names(data))) 
   stopifnot(all(c("stock", "advice") %in% names(adv))) 
@@ -511,6 +513,7 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
   if (n_stocks == 0) stop("No stock data available to plot.") 
   n_cols <- min(3, n_stocks) 
   n_rows <- ceiling(n_stocks / n_cols) 
+  fig_height <- max(min_height, n_rows * row_height) 
   
   # Global scenario order + numeric x index.
   # Known scenarios come first in this fixed order; any others are appended alphabetically.
@@ -1048,6 +1051,8 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
     
     plotly::layout( 
       
+      height = fig_height,
+      
       barmode = "group", 
       
       showlegend = TRUE,
@@ -1056,7 +1061,8 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
         orientation = "h", 
         
         x = 0.5,
-        y = 1.05,
+        y = 1.04,
+        yref = "paper",
         
         xanchor = "center",
         yanchor = "bottom"
@@ -1064,16 +1070,18 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
       
       margin = list(
         l = 80,
-        b = 110,
-        t = 110,
+        b = 140,
+        t = 160,
         r = 20
       ),
       
       title = list(
         text = title,
         x = 0.5,
-        y = 1.2,
-        xanchor = "center"
+        y = 1.4,
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom"
       ),
       
       annotations = list( 
