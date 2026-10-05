@@ -90,7 +90,8 @@ app_server <- function(input, output, session) {
         tab    = p$tab %|?% "",
         subtab = p$subtab %|?% "",
         stock  = p$stock %|?% "",
-        plot   = p$plot %|?% ""
+        plot   = p$plot %|?% "",
+        subregion = p$subregion %|?% ""
       ))
       # Flip the global "restore in progress" flag; the observer below will do the work
       is_restoring(TRUE)
@@ -130,7 +131,26 @@ app_server <- function(input, output, session) {
     # Step 4: if a stock is requested, set it (some modules may choose to ignore this)
     if (nzchar(d$stock)) selected_stock(d$stock)
 
-    # Step 5: mixed-fisheries plot
+    # Step 5: mixed-fisheries subregion
+    if (
+      identical(d$tab, "mixfish") &&
+        nzchar(d$subregion %|?% "")
+    ) {
+      updateRadioButtons(
+        session,
+        "mixfish_1-subRegion_history",
+        selected = d$subregion
+      )
+
+      updateRadioButtons(
+        session,
+        "mixfish_1-subRegion_forecast",
+        selected = d$subregion
+      )
+    }
+
+
+    # Step 6: mixed-fisheries plot
     if (
       identical(d$tab, "mixfish") &&
         nzchar(d$plot)
@@ -169,6 +189,12 @@ app_server <- function(input, output, session) {
     cur_tab <- input$`nav-page` %|?% ""
     cur_sub <- get_current_subtab(d$tab, input)
 
+    cur_subregion <- if (identical(d$tab, "mixfish")) {
+      get_current_mixfish_subregion(input, d$subtab)
+    } else {
+      ""
+    }
+
     cur_plot <- if (identical(d$tab, "mixfish")) {
       get_current_mixfish_plot(input, d$subtab)
     } else {
@@ -182,6 +208,7 @@ app_server <- function(input, output, session) {
       (!nzchar(d$tab) || identical(cur_tab, d$tab)) &&
       (!nzchar(d$subtab) || identical(cur_sub, d$subtab)) &&
       (!nzchar(d$stock) || identical(selected_stock() %|?% "", d$stock)) &&
+      (!nzchar(d$subregion %|?% "") || identical(cur_subregion, d$subregion)) &&
       (!nzchar(d$plot %|?% "") || identical(cur_plot, d$plot))
     ) {
       # Freeze the restore loop; further navigation will be driven by user input
@@ -287,6 +314,19 @@ app_server <- function(input, output, session) {
   )
 
 
+  get_current_mixfish_subregion <- function(input, subtab) {
+
+  if (identical(subtab, "history")) {
+    input[["mixfish_1-subRegion_history"]] %|?% ""
+
+  } else if (identical(subtab, "forecast")) {
+    input[["mixfish_1-subRegion_forecast"]] %|?% ""
+
+  } else {
+    ""
+  }
+}
+
   get_current_mixfish_plot <- function(input, subtab) {
 
   plot_id <- if (identical(subtab, "history")) {
@@ -325,6 +365,18 @@ app_server <- function(input, output, session) {
   tab <- input$`nav-page` %|?% ""
   subtab <- get_current_subtab(tab, input)
 
+  mixfish_subregion <- if (identical(tab, "mixfish")) {
+    get_current_mixfish_subregion(input, subtab)
+  } else {
+    ""
+  }
+
+  # Do not bother putting it in the URL when it is just
+  # the normal single ecoregion selection
+  if (identical(mixfish_subregion, selected_ecoregion())) {
+    mixfish_subregion <- ""
+  }
+
   list(
     eco = selected_ecoregion() %|?% "",
     tab = tab,
@@ -335,7 +387,8 @@ app_server <- function(input, output, session) {
       get_current_mixfish_plot(input, subtab)
     } else {
       ""
-    }
+    },
+    subregion = mixfish_subregion
   )
 })
   current_state_deb <- debounce(current_state, millis = 150)
@@ -348,7 +401,7 @@ app_server <- function(input, output, session) {
       st <- current_state_deb()
       shinyjs::runjs(sprintf(
         "location.hash = %s;",
-        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock, st$plot), auto_unbox = TRUE)
+        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock, st$plot, st$subregion), auto_unbox = TRUE)
       ))
     },
     ignoreInit = TRUE
@@ -363,7 +416,7 @@ app_server <- function(input, output, session) {
       st <- current_state()
       shinyjs::runjs(sprintf(
         "location.hash = %s;",
-        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock, st$plot), auto_unbox = TRUE)
+        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock, st$plot, st$subregion), auto_unbox = TRUE)
       ))
     },
     ignoreInit = TRUE
@@ -374,7 +427,7 @@ app_server <- function(input, output, session) {
   share_url <- reactiveVal(NULL)
   observeEvent(input$share_btn, {
     st <- current_state()
-    final <- paste0(.base_url(session), write_hash(st$eco, st$tab, st$subtab, st$stock, st$plot))
+    final <- paste0(.base_url(session), write_hash(st$eco, st$tab, st$subtab, st$stock, st$plot, st$subregion))
     share_url(final)
     showModal(modalDialog(
       title = "Share this view",
