@@ -871,7 +871,7 @@ mod_mixfish_server <- function(
             flex-wrap: wrap;
           ",
           div(
-            style = "width: 260px;",
+            style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
             selectizeInput(
               ns("plot5_selectors"),
               "X-axis variable(s):",
@@ -886,7 +886,7 @@ mod_mixfish_server <- function(
             )
           ),
           div(
-            style = "width: 260px;",
+            style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
             selectizeInput(
               ns("plot5_divider"),
               "Divide plot by:",
@@ -897,7 +897,7 @@ mod_mixfish_server <- function(
             )
           ),
           div(
-            style = "width: 260px;",
+            style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
             selectizeInput(
               ns("plot5_year_filter"),
               "Filter year:",
@@ -912,7 +912,7 @@ mod_mixfish_server <- function(
             )
           ),
           div(
-            style = "width: 260px;",
+            style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
             selectizeInput(
               ns("plot5_country_filter"),
               "Filter country:",
@@ -1419,9 +1419,15 @@ mod_mixfish_server <- function(
       },
       ignoreInit = TRUE
     )
-
+    ################################## Data source note ##################################
+    data_source_note <- reactive({
+      paste0(
+      "2025 ICES Advice.<br>",
+      selected_subRegion(),
+      " mixed fisheries considerations.<br>13-Nov-2025, ICES, Copenhagen.")
+    })
     ################################## Plot rendering: History ##################################
-
+    
     output$plot_history <- renderPlotly({
       req(plot_name_history())
       req(region_ready())
@@ -1432,13 +1438,15 @@ mod_mixfish_server <- function(
 
           plot_landByMetStock_plotly(
             data = current_plot_data_history(),
-            refTable = data_reactive_all()$refTable_filtered
+            refTable = data_reactive_all()$refTable_filtered,
+            source_note = data_source_note()
           )
         },
         "plot4" = {
           plot_landByStock_plotly(
             data = data_reactive_all()$StockLandings_filtered,
-            refTable = data_reactive_all()$refTable_filtered
+            refTable = data_reactive_all()$refTable_filtered,
+            source_note = data_source_note()
           )
         },
         "plot5" = {
@@ -1453,7 +1461,8 @@ mod_mixfish_server <- function(
             filters = plot5_filters(),
             selectors = plot5_selectors(),
             divider = plot5_divider(),
-            yvar = "catch"
+            yvar = "catch",
+            source_note = data_source_note()
           )
         },
         "plot6" = {
@@ -1465,9 +1474,10 @@ mod_mixfish_server <- function(
             group_vars = c("fleet", "metier", "stock"),
             fill_var = "stock",
             group_labs = c("Fleet", "Métier", "Stock"),
-            ylab = "Landings [t]",
+            ylab = "Landings (tonnes)]",
             fillLegendTitle = "Stock",
-            addLegend = TRUE
+            addLegend = TRUE,
+            source_note = data_source_note()  
           )
         }
       )
@@ -1490,7 +1500,8 @@ mod_mixfish_server <- function(
             data = current_plot_data_forecast(),
             adv = data_reactive_all()$catchRange_filtered,
             refTable = data_reactive_all()$refTable_filtered,
-            title = "Mixed-fisheries projections of potential 2026 catches"
+            title = "Mixed-fisheries projections of potential 2026 catches",
+            source_note = data_source_note()
           )
         },
 
@@ -1499,7 +1510,8 @@ mod_mixfish_server <- function(
 
           plot_effortFltStk_plotly(
             data = current_plot_data_forecast(),
-            refTable = data_reactive_all()$refTable_filtered
+            refTable = data_reactive_all()$refTable_filtered,
+            source_note = data_source_note()
           )
         }
       )
