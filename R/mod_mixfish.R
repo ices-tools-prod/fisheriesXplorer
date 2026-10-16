@@ -925,6 +925,15 @@ mod_mixfish_server <- function(
                 placeholder = "All countries"
               )
             )
+          ),
+          div(
+            style = "flex: 0 0 100px; min-width: 100px; max-width: 150px;",
+            checkboxInput(
+              inputId = ns("plot5_relative"),
+              label = "Relative (%)",
+              value = TRUE,
+              width = "100%"
+            )
           )
         ),
         "plot6" = div(
@@ -1455,13 +1464,15 @@ mod_mixfish_server <- function(
           req(!is.null(df))
           req(NROW(df) > 0)
 
-          plot_catchComp_plotly(
+          plot_catchComp_plotly_v3(
             dataComposition = df,
             refTable = data_reactive_all()$refTable_filtered,
             filters = plot5_filters(),
             selectors = plot5_selectors(),
             divider = plot5_divider(),
             yvar = "catch",
+            relative = if (is.null(input$plot5_relative)) TRUE
+             else isTRUE(input$plot5_relative),
             source_note = data_source_note()
           )
         },
