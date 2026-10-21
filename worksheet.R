@@ -1024,3 +1024,773 @@ load("data/catchScenarioStk.rda")
 dim(catchScenarioStk)
 names(catchScenarioStk)
 head(catchScenarioStk)
+
+
+
+
+
+
+
+#' Alluvial plot
+#'
+#' @param data data.frame Contains information on for making an alluvial-type
+#'   plot (e.g. catch or landings). The data.frame should contain several
+#'   variables for grouping (e.g. `fleet`, `metier`, `stock`) as well as a
+#'   variable to plot values (`value`).
+#' @param group_vars vector. Contains variable names (order from left to right)
+#'   that define the alluvial axes
+#'   (Default: `group_vars = c("fleet", "metier", "stock")`)
+#' @param fill_var character. Data variable name used for coloring alluvial
+#'   (Default: `fill_var = "stock"`).
+#' @param refTable data.frame Contains stock look-up information for consistent
+#'   plotting of colors. The data.frame should contain a variable that matches
+#'   the `fill_var` definition (Default: `fill_var = "stock"`), and also found
+#'   in the `data` object. Contains a variable `col` that defines the color
+#'   used to fill bars in plot. `order` defines the order of levels used in
+#'   plot.
+#' @param group_labs vector Contains the x-axis labels used for the group_vars.
+#'   (Default: group_labs = group_vars).
+#' @param text_repel logical Should stratum labels be repelled to prevent
+#'   overlapping (using `ggrepel::geom_text_repel`)
+#'   (Default: `text_repel = FALSE`)
+#' @param text_size numeric Value for text label size
+#'   (Default: `text_size = 2`)
+#' @param mult_x vector. Two values defining the multiplier to expand the
+#'   x-axis (Default: `mult_x = c(0.1, 0.1)`). Passes values to
+#'   `expansion(mult = mult_x)`.
+#' @param nudge_x numeric. Value to nudge direction of stratum labels when
+#'   `text_repel = TRUE`. (Default: `nudge_x = 1/3`)
+#' @param stratum_width numeric. Width of the stratum bar
+#'   (Default: `stratum_width = 1/3`)
+#' @param stratum_col color definition. Color used to fll the non-stock strata
+#'   (Default: `stratum_col = "white"`)
+#' @param xlab character X-axis label (Default: `xlab = NULL` removes label)
+#' @param ylab character Y-axis label (Default: `ylab = Catch [t]`)
+#' @param fillLegendTitle character Fill legend title
+#'   (Default: `fillLegendTitle = "Stock"`)
+#' @param plotTitle character Plot title
+#'   (Default: `plotTitle = NULL` removes title)
+#' @param addLegend logical Should legend of stock fill colors be added
+#'
+#' @return plot output of class ggplot
+#' @import ggplot2 ggalluvial ggrepel
+#' @export
+#'
+#' @examples
+#'
+#' data("stfMtStkSum")
+#' data("refTable")
+#'
+#' ## create catch data by fleet, metier, and stock
+#' dataYr <- 2020
+#' # add country for filter (if desired)
+#' stfMtStkSum$country <- unlist(lapply(strsplit(stfMtStkSum$fleet, "_"),
+#'   function(x){x[1]}))
+#' # filter data
+#' df <- subset(stfMtStkSum, year == 2020 & scenario == "min" &
+#'   country == "BE")[,c("fleet", "metier", "stock", "landings")]
+#' df$stock <- refTable$stock[match(df$stock, refTable$stock_short)]
+#' names(df)[4] <- "value"
+#'
+#' plot_alluvial(data = df, refTable = refTable,
+#'   group_vars = c("fleet", "metier", "stock"),
+#'   fill_var = c("stock"))
+#'
+#' # doesn't make sense, but redefine group_var order
+#' plot_alluvial(data = df, refTable = refTable,
+#'   group_vars = c("fleet", "stock", "metier"),
+#'   fill_var = c("stock"))
+#'
+#' # a 2-level version
+#' plot_alluvial(data = df, refTable = refTable,
+#'   group_vars = c("fleet", "stock"),
+#'   fill_var = c("stock"))
+#'
+#' # repel labels
+#' plot_alluvial(data = df, refTable = refTable,
+#'   group_vars = c("fleet", "metier", "stock"),
+#'   text_repel = TRUE, text_size = 2)
+#'
+#' # repel labels and suppress legend
+#' plot_alluvial(data = df, refTable = refTable,
+#'   text_repel = TRUE, text_size = 2, addLegend = FALSE)
+#'
+plot_alluvial <- function(data, refTable,
+  group_vars = c("fleet", "metier", "stock"),
+  fill_var = c("stock"),
+  group_labs = NULL,
+  text_repel = FALSE,
+  text_size = 2,
+  mult_x = c(0.1, 0.1),
+  nudge_x = 1/3,
+  stratum_width = 1/3,
+  stratum_col = "white",
+  xlab = NULL,
+  ylab = "Catch [t]",
+  fillLegendTitle = "Stock",
+  addLegend = TRUE,
+  plotTitle = NULL){
+
+  if(!fill_var %in% names(refTable)){stop("fill_var must be variable in refTable")}
+  if(is.null(group_labs)){group_labs <- group_vars}
+
+  palFill <- data.frame(tmp = unique(data[fill_var]))
+  names(palFill) <- fill_var
+  palFill <- merge(x = palFill, y = refTable, all.x = TRUE)
+  palFill <- palFill[order(palFill$order),]
+  palColors <- palFill$col
+  names(palColors) <- palFill[,fill_var]
+  palColorScale <- scale_colour_manual(
+    name = fillLegendTitle, values = palColors, aesthetics = c("fill"),
+    na.value = stratum_col, # define other stratum box fill color (NA)
+    limits = \(x) x[!is.na(x)]) # don't show NA fill level in legend
+
+  # ensure plotting order
+  data[,fill_var] <- factor(data[,fill_var], levels = palFill[,fill_var])
+
+  # Build a named character vector for aesthetics
+  axis_mapping <- setNames(group_vars, paste0("axis", seq_along(group_vars)))
+  aes_args <- c(axis_mapping, list(y = "value"))
+
+
+  p <- ggplot(data = data) +
+    do.call(aes_string, aes_args) + # aes()
+    ggalluvial::geom_alluvium(aes(fill = get(fill_var)), width = stratum_width) +
+    ggalluvial::geom_stratum(aes(fill = get(fill_var)), width = stratum_width) +
+    scale_x_discrete(limits = group_labs,
+      expand = expansion(mult = mult_x)) +
+    labs(y = ylab, x = xlab, title = plotTitle) +
+    theme_bw() +
+    theme(text = element_text(size = 9),
+      axis.text.x = element_text(angle = 90, hjust = 0, vjust = 0.3,
+        size = 9)) +
+    palColorScale
+
+  if(!text_repel){
+    p <- p + geom_text(stat = "stratum", aes(label = after_stat(stratum)),
+      size = text_size)
+  }
+
+  if(text_repel){
+    p <- p + ggrepel::geom_text_repel(
+      stat = "stratum", aes(label = after_stat(stratum)),
+      size = text_size,
+      direction = "y",
+      nudge_x = nudge_x
+    )
+  }
+
+  if(!addLegend){
+    p <- p + guides(fill="none")
+  }
+
+  return(p)
+}
+
+
+
+library(mixfishtools)
+data("stfMtStkSum")
+data("refTable")
+'
+## create catch data by fleet, metier, and stock
+dataYr <- 2024
+# add country for filter (if desired)
+stfMtStkSum$country <- unlist(lapply(strsplit(stfMtStkSum$fleet, "_"),
+  function(x){x[1]}))
+# filter data
+df <- subset(stfMtStkSum, year == dataYr & scenario == "min" &
+  country == "NL")[,c("fleet", "metier", "stock", "landings")]
+df$stock <- refTable$stock[match(df$stock, refTable$stock_short)]
+names(df)[4] <- "value"
+
+plot_alluvial(data = df, refTable = refTable,
+  group_vars = c("fleet", "metier", "stock"),
+  fill_var = c("stock"))
+
+# doesn't make sense, but redefine group_var order
+plot_alluvial(data = df, refTable = refTable,
+  group_vars = c("fleet", "stock", "metier"),
+  fill_var = c("stock"))
+
+# a 2-level version
+plot_alluvial(data = df, refTable = refTable,
+  group_vars = c("fleet", "stock"),
+  fill_var = c("stock"))
+
+# repel labels
+plot_alluvial(data = df, refTable = refTable,
+  group_vars = c("fleet", "metier", "stock"),
+  text_repel = TRUE, text_size = 2)
+
+# repel labels and suppress legend
+plot_alluvial(data = df, refTable = refTable,
+  text_repel = TRUE, text_size = 2, addLegend = FALSE)
+
+
+
+
+
+
+#' Interactive alluvial plot
+#'
+#' @param data data.frame containing grouping variables and a `value` column.
+#' @param refTable data.frame containing fill-variable lookup information,
+#'   including `col` and `order`.
+#' @param group_vars vector of variable names defining the alluvial axes.
+#' @param fill_var character. Variable used to colour the flows.
+#' @param group_labs labels for the alluvial axes.
+#' @param text_repel retained for compatibility with plot_alluvial().
+#' @param text_size text size.
+#' @param mult_x retained for compatibility with plot_alluvial().
+#' @param nudge_x retained for compatibility with plot_alluvial().
+#' @param stratum_width approximate node width.
+#' @param stratum_col colour for strata not corresponding to fill_var.
+#' @param xlab x-axis label.
+#' @param ylab value label used in hover text.
+#' @param fillLegendTitle legend title.
+#' @param addLegend logical. Add colour legend.
+#' @param plotTitle plot title.
+#'
+#' @return plotly object
+#'
+#' @export
+plot_alluvial_plotly <- function(
+    data,
+    refTable,
+    group_vars = c("fleet", "metier", "stock"),
+    fill_var = "stock",
+    group_labs = NULL,
+    text_repel = FALSE,
+    text_size = 11,
+    mult_x = c(0.1, 0.1),
+    nudge_x = 1/3,
+    stratum_width = 1/3,
+    stratum_col = "white",
+    xlab = NULL,
+    ylab = "Catch [t]",
+    fillLegendTitle = "Stock",
+    addLegend = TRUE,
+    plotTitle = NULL) {
+
+  # ------------------------------------------------------------------
+  # Checks
+  # ------------------------------------------------------------------
+
+  if (length(fill_var) != 1) {
+    stop("fill_var must contain exactly one variable name")
+  }
+
+  if (!fill_var %in% names(refTable)) {
+    stop("fill_var must be variable in refTable")
+  }
+
+  required_vars <- c(group_vars, fill_var, "value")
+  missing_vars <- setdiff(required_vars, names(data))
+
+  if (length(missing_vars) > 0) {
+    stop(
+      paste(
+        "Missing required variables in data:",
+        paste(missing_vars, collapse = ", ")
+      )
+    )
+  }
+
+  if (is.null(group_labs)) group_labs <- group_vars
+
+  if (length(group_labs) != length(group_vars)) {
+    stop("group_labs must have the same length as group_vars")
+  }
+
+  if (length(group_vars) < 2) {
+    stop("group_vars must contain at least two variables")
+  }
+
+
+  # ------------------------------------------------------------------
+  # Colour lookup - same basic logic as plot_alluvial()
+  # ------------------------------------------------------------------
+
+  palFill <- data.frame(
+    tmp = unique(as.character(data[[fill_var]])),
+    stringsAsFactors = FALSE
+  )
+
+  names(palFill) <- fill_var
+
+  palFill <- merge(
+    x = palFill,
+    y = refTable,
+    by = fill_var,
+    all.x = TRUE
+  )
+
+  if ("order" %in% names(palFill)) {
+    palFill <- palFill[order(palFill$order), , drop = FALSE]
+  }
+
+  palColors <- palFill$col
+  names(palColors) <- as.character(palFill[[fill_var]])
+
+  # Fallback colour if a fill value is missing from refTable
+  palColors[is.na(palColors)] <- "#BDBDBD"
+
+
+  # ------------------------------------------------------------------
+  # Clean data
+  # ------------------------------------------------------------------
+
+  dat <- data
+
+  dat$value <- as.numeric(dat$value)
+
+  dat <- dat[
+    !is.na(dat$value) &
+      dat$value > 0,
+    ,
+    drop = FALSE
+  ]
+
+  for (v in group_vars) {
+    dat[[v]] <- as.character(dat[[v]])
+  }
+
+  dat[[fill_var]] <- as.character(dat[[fill_var]])
+
+
+  # ------------------------------------------------------------------
+  # Create unique node IDs
+  #
+  # Important: "BE" under Fleet and "BE" under another axis must be
+  # treated as different nodes.
+  # ------------------------------------------------------------------
+
+  node_tables <- lapply(seq_along(group_vars), function(i) {
+    var <- group_vars[i]
+
+    vals <- unique(dat[[var]])
+
+    data.frame(
+      axis_no = i,
+      variable = var,
+      label = vals,
+      node_id = paste(i, vals, sep = "__"),
+      stringsAsFactors = FALSE
+    )
+  })
+
+  nodes <- dplyr::bind_rows(node_tables)
+
+  nodes$index <- seq_len(nrow(nodes)) - 1
+
+
+  # ------------------------------------------------------------------
+  # Node colours
+  #
+  # Only the axis corresponding to fill_var receives stock colours.
+  # Other strata retain stratum_col, matching the original intention.
+  # ------------------------------------------------------------------
+
+  nodes$color <- stratum_col
+
+  fill_axis <- which(group_vars == fill_var)
+
+  if (length(fill_axis) > 0) {
+    idx <- nodes$axis_no %in% fill_axis
+
+    matched_col <- palColors[nodes$label[idx]]
+
+    nodes$color[idx] <- ifelse(
+      is.na(matched_col),
+      stratum_col,
+      matched_col
+    )
+  }
+
+
+  # ------------------------------------------------------------------
+  # Node totals for hover
+  # ------------------------------------------------------------------
+
+  node_totals <- lapply(seq_along(group_vars), function(i) {
+    var <- group_vars[i]
+
+    tmp <- dat %>%
+      dplyr::group_by(.data[[var]]) %>%
+      dplyr::summarise(
+        total = sum(value, na.rm = TRUE),
+        .groups = "drop"
+      )
+
+    names(tmp)[1] <- "label"
+
+    tmp$axis_no <- i
+    tmp
+  }) %>%
+    dplyr::bind_rows()
+
+  nodes <- nodes %>%
+    dplyr::left_join(
+      node_totals,
+      by = c("axis_no", "label")
+    )
+
+
+  # ------------------------------------------------------------------
+# Build links between every pair of adjacent axes
+# ------------------------------------------------------------------
+
+link_list <- vector("list", length(group_vars) - 1)
+
+for (i in seq_len(length(group_vars) - 1)) {
+
+  left_var  <- group_vars[i]
+  right_var <- group_vars[i + 1]
+
+  # Avoid duplicate grouping variables when fill_var is also
+  # one of the two axes (e.g. stock -> stock).
+  vars_to_group <- unique(c(left_var, right_var, fill_var))
+
+  links <- dat %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(vars_to_group))) %>%
+    dplyr::summarise(
+      value = sum(value, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::transmute(
+      source_label = as.character(.data[[left_var]]),
+      target_label = as.character(.data[[right_var]]),
+      fill_value = as.character(.data[[fill_var]]),
+      value = value
+    )
+
+  source_lookup <- nodes %>%
+    dplyr::filter(axis_no == i) %>%
+    dplyr::select(
+      source_label = label,
+      source = index
+    )
+
+  target_lookup <- nodes %>%
+    dplyr::filter(axis_no == i + 1) %>%
+    dplyr::select(
+      target_label = label,
+      target = index
+    )
+
+  links <- links %>%
+    dplyr::left_join(source_lookup, by = "source_label") %>%
+    dplyr::left_join(target_lookup, by = "target_label")
+
+  links$source_var <- left_var
+  links$target_var <- right_var
+
+  link_list[[i]] <- links
+}
+
+links <- dplyr::bind_rows(link_list)
+
+
+  # ------------------------------------------------------------------
+  # Link colours
+  # ------------------------------------------------------------------
+
+  links$color <- palColors[
+    as.character(links$fill_value)
+  ]
+
+  links$color[is.na(links$color)] <- "#BDBDBD"
+
+
+  # Make links slightly transparent
+  hex_to_rgba <- function(cols, alpha = 0.55) {
+
+    vapply(cols, function(col) {
+
+      rgb <- grDevices::col2rgb(col)
+
+      sprintf(
+        "rgba(%d,%d,%d,%.2f)",
+        rgb[1],
+        rgb[2],
+        rgb[3],
+        alpha
+      )
+
+    }, character(1))
+  }
+
+  links$color_rgba <- hex_to_rgba(
+    links$color,
+    alpha = 0.55
+  )
+
+
+  # ------------------------------------------------------------------
+  # Hover text
+  # ------------------------------------------------------------------
+
+  links$hover <- paste0(
+    links$source_var, ": ", links$source_label,
+    "<br>",
+    links$target_var, ": ", links$target_label,
+    "<br>",
+    fillLegendTitle, ": ", links$fill_value,
+    "<br>",
+    ylab, ": ", format(
+      round(links$value, 1),
+      big.mark = ",",
+      trim = TRUE
+    )
+  )
+
+  nodes$hover <- paste0(
+    nodes$variable, ": ", nodes$label,
+    "<br>",
+    ylab, ": ", format(
+      round(nodes$total, 1),
+      big.mark = ",",
+      trim = TRUE
+    )
+  )
+
+
+  # ------------------------------------------------------------------
+  # Fixed x positions for each alluvial axis
+  # ------------------------------------------------------------------
+
+  axis_positions <- seq(
+    0.02,
+    0.98,
+    length.out = length(group_vars)
+  )
+
+  nodes$x <- axis_positions[
+    nodes$axis_no
+  ]
+
+
+  # ------------------------------------------------------------------
+  # Create Plotly Sankey
+  # ------------------------------------------------------------------
+
+  p <- plotly::plot_ly(
+    type = "sankey",
+    arrangement = "snap",
+
+    node = list(
+      label = nodes$label,
+      x = nodes$x,
+      color = nodes$color,
+
+      # Plotly thickness is in pixels, so this is only an
+      # approximation of ggalluvial's stratum_width.
+      thickness = max(
+        10,
+        round(30 * stratum_width / (1/3))
+      ),
+
+      pad = 10,
+
+      line = list(
+        color = "#808080",
+        width = 0.5
+      ),
+
+      customdata = nodes$hover,
+      hovertemplate = "%{customdata}<extra></extra>"
+    ),
+
+    link = list(
+      source = links$source,
+      target = links$target,
+      value = links$value,
+      color = links$color_rgba,
+      customdata = links$hover,
+      hovertemplate = "%{customdata}<extra></extra>"
+    )
+  )
+
+
+  # ------------------------------------------------------------------
+  # Axis labels
+  # ------------------------------------------------------------------
+
+  axis_annotations <- lapply(
+    seq_along(group_vars),
+    function(i) {
+
+      list(
+        x = axis_positions[i],
+        y = 1.05,
+        xref = "paper",
+        yref = "paper",
+        text = group_labs[i],
+        showarrow = FALSE,
+        xanchor = "center",
+        font = list(
+          size = text_size + 1
+        )
+      )
+    }
+  )
+
+
+  # ------------------------------------------------------------------
+  # Optional colour legend
+  #
+  # Sankey traces do not have a conventional categorical legend,
+  # so we create a compact annotation-based one.
+  # ------------------------------------------------------------------
+
+  legend_annotations <- list()
+
+  if (addLegend) {
+
+    legend_data <- palFill[
+      !is.na(palFill[[fill_var]]),
+      ,
+      drop = FALSE
+    ]
+
+    if (nrow(legend_data) > 0) {
+
+      legend_annotations <- c(
+        list(
+          list(
+            x = 1.03,
+            y = 1,
+            xref = "paper",
+            yref = "paper",
+            text = paste0(
+              "<b>",
+              fillLegendTitle,
+              "</b>"
+            ),
+            showarrow = FALSE,
+            xanchor = "left"
+          )
+        ),
+
+        lapply(seq_len(nrow(legend_data)), function(i) {
+
+          col <- legend_data$col[i]
+          if (is.na(col)) col <- "#BDBDBD"
+
+          list(
+            x = 1.03,
+            y = 1 - i * 0.045,
+            xref = "paper",
+            yref = "paper",
+            text = paste0(
+              "<span style='color:",
+              col,
+              "; font-size:18px;'>■</span> ",
+              legend_data[[fill_var]][i]
+            ),
+            showarrow = FALSE,
+            xanchor = "left",
+            align = "left"
+          )
+        })
+      )
+    }
+  }
+
+
+  # ------------------------------------------------------------------
+  # Layout
+  # ------------------------------------------------------------------
+
+  right_margin <- if (addLegend) 170 else 30
+
+  p <- p %>%
+    plotly::layout(
+      title = list(
+        text = plotTitle,
+        x = 0.5,
+        xanchor = "center"
+      ),
+
+      font = list(
+        size = text_size
+      ),
+
+      annotations = c(
+        axis_annotations,
+        legend_annotations
+      ),
+
+      margin = list(
+        l = 30,
+        r = right_margin,
+        t = 70,
+        b = 40
+      )
+    )
+
+
+  return(p)
+}
+
+
+
+plot_alluvial_plotly(
+  data = df,
+  refTable = refTable,
+  group_vars = c("fleet", "stock", "metier"),
+  fill_var = "stock"
+)
+
+
+
+if (FALSE) { # rlang::is_interactive()
+items <- lapply(LETTERS, function(x) {
+  accordion_panel(paste("Section", x), paste("Some narrative for section", x))
+})
+
+# First shown by default
+accordion(!!!items)
+# Nothing shown by default
+accordion(!!!items, open = FALSE)
+# Everything shown by default
+accordion(!!!items, open = TRUE)
+
+# Show particular sections
+accordion(!!!items, open = "Section B")
+accordion(!!!items, open = c("Section A", "Section B"))
+
+# Provide an id to create a shiny input binding
+library(shiny)
+library(bslib)
+
+ui <- page_fluid(
+  accordion(!!!items, id = "acc")
+)
+
+server <- function(input, output) {
+  observe(print(input$acc))
+}
+
+shinyApp(ui, server)
+}
+
+
+library(httr)
+
+    # Define the JWT token
+    jwt_token <- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoibHVjYS5sYW1vbmlAaWNlcy5kayIsImp0aSI6IjQwMjMzNjdmLTM0YmEtNGM0NC1iYWZkLTBlMmI3YjJhNTBiMSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Imx1Y2EubGFtb25pQGljZXMuZGsiLCJVc2VyRW1haWwiOiJsdWNhLmxhbW9uaUBpY2VzLmRrIiwiRW1haWwiOiJsdWNhLmxhbW9uaUBpY2VzLmRrIiwiZXhwIjoxNzkzNDM4NzU5LCJpc3MiOiJodHRwOi8vdGFmLmljZXMuZGsiLCJhdWQiOiJodHRwOi8vdGFmLmljZXMuZGsifQ.sSefrqRnEiWpUWZ7kLiDMjmhBTi76JUrbhos8FuL-s4"
+
+    # Define the API endpoint
+    url <- "https://sag.ices.dk/API/API/UpdateSag/Run"
+
+    # Make the request with the Authorization header
+    response <- GET(
+      url,
+      add_headers(Authorization = paste("Bearer", jwt_token))
+    )
+
+     # Print response status and content
+    print(status_code(response))
+    print(content(response, as = "text", encoding = "UTF-8"))
