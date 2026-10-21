@@ -726,6 +726,10 @@ mod_mixfish_server <- function(
           mixfish_data$StockLandings %>%
           dplyr::filter(ecoregion == eco_acronym),
 
+        stfMtStkSum_filtered =
+          mixfish_data$stfMtStkSum %>%
+          dplyr::filter(ecoregion == eco_acronym),
+
         refTable_filtered =
           mixfish_data$refTable %>%
           dplyr::filter(ecoregion == eco_acronym)
@@ -755,8 +759,8 @@ mod_mixfish_server <- function(
         "plot1" = data_reactive_all()$catchScenarioStk_filtered,
         "plot2" = data_reactive_all()$EffortByFleetStock_filtered,
         "plot3" = data_reactive_all()$MetierStockLandings_filtered,
-        "plot5" = dataComp()$stfMtStkSum,
-        "plot6" = dataComp()$stfMtStkSum,
+        "plot5" = data_reactive_all()$stfMtStkSum_filtered,
+        "plot6" = data_reactive_all()$stfMtStkSum_filtered,
         NULL
       )
     }
@@ -1067,7 +1071,7 @@ mod_mixfish_server <- function(
       req(input$plot6_year_filter)
       req(input$plot6_scenario_filter)
 
-      df <- dataComp()$stfMtStkSum
+      df <- data_reactive_all()$stfMtStkSum_filtered
 
       # Year
       df <- df %>%
