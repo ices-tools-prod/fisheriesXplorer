@@ -75,7 +75,7 @@ mod_landings_ui <- function(id) {
           bg = "white", fg = "black",
           sidebar = sidebar(
             width = "33vw", bg = "white", fg = "black",
-            open = FALSE,
+            open = TRUE,
             uiOutput(ns("landings_text"))
           ),
           card(
@@ -111,7 +111,7 @@ mod_landings_ui <- function(id) {
           bg = "white", fg = "black",
           sidebar = sidebar(
             width = "33vw", bg = "white", fg = "black",
-            open = FALSE,
+            open = TRUE,
             uiOutput(ns("discards_text"))
           ),
           card(

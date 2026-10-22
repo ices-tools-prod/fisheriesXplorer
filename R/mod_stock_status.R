@@ -86,7 +86,7 @@ mod_stock_status_ui <- function(id) {
         layout_sidebar(
           sidebar = sidebar(
             width = "33vw", bg = "white", fg = "black",
-            open = FALSE,
+            open = TRUE,
             uiOutput(ns("status_text_summary"))
           ),
           fluidRow(
