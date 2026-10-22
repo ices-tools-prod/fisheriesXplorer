@@ -2276,370 +2276,370 @@ plot_landByStock_plotly <- function(data, refTable,
 # }
 
 
-plot_catchComp_plotly_v2 <- function(
-    dataComposition,
-    refTable,
-    filters = NULL,
-    selectors = "metier",
-    divider = NULL,
-    yvar = "landings",
-    scenario_value = "min",
-    label_wrap = 18,
-    facet_ncol = 2,
-    min_height = 300,
-    row_height = 15,
-    source_note = NULL,
-    x_label_angle = 45
-) {
-
-  if (length(divider) > 1) {
-    stop("Only 1 variable can be provided as a divider.")
-  }
-
-  # ---------------------------------------------------------------------------
-  # Prepare data
-  # ---------------------------------------------------------------------------
-
-  data <- dataComposition %>%
-    dplyr::filter(.data$scenario == scenario_value)
-
-  # Extract area from métier
-  tmp <- strsplit(as.character(data$metier), ".", fixed = TRUE)
-
-  data$area <- vapply(
-    tmp,
-    function(x) {
-      if (length(x) == 2) x[2] else NA_character_
-    },
-    character(1)
-  )
-
-  # Extract country from fleet
-  tmp <- strsplit(as.character(data$fleet), "_", fixed = TRUE)
-
-  data$country <- vapply(
-    tmp,
-    function(x) {
-      if (length(x) == 2) x[1] else NA_character_
-    },
-    character(1)
-  )
-
-  data$area[is.na(data$area)] <- "notSpecified"
-
-  # Replace short stock names with ICES stock codes
-  data$stock <- refTable$stock[
-    match(data$stock, refTable$stock_short)
-  ]
-
-  # ---------------------------------------------------------------------------
-  # Apply optional filters
-  # ---------------------------------------------------------------------------
-
-  if (!is.null(filters)) {
-    for (var in names(filters)) {
-      data <- data %>%
-        dplyr::filter(.data[[var]] %in% filters[[var]])
-    }
-  }
-
-  # ---------------------------------------------------------------------------
-  # Build aggregation label
-  # ---------------------------------------------------------------------------
-
-  data <- data %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(
-      label = apply(
-        dplyr::select(., dplyr::all_of(selectors)),
-        1,
-        paste,
-        collapse = "_"
-      ),
-      label = stringr::str_wrap(
-        label,
-        width = label_wrap,
-        whitespace_only = FALSE
-      )
-    )
-
-  group_vars <- c("label", "stock", divider)
-
-  data <- data %>%
-    dplyr::group_by(
-      dplyr::across(dplyr::all_of(group_vars))
-    ) %>%
-    dplyr::summarise(
-      VAR = sum(.data[[yvar]], na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    dplyr::filter(
-      !is.na(stock),
-      VAR > 0
-    )
-
-  # ---------------------------------------------------------------------------
-  # Join colours and ordering
-  # ---------------------------------------------------------------------------
-
-  data <- data %>%
-    dplyr::left_join(
-      refTable,
-      by = "stock"
-    )
-
-  stock_key <- data %>%
-    dplyr::select(stock, col, order) %>%
-    dplyr::distinct() %>%
-    dplyr::arrange(order)
-
-  stk_colors <- stock_key$col
-  names(stk_colors) <- stock_key$stock
-
-  data$stock <- factor(
-    data$stock,
-    levels = stock_key$stock
-  )
-
-  # Order labels by total catch
-  label_order <- data %>%
-    dplyr::group_by(label) %>%
-    dplyr::summarise(
-      total = sum(VAR, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    dplyr::arrange(total) %>%
-    dplyr::pull(label)
-
-  data$label <- factor(
-    data$label,
-    levels = label_order
-  )
-
-  # ---------------------------------------------------------------------------
-  # Dynamic height: adapted for vertical bars
-  # ---------------------------------------------------------------------------
-
-  if (is.null(divider)) {
-
-    n_facet_rows <- 1
-
-    max_labels_per_facet <- dplyr::n_distinct(data$label)
-
-  } else {
-
-    n_facets <- dplyr::n_distinct(data[[divider]])
-
-    n_facet_rows <- ceiling(n_facets / facet_ncol)
-
-    max_labels_per_facet <- data %>%
-      dplyr::group_by(.data[[divider]]) %>%
-      dplyr::summarise(
-        n = dplyr::n_distinct(label),
-        .groups = "drop"
-      ) %>%
-      dplyr::summarise(max_n = max(n)) %>%
-      dplyr::pull(max_n)
-  }
-
-  # Vertical bars need more height per facet.
-  # Preserve row_height as a compatibility parameter.
-
-  facet_row_height <- max(
-    300,
-    max_labels_per_facet * row_height + 45
-  )
-
-  plot_height <- max(
-    min_height,
-    n_facet_rows * facet_row_height + 200
-  )
-
-  # ---------------------------------------------------------------------------
-  # Plot: VERTICAL STACKED BARS
-  # ---------------------------------------------------------------------------
-
-  p <- ggplot2::ggplot(
-    data,
-    ggplot2::aes(
-      x = label,
-      y = VAR,
-      colour = stock,
-      fill = stock,
-      text = paste0(
-        "Label: ", label,
-        "<br>Stock: ", stock,
-        "<br>", yvar, ": ", round(VAR, 2)
-      )
-    )
-  ) +
-
-    ggplot2::geom_col(
-      position = "fill",
-      width = 0.85
-    ) +
-
-    # No coord_flip(): percentages stay on Y axis.
-
-    ggplot2::scale_y_continuous(
-      labels = scales::percent_format(accuracy = 1),
-      breaks = seq(0, 1, by = 0.25),
-      expand = ggplot2::expansion(
-        mult = c(0, 0.02)
-      )
-    ) +
-
-    ggplot2::scale_colour_manual(
-      name = "Stock",
-      values = stk_colors,
-      aesthetics = c("colour", "fill")
-    ) +
-
-    ggplot2::labs(
-      x = NULL,
-      y = "Share of catch composition",
-      fill = NULL,
-      colour = NULL
-    ) +
-
-    ggplot2::theme_bw() +
-
-    ggplot2::theme(
-
-      # X axis: labels now below vertical bars
-      axis.text.x = ggplot2::element_text(
-        size = 9,
-        angle = x_label_angle,
-        hjust = 1,
-        vjust = 1
-      ),
-
-      # Y axis: percentages
-      axis.text.y = ggplot2::element_text(
-        size = 9
-      ),
-
-      axis.title.y = ggplot2::element_text(
-        size = 10
-      ),
-
-      strip.text = ggplot2::element_text(
-        size = 10,
-        face = "bold"
-      ),
-
-      # More space between facet rows
-      panel.spacing.y = grid::unit(
-        2.5,
-        "lines"
-      ),
-
-      panel.spacing.x = grid::unit(
-        1.0,
-        "lines"
-      ),
-
-      legend.position = "bottom",
-
-      legend.text = ggplot2::element_text(
-        size = 9
-      ),
-
-      legend.key.size = grid::unit(
-        0.35,
-        "cm"
-      ),
-
-      plot.margin = ggplot2::margin(
-        20, 20, 30, 20
-      )
-    ) +
-
-    ggplot2::guides(
-      fill = ggplot2::guide_legend(ncol = 4),
-      colour = ggplot2::guide_legend(ncol = 4)
-    )
-
-  # ---------------------------------------------------------------------------
-  # Faceting
-  # ---------------------------------------------------------------------------
-
-  if (!is.null(divider)) {
-
-    p <- p +
-      ggplot2::facet_wrap(
-        stats::as.formula(paste("~", divider)),
-
-        # Changed from free_y to free_x:
-        # categories are now on the X axis.
-        scales = "free_x",
-
-        ncol = facet_ncol
-      )
-  }
-
-  # ---------------------------------------------------------------------------
-  # Convert to Plotly
-  # ---------------------------------------------------------------------------
-
-  fig <- plotly::ggplotly(
-    p,
-    tooltip = "text",
-    height = plot_height
-  )
-
-  fig <- fig %>%
-    plotly::layout(
-      autosize = TRUE,
-
-      margin = list(
-        l = 80,
-        r = 50,
-        b = 150,
-        t = 140
-      ),
-
-      legend = list(
-        orientation = "h",
-        x = 0,
-        y = 1.02,
-        xanchor = "left",
-        yanchor = "bottom",
-        title = list(text = "Stock:")
-      )
-    )
-
-  # Add source note only when provided
-  if (!is.null(source_note) &&
-      length(source_note) == 1 &&
-      !is.na(source_note) &&
-      nzchar(source_note)) {
-
-    fig <- fig %>%
-      plotly::layout(
-        annotations = list(
-          list(
-            text = source_note,
-            x = 1,
-            y = 0,
-            xref = "paper",
-            yref = "paper",
-            showarrow = FALSE,
-            xanchor = "right",
-            yanchor = "top",
-            yshift = -115,
-            align = "right",
-            font = list(
-              size = 10,
-              color = "#707070"
-            )
-          )
-        )
-      )
-  }
-
-  return(fig)
-}
+# plot_catchComp_plotly_v2 <- function(
+#     dataComposition,
+#     refTable,
+#     filters = NULL,
+#     selectors = "metier",
+#     divider = NULL,
+#     yvar = "landings",
+#     scenario_value = "min",
+#     label_wrap = 18,
+#     facet_ncol = 2,
+#     min_height = 300,
+#     row_height = 15,
+#     source_note = NULL,
+#     x_label_angle = 45
+# ) {
+
+#   if (length(divider) > 1) {
+#     stop("Only 1 variable can be provided as a divider.")
+#   }
+
+#   # ---------------------------------------------------------------------------
+#   # Prepare data
+#   # ---------------------------------------------------------------------------
+
+#   data <- dataComposition %>%
+#     dplyr::filter(.data$scenario == scenario_value)
+
+#   # Extract area from métier
+#   tmp <- strsplit(as.character(data$metier), ".", fixed = TRUE)
+
+#   data$area <- vapply(
+#     tmp,
+#     function(x) {
+#       if (length(x) == 2) x[2] else NA_character_
+#     },
+#     character(1)
+#   )
+
+#   # Extract country from fleet
+#   tmp <- strsplit(as.character(data$fleet), "_", fixed = TRUE)
+
+#   data$country <- vapply(
+#     tmp,
+#     function(x) {
+#       if (length(x) == 2) x[1] else NA_character_
+#     },
+#     character(1)
+#   )
+
+#   data$area[is.na(data$area)] <- "notSpecified"
+
+#   # Replace short stock names with ICES stock codes
+#   data$stock <- refTable$stock[
+#     match(data$stock, refTable$stock_short)
+#   ]
+
+#   # ---------------------------------------------------------------------------
+#   # Apply optional filters
+#   # ---------------------------------------------------------------------------
+
+#   if (!is.null(filters)) {
+#     for (var in names(filters)) {
+#       data <- data %>%
+#         dplyr::filter(.data[[var]] %in% filters[[var]])
+#     }
+#   }
+
+#   # ---------------------------------------------------------------------------
+#   # Build aggregation label
+#   # ---------------------------------------------------------------------------
+
+#   data <- data %>%
+#     dplyr::ungroup() %>%
+#     dplyr::mutate(
+#       label = apply(
+#         dplyr::select(., dplyr::all_of(selectors)),
+#         1,
+#         paste,
+#         collapse = "_"
+#       ),
+#       label = stringr::str_wrap(
+#         label,
+#         width = label_wrap,
+#         whitespace_only = FALSE
+#       )
+#     )
+
+#   group_vars <- c("label", "stock", divider)
+
+#   data <- data %>%
+#     dplyr::group_by(
+#       dplyr::across(dplyr::all_of(group_vars))
+#     ) %>%
+#     dplyr::summarise(
+#       VAR = sum(.data[[yvar]], na.rm = TRUE),
+#       .groups = "drop"
+#     ) %>%
+#     dplyr::filter(
+#       !is.na(stock),
+#       VAR > 0
+#     )
+
+#   # ---------------------------------------------------------------------------
+#   # Join colours and ordering
+#   # ---------------------------------------------------------------------------
+
+#   data <- data %>%
+#     dplyr::left_join(
+#       refTable,
+#       by = "stock"
+#     )
+
+#   stock_key <- data %>%
+#     dplyr::select(stock, col, order) %>%
+#     dplyr::distinct() %>%
+#     dplyr::arrange(order)
+
+#   stk_colors <- stock_key$col
+#   names(stk_colors) <- stock_key$stock
+
+#   data$stock <- factor(
+#     data$stock,
+#     levels = stock_key$stock
+#   )
+
+#   # Order labels by total catch
+#   label_order <- data %>%
+#     dplyr::group_by(label) %>%
+#     dplyr::summarise(
+#       total = sum(VAR, na.rm = TRUE),
+#       .groups = "drop"
+#     ) %>%
+#     dplyr::arrange(total) %>%
+#     dplyr::pull(label)
+
+#   data$label <- factor(
+#     data$label,
+#     levels = label_order
+#   )
+
+#   # ---------------------------------------------------------------------------
+#   # Dynamic height: adapted for vertical bars
+#   # ---------------------------------------------------------------------------
+
+#   if (is.null(divider)) {
+
+#     n_facet_rows <- 1
+
+#     max_labels_per_facet <- dplyr::n_distinct(data$label)
+
+#   } else {
+
+#     n_facets <- dplyr::n_distinct(data[[divider]])
+
+#     n_facet_rows <- ceiling(n_facets / facet_ncol)
+
+#     max_labels_per_facet <- data %>%
+#       dplyr::group_by(.data[[divider]]) %>%
+#       dplyr::summarise(
+#         n = dplyr::n_distinct(label),
+#         .groups = "drop"
+#       ) %>%
+#       dplyr::summarise(max_n = max(n)) %>%
+#       dplyr::pull(max_n)
+#   }
+
+#   # Vertical bars need more height per facet.
+#   # Preserve row_height as a compatibility parameter.
+
+#   facet_row_height <- max(
+#     300,
+#     max_labels_per_facet * row_height + 45
+#   )
+
+#   plot_height <- max(
+#     min_height,
+#     n_facet_rows * facet_row_height + 200
+#   )
+
+#   # ---------------------------------------------------------------------------
+#   # Plot: VERTICAL STACKED BARS
+#   # ---------------------------------------------------------------------------
+
+#   p <- ggplot2::ggplot(
+#     data,
+#     ggplot2::aes(
+#       x = label,
+#       y = VAR,
+#       colour = stock,
+#       fill = stock,
+#       text = paste0(
+#         "Label: ", label,
+#         "<br>Stock: ", stock,
+#         "<br>", yvar, ": ", round(VAR, 2)
+#       )
+#     )
+#   ) +
+
+#     ggplot2::geom_col(
+#       position = "fill",
+#       width = 0.85
+#     ) +
+
+#     # No coord_flip(): percentages stay on Y axis.
+
+#     ggplot2::scale_y_continuous(
+#       labels = scales::percent_format(accuracy = 1),
+#       breaks = seq(0, 1, by = 0.25),
+#       expand = ggplot2::expansion(
+#         mult = c(0, 0.02)
+#       )
+#     ) +
+
+#     ggplot2::scale_colour_manual(
+#       name = "Stock",
+#       values = stk_colors,
+#       aesthetics = c("colour", "fill")
+#     ) +
+
+#     ggplot2::labs(
+#       x = NULL,
+#       y = "Share of catch composition",
+#       fill = NULL,
+#       colour = NULL
+#     ) +
+
+#     ggplot2::theme_bw() +
+
+#     ggplot2::theme(
+
+#       # X axis: labels now below vertical bars
+#       axis.text.x = ggplot2::element_text(
+#         size = 9,
+#         angle = x_label_angle,
+#         hjust = 1,
+#         vjust = 1
+#       ),
+
+#       # Y axis: percentages
+#       axis.text.y = ggplot2::element_text(
+#         size = 9
+#       ),
+
+#       axis.title.y = ggplot2::element_text(
+#         size = 10
+#       ),
+
+#       strip.text = ggplot2::element_text(
+#         size = 10,
+#         face = "bold"
+#       ),
+
+#       # More space between facet rows
+#       panel.spacing.y = grid::unit(
+#         2.5,
+#         "lines"
+#       ),
+
+#       panel.spacing.x = grid::unit(
+#         1.0,
+#         "lines"
+#       ),
+
+#       legend.position = "bottom",
+
+#       legend.text = ggplot2::element_text(
+#         size = 9
+#       ),
+
+#       legend.key.size = grid::unit(
+#         0.35,
+#         "cm"
+#       ),
+
+#       plot.margin = ggplot2::margin(
+#         20, 20, 30, 20
+#       )
+#     ) +
+
+#     ggplot2::guides(
+#       fill = ggplot2::guide_legend(ncol = 4),
+#       colour = ggplot2::guide_legend(ncol = 4)
+#     )
+
+#   # ---------------------------------------------------------------------------
+#   # Faceting
+#   # ---------------------------------------------------------------------------
+
+#   if (!is.null(divider)) {
+
+#     p <- p +
+#       ggplot2::facet_wrap(
+#         stats::as.formula(paste("~", divider)),
+
+#         # Changed from free_y to free_x:
+#         # categories are now on the X axis.
+#         scales = "free_x",
+
+#         ncol = facet_ncol
+#       )
+#   }
+
+#   # ---------------------------------------------------------------------------
+#   # Convert to Plotly
+#   # ---------------------------------------------------------------------------
+
+#   fig <- plotly::ggplotly(
+#     p,
+#     tooltip = "text",
+#     height = plot_height
+#   )
+
+#   fig <- fig %>%
+#     plotly::layout(
+#       autosize = TRUE,
+
+#       margin = list(
+#         l = 80,
+#         r = 50,
+#         b = 150,
+#         t = 140
+#       ),
+
+#       legend = list(
+#         orientation = "h",
+#         x = 0,
+#         y = 1.02,
+#         xanchor = "left",
+#         yanchor = "bottom",
+#         title = list(text = "Stock:")
+#       )
+#     )
+
+#   # Add source note only when provided
+#   if (!is.null(source_note) &&
+#       length(source_note) == 1 &&
+#       !is.na(source_note) &&
+#       nzchar(source_note)) {
+
+#     fig <- fig %>%
+#       plotly::layout(
+#         annotations = list(
+#           list(
+#             text = source_note,
+#             x = 1,
+#             y = 0,
+#             xref = "paper",
+#             yref = "paper",
+#             showarrow = FALSE,
+#             xanchor = "right",
+#             yanchor = "top",
+#             yshift = -115,
+#             align = "right",
+#             font = list(
+#               size = 10,
+#               color = "#707070"
+#             )
+#           )
+#         )
+#       )
+#   }
+
+#   return(fig)
+# }
 
 
 # Vertical stacked catch composition (v3)
@@ -3154,7 +3154,7 @@ plot_alluvial_plotly <- function(
   # ------------------------------------------------------------------
   # Checks
   # ------------------------------------------------------------------
-
+  
   if (length(fill_var) != 1) {
     stop("fill_var must contain exactly one variable name")
   }
@@ -3162,8 +3162,8 @@ plot_alluvial_plotly <- function(
   if (!fill_var %in% names(refTable)) {
     stop("fill_var must be variable in refTable")
   }
-  
-  required_vars <- c(group_vars, fill_var, "value")
+
+required_vars <- c(group_vars, fill_var, "value")
   missing_vars <- setdiff(required_vars, names(data))
 
   if (length(missing_vars) > 0) {
@@ -3220,7 +3220,7 @@ plot_alluvial_plotly <- function(
   # ------------------------------------------------------------------
 
   dat <- data
-
+  # Sankey link weights represent landings in tonnes
   dat$value <- as.numeric(dat$value)
 
   dat <- dat[

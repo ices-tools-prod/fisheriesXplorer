@@ -978,22 +978,22 @@ mod_mixfish_server <- function(
                 placeholder = "All countries"
               )
             )
-          ),
-          div(
-            style = "width: 260px;",
-            selectizeInput(
-              ns("plot6_scenario_filter"),
-              "Scenario:",
-              choices = safe_choices(df, "scenario"),
-              selected = if ("min" %in% safe_choices(df, "scenario")) {
-                "min"
-              } else {
-                safe_choices(df, "scenario")[1]
-              },
-              multiple = FALSE,
-              width = "100%"
-            )
           )
+          # div(
+          #   style = "width: 260px;",
+          #   selectizeInput(
+          #     ns("plot6_scenario_filter"),
+          #     "Scenario:",
+          #     choices = safe_choices(df, "scenario"),
+          #     selected = if ("min" %in% safe_choices(df, "scenario")) {
+          #       "min"
+          #     } else {
+          #       safe_choices(df, "scenario")[1]
+          #     },
+          #     multiple = FALSE,
+          #     width = "100%"
+          #   )
+          # )
         )
       )
     })
@@ -1071,50 +1071,54 @@ mod_mixfish_server <- function(
 
     ################################## Plot 6 alluvial data ##################################
 
-    plot6_data <- reactive({
-      req(plot_name_history() == "plot6")
-      req(input$plot6_year_filter)
-      req(input$plot6_scenario_filter)
+plot6_data <- reactive({
 
-      df <- data_reactive_all()$stfMtStkSum_filtered
+  req(plot_name_history() == "plot6")
+  req(input$plot6_year_filter)
 
-      # Year
-      df <- df %>%
-        dplyr::filter(as.character(year) == as.character(input$plot6_year_filter))
+  # Same source dataset used by Plot 5
+  df <- data_reactive_all()$stfMtStkSum_filtered
 
-      # Scenario
-      df <- df %>%
-        dplyr::filter(as.character(scenario) == as.character(input$plot6_scenario_filter))
+  # Filter selected year
+  df <- df %>%
+    dplyr::filter(
+      as.character(year) == as.character(input$plot6_year_filter)
+    )
 
-      # Country: optional; no selection means all countries
-      if (!is.null(input$plot6_country_filter) &&
-        length(input$plot6_country_filter) > 0) {
-        df <- df %>%
-          dplyr::filter(country %in% input$plot6_country_filter)
-      }
+  # Optional country filter
+  if (!is.null(input$plot6_country_filter) &&
+      length(input$plot6_country_filter) > 0) {
 
-      validate(
-        need(nrow(df) > 0, "No data available for the selected filters.")
+    df <- df %>%
+      dplyr::filter(
+        country %in% input$plot6_country_filter
       )
+  }
 
-      # plot_alluvial_plotly expects fleet, metier, stock and value
-      df <- df %>%
-        dplyr::select(fleet, metier, stock, landings)
+  # Prepare data for Sankey
+  # Stock identifiers are already in the correct format
+  df <- df %>%
+    dplyr::select(
+      fleet,
+      metier,
+      stock,
+      value = landings
+    ) %>%
+    dplyr::filter(
+      !is.na(stock),
+      !is.na(value),
+      value > 0
+    )
 
-      # stfMtStkSum uses the short stock code.
-      # Convert it to the stock identifier used by refTable.
-      ref <- data_reactive_all()$refTable_filtered
+  validate(
+    need(
+      nrow(df) > 0,
+      "No positive landings available for the selected filters."
+    )
+  )
 
-      if ("stock_short" %in% names(ref)) {
-        df$stock <- ref$stock[match(df$stock, ref$stock_short)]
-      }
-
-      df <- df %>%
-        dplyr::filter(!is.na(stock)) %>%
-        dplyr::rename(value = landings)
-
-      df
-    })
+  df
+})
 
     ################################## Dynamic filter UI: Forecast ##################################
 
@@ -1440,9 +1444,9 @@ mod_mixfish_server <- function(
     ################################## Data source note ##################################
     data_source_note <- reactive({
       paste0(
-      "2025 ICES Advice.<br>",
+      "2026 ICES Advice.<br>",
       selected_subRegion(),
-      " mixed fisheries considerations.<br>13-Nov-2025, ICES, Copenhagen.")
+      " mixed fisheries considerations.<br>13-Nov-2026, ICES, Copenhagen.")
     })
     ################################## Plot rendering: History ##################################
     
@@ -1494,7 +1498,7 @@ mod_mixfish_server <- function(
             group_vars = c("fleet", "metier", "stock"),
             fill_var = "stock",
             group_labs = c("Fleet", "Métier", "Stock"),
-            ylab = "Landings (tonnes)]",
+            ylab = "Landings (tonnes)",
             fillLegendTitle = "Stock",
             addLegend = TRUE,
             source_note = data_source_note()  
@@ -1520,7 +1524,7 @@ mod_mixfish_server <- function(
             data = current_plot_data_forecast(),
             adv = data_reactive_all()$catchRange_filtered,
             refTable = data_reactive_all()$refTable_filtered,
-            title = "Mixed-fisheries projections of potential 2026 catches",
+            title = "Mixed-fisheries projections of potential 2027 catches",
             source_note = data_source_note()
           )
         },
