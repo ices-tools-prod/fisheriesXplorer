@@ -728,7 +728,12 @@ mod_mixfish_server <- function(
 
         stfMtStkSum_filtered =
           mixfish_data$stfMtStkSum %>%
-          dplyr::filter(ecoregion == eco_acronym),
+          dplyr::filter(ecoregion == eco_acronym) %>% 
+          dplyr::mutate(
+          country = sub("_.*$", "", fleet),
+          area = sub("^.*\\.", "", metier),
+          area = ifelse(grepl("\\.", metier), area, NA_character_)
+        ),
 
         refTable_filtered =
           mixfish_data$refTable %>%
@@ -738,18 +743,18 @@ mod_mixfish_server <- function(
 
     ################################## Catch-composition data ##################################
 
-    dataComp <- reactive({
-      data(stfMtStkSum, package = "mixfishtools")
+    # dataComp <- reactive({
+    #   data(stfMtStkSum, package = "mixfishtools")
 
-      stfMtStkSum <- stfMtStkSum %>%
-        dplyr::mutate(
-          country = sub("_.*$", "", fleet),
-          area = sub("^.*\\.", "", metier),
-          area = ifelse(grepl("\\.", metier), area, NA_character_)
-        )
+    #   stfMtStkSum <- stfMtStkSum %>%
+    #     dplyr::mutate(
+    #       country = sub("_.*$", "", fleet),
+    #       area = sub("^.*\\.", "", metier),
+    #       area = ifelse(grepl("\\.", metier), area, NA_character_)
+    #     )
 
-      list(stfMtStkSum = stfMtStkSum)
-    })
+    #   list(stfMtStkSum = stfMtStkSum)
+    # })
 
     ################################## Filter helpers ##################################
 
@@ -1469,12 +1474,12 @@ mod_mixfish_server <- function(
           req(NROW(df) > 0)
 
           plot_catchComp_plotly_v3(
-            dataComposition = df,
+            data = df,
             refTable = data_reactive_all()$refTable_filtered,
             filters = plot5_filters(),
             selectors = plot5_selectors(),
             divider = plot5_divider(),
-            yvar = "catch",
+            yvar = "landings",
             relative = if (is.null(input$plot5_relative)) TRUE
              else isTRUE(input$plot5_relative),
             source_note = data_source_note()

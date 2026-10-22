@@ -2651,13 +2651,13 @@ plot_catchComp_plotly_v2 <- function(
 #   - relative = TRUE uses 100% stacked bars; FALSE uses absolute values
 
 plot_catchComp_plotly_v3 <- function(
-    dataComposition,
+    data,
     refTable,
     filters = NULL,
     selectors = "metier",
     divider = NULL,
     yvar = "landings",
-    scenario_value = "min",
+    # scenario_value = "min",
     label_wrap = 18,
     facet_ncol = 2,
     min_height = 300,
@@ -2666,6 +2666,7 @@ plot_catchComp_plotly_v3 <- function(
     x_label_angle = 45,
     relative = FALSE
 ) {
+
 
   if (length(divider) > 1L) {
     stop("Only 1 variable can be provided as a divider.")
@@ -2678,7 +2679,7 @@ plot_catchComp_plotly_v3 <- function(
   # Match the original mixfishtools plot_catchComp() behaviour.
   position_type <- if (relative) "fill" else "stack"
   y_axis_title <- if (relative) {
-    "Share of catch composition"
+    "Share of landings composition"
   } else {
     paste0(tools::toTitleCase(gsub("_", " ", yvar)), " (Tonnes)")
   }
@@ -2701,8 +2702,8 @@ plot_catchComp_plotly_v3 <- function(
   # Prepare data
   # ---------------------------------------------------------------------------
 
-  data <- dataComposition %>%
-    dplyr::filter(.data$scenario == scenario_value)
+  # data <- dataComposition 
+    # dplyr::filter(.data$scenario == scenario_value)
 
   tmp <- strsplit(as.character(data$metier), ".", fixed = TRUE)
   data$area <- vapply(
@@ -2719,10 +2720,6 @@ plot_catchComp_plotly_v3 <- function(
   )
 
   data$area[is.na(data$area)] <- "notSpecified"
-
-  data$stock <- refTable$stock[
-    match(data$stock, refTable$stock_short)
-  ]
 
   # ---------------------------------------------------------------------------
   # Apply optional filters
@@ -2769,6 +2766,7 @@ plot_catchComp_plotly_v3 <- function(
       dplyr::pull(label) %>%
       unique()
   }
+
 
   group_vars <- c("label", "stock", divider)
 
@@ -2966,144 +2964,144 @@ plot_catchComp_plotly_v3 <- function(
 
 
 
-plot_relEffortFltStk_plotly <- function(
-    data,
-    limits = c(-100, 100),
-    xlab = "Stock",
-    ylab = "Fleet",
-    fillLegendTitle = "Variation<br>in effort",
-    min_height = 650,
-    row_height = 25,
-    left_margin = 130,
-    bottom_margin = 120,
-    source_note = NULL) {
+# plot_relEffortFltStk_plotly <- function(
+#     data,
+#     limits = c(-100, 100),
+#     xlab = "Stock",
+#     ylab = "Fleet",
+#     fillLegendTitle = "Variation<br>in effort",
+#     min_height = 650,
+#     row_height = 25,
+#     left_margin = 130,
+#     bottom_margin = 120,
+#     source_note = NULL) {
 
-  data$relEffort <- data$quotaEffort / data$sqEffort
-  # convert to percentage change
-  data$var <- 100 * (data$relEffort - 1)
+#   data$relEffort <- data$quotaEffort / data$sqEffort
+#   # convert to percentage change
+#   data$var <- 100 * (data$relEffort - 1)
 
-  # optional upper limit (e.g. 100)
-  data$var <- ifelse(data$var > 100, 100, data$var)
-  # Basic checks
-  required_cols <- c("stock", "fleet", "var")
-  missing_cols <- setdiff(required_cols, names(data))
+#   # optional upper limit (e.g. 100)
+#   data$var <- ifelse(data$var > 100, 100, data$var)
+#   # Basic checks
+#   required_cols <- c("stock", "fleet", "var")
+#   missing_cols <- setdiff(required_cols, names(data))
 
-  if (length(missing_cols) > 0) {
-    stop(
-      "Missing required column(s): ",
-      paste(missing_cols, collapse = ", ")
-    )
-  }
+#   if (length(missing_cols) > 0) {
+#     stop(
+#       "Missing required column(s): ",
+#       paste(missing_cols, collapse = ", ")
+#     )
+#   }
 
-  # Keep plotting order stable.
-  # If stock/fleet are already factors, preserve their levels.
-  stock_levels <- if (is.factor(data$stock)) {
-    levels(data$stock)
-  } else {
-    unique(data$stock)
-  }
+#   # Keep plotting order stable.
+#   # If stock/fleet are already factors, preserve their levels.
+#   stock_levels <- if (is.factor(data$stock)) {
+#     levels(data$stock)
+#   } else {
+#     unique(data$stock)
+#   }
 
-  fleet_levels <- if (is.factor(data$fleet)) {
-    levels(data$fleet)
-  } else {
-    unique(data$fleet)
-  }
+#   fleet_levels <- if (is.factor(data$fleet)) {
+#     levels(data$fleet)
+#   } else {
+#     unique(data$fleet)
+#   }
 
-  data <- data %>%
-    dplyr::mutate(
-      stock = factor(stock, levels = stock_levels),
-      fleet = factor(fleet, levels = rev(fleet_levels))
-    )
+#   data <- data %>%
+#     dplyr::mutate(
+#       stock = factor(stock, levels = stock_levels),
+#       fleet = factor(fleet, levels = rev(fleet_levels))
+#     )
 
-  # Convert long data to matrix for plotly heatmap
-  heatmap_data <- data %>%
-    dplyr::select(stock, fleet, var) %>%
-    tidyr::pivot_wider(
-      names_from = stock,
-      values_from = var
-    ) %>%
-    dplyr::arrange(fleet)
+#   # Convert long data to matrix for plotly heatmap
+#   heatmap_data <- data %>%
+#     dplyr::select(stock, fleet, var) %>%
+#     tidyr::pivot_wider(
+#       names_from = stock,
+#       values_from = var
+#     ) %>%
+#     dplyr::arrange(fleet)
 
-  y_vals <- as.character(heatmap_data$fleet)
-  x_vals <- setdiff(names(heatmap_data), "fleet")
+#   y_vals <- as.character(heatmap_data$fleet)
+#   x_vals <- setdiff(names(heatmap_data), "fleet")
 
-  z_mat <- heatmap_data %>%
-    dplyr::select(dplyr::all_of(x_vals)) %>%
-    as.matrix()
+#   z_mat <- heatmap_data %>%
+#     dplyr::select(dplyr::all_of(x_vals)) %>%
+#     as.matrix()
 
-  # Dynamic height: one row per fleet
-  plot_height <- max(min_height, length(y_vals) * row_height)
+#   # Dynamic height: one row per fleet
+#   plot_height <- max(min_height, length(y_vals) * row_height)
 
-  # Hover text
-  hover_text <- matrix(
-    paste0(
-      "Fleet: ", rep(y_vals, times = length(x_vals)),
-      "<br>Stock: ", rep(x_vals, each = length(y_vals)),
-      "<br>Variation in effort: ", round(as.vector(z_mat), 2), "%"
-    ),
-    nrow = length(y_vals),
-    ncol = length(x_vals),
-    byrow = FALSE
-  )
+#   # Hover text
+#   hover_text <- matrix(
+#     paste0(
+#       "Fleet: ", rep(y_vals, times = length(x_vals)),
+#       "<br>Stock: ", rep(x_vals, each = length(y_vals)),
+#       "<br>Variation in effort: ", round(as.vector(z_mat), 2), "%"
+#     ),
+#     nrow = length(y_vals),
+#     ncol = length(x_vals),
+#     byrow = FALSE
+#   )
 
-  plotly::plot_ly(
-    x = x_vals,
-    y = y_vals,
-    z = z_mat,
-    type = "heatmap",
-    text = hover_text,
-    hoverinfo = "text",
-    zmin = limits[1],
-    zmax = limits[2],
-    colorscale = list(
-      c(0, "rgb(139, 0, 0)"),
-      c(0.5, "rgb(230, 230, 230)"),
-      c(1, "rgb(0, 0, 139)")
-    ),
-    colorbar = list(
-      title = list(text = fillLegendTitle),
-      tickvals = c(limits[1], limits[1] / 2, 0, limits[2] / 2, limits[2]),
-      ticktext = as.character(c(limits[1], limits[1] / 2, 0, limits[2] / 2, limits[2]))
-    )
-  ) %>%
-    plotly::layout(
-      height = plot_height,
-      autosize = TRUE,
-      xaxis = list(
-        title = xlab,
-        tickangle = -90,
-        automargin = TRUE,
-        type = "category"
-      ),
-      yaxis = list(
-        title = ylab,
-        automargin = TRUE,
-        type = "category"
-      ),
-      margin = list(
-        l = left_margin,
-        r = 80,
-        b = bottom_margin,
-        t = 20
-      ),
-      annotations = list(
-        list(
-          text = source_note,
-          x = 1, y = -0.12,
-          xref = "paper", yref = "paper",
-          showarrow = FALSE,
-          xanchor = "right",
-          yanchor = "top",
-          align = "right",
-          font = list(size = 10, color = "#707070")
-        )
-      )
-    ) %>%
-    plotly::config(
-      displayModeBar = TRUE,
-      responsive = TRUE
-    )
-}
+#   plotly::plot_ly(
+#     x = x_vals,
+#     y = y_vals,
+#     z = z_mat,
+#     type = "heatmap",
+#     text = hover_text,
+#     hoverinfo = "text",
+#     zmin = limits[1],
+#     zmax = limits[2],
+#     colorscale = list(
+#       c(0, "rgb(139, 0, 0)"),
+#       c(0.5, "rgb(230, 230, 230)"),
+#       c(1, "rgb(0, 0, 139)")
+#     ),
+#     colorbar = list(
+#       title = list(text = fillLegendTitle),
+#       tickvals = c(limits[1], limits[1] / 2, 0, limits[2] / 2, limits[2]),
+#       ticktext = as.character(c(limits[1], limits[1] / 2, 0, limits[2] / 2, limits[2]))
+#     )
+#   ) %>%
+#     plotly::layout(
+#       height = plot_height,
+#       autosize = TRUE,
+#       xaxis = list(
+#         title = xlab,
+#         tickangle = -90,
+#         automargin = TRUE,
+#         type = "category"
+#       ),
+#       yaxis = list(
+#         title = ylab,
+#         automargin = TRUE,
+#         type = "category"
+#       ),
+#       margin = list(
+#         l = left_margin,
+#         r = 80,
+#         b = bottom_margin,
+#         t = 20
+#       ),
+#       annotations = list(
+#         list(
+#           text = source_note,
+#           x = 1, y = -0.12,
+#           xref = "paper", yref = "paper",
+#           showarrow = FALSE,
+#           xanchor = "right",
+#           yanchor = "top",
+#           align = "right",
+#           font = list(size = 10, color = "#707070")
+#         )
+#       )
+#     ) %>%
+#     plotly::config(
+#       displayModeBar = TRUE,
+#       responsive = TRUE
+#     )
+# }
 
 
 
@@ -3147,7 +3145,7 @@ plot_alluvial_plotly <- function(
     stratum_width = 1/3,
     stratum_col = "white",
     xlab = NULL,
-    ylab = "Catch [t]",
+    ylab = "Landings [t]",
     fillLegendTitle = "Stock",
     addLegend = TRUE,
     plotTitle = NULL,
@@ -3164,7 +3162,7 @@ plot_alluvial_plotly <- function(
   if (!fill_var %in% names(refTable)) {
     stop("fill_var must be variable in refTable")
   }
-
+  
   required_vars <- c(group_vars, fill_var, "value")
   missing_vars <- setdiff(required_vars, names(data))
 
