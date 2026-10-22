@@ -206,7 +206,7 @@ ecoregions <- sort(get_ecoregion_list())
 ecoregions <- ecoregions[c(4:7,9:13, 15,16)]
 
 #set year for effort and sar maps
-yr <- 2024
+yr <- 2025
 # Set resolution for plotting
 dpi <- 144 
 
@@ -215,8 +215,8 @@ plot_width <- 1300
 plot_height <- 1000
 
 # SAR and Effort updated November 2025
-vms_data_update = "November 2025"
-vms_data_update_short = "Nov-25"
+vms_data_update = "November 2026"
+vms_data_update_short = "Nov-26"
 
 CRS_LAEA_EUROPE <- "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
 
