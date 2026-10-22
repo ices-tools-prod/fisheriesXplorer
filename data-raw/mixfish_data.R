@@ -386,7 +386,42 @@ library(readr)
 library(purrr)
 library(gh)
 
+# download_github_data <- function(repo_owner, repo_name, file_path) {
+#   response <- gh::gh(
+#     "GET /repos/{owner}/{repo}/contents/{path}",
+#     owner = repo_owner,
+#     repo = repo_name,
+#     path = file_path
+#   )
+
+#   csv_text <- response$content |>
+#     gsub("\\n", "", x = _) |>
+#     base64enc::base64decode() |>
+#     rawToChar()
+
+#   tmp <- tempfile(fileext = ".csv")
+#   on.exit(unlink(tmp), add = TRUE)
+
+#   writeLines(csv_text, tmp, useBytes = TRUE)
+
+#   df <- utils::read.csv(
+#     tmp,
+#     stringsAsFactors = FALSE,
+#     check.names = FALSE
+#   )
+
+#   bad_names <- is.na(names(df)) | names(df) == ""
+
+#   if (any(bad_names)) {
+#     names(df)[bad_names] <- paste0("X", which(bad_names))
+#   }
+
+#   names(df) <- make.unique(names(df))
+
+#   df
+# }
 download_github_data <- function(repo_owner, repo_name, file_path) {
+
   response <- gh::gh(
     "GET /repos/{owner}/{repo}/contents/{path}",
     owner = repo_owner,
@@ -394,15 +429,53 @@ download_github_data <- function(repo_owner, repo_name, file_path) {
     path = file_path
   )
 
-  csv_text <- response$content |>
-    gsub("\\n", "", x = _) |>
-    base64enc::base64decode() |>
-    rawToChar()
+  message("Repository: ", repo_name)
+  message("File: ", file_path)
+  message("Size: ", response$size, " bytes")
+  message("Encoding: ", response$encoding)
+
+  # Small files: use the content directly
+  if (
+    identical(response$encoding, "base64") &&
+    !is.null(response$content) &&
+    nzchar(response$content)
+  ) {
+    encoded_content <- response$content
+
+  } else {
+
+    # Large files: retrieve the Git blob using its SHA
+    message("Retrieving file through Git Blobs API")
+
+    blob <- gh::gh(
+      "GET /repos/{owner}/{repo}/git/blobs/{sha}",
+      owner = repo_owner,
+      repo = repo_name,
+      sha = response$sha
+    )
+
+    if (!identical(blob$encoding, "base64") ||
+        is.null(blob$content) ||
+        !nzchar(blob$content)) {
+      stop("Unable to retrieve file content: ", file_path)
+    }
+
+    encoded_content <- blob$content
+  }
+
+  # Decode the CSV content
+  raw_data <- base64enc::base64decode(
+    gsub("\\s+", "", encoded_content)
+  )
+
+  if (length(raw_data) == 0) {
+    stop("Empty file: ", repo_name, "/", file_path)
+  }
 
   tmp <- tempfile(fileext = ".csv")
   on.exit(unlink(tmp), add = TRUE)
 
-  writeLines(csv_text, tmp, useBytes = TRUE)
+  writeBin(raw_data, tmp)
 
   df <- utils::read.csv(
     tmp,
@@ -410,6 +483,7 @@ download_github_data <- function(repo_owner, repo_name, file_path) {
     check.names = FALSE
   )
 
+  # Repair missing or duplicate column names
   bad_names <- is.na(names(df)) | names(df) == ""
 
   if (any(bad_names)) {
@@ -418,11 +492,13 @@ download_github_data <- function(repo_owner, repo_name, file_path) {
 
   names(df) <- make.unique(names(df))
 
-  df
+  message("Loaded ", nrow(df), " rows and ", ncol(df), " columns")
+
+  return(df)
 }
 
-advice_year <- 2025
-regions <- c("NrS", "CS", "IrS", "IW", "BoB")
+advice_year <- 2026
+regions <- c("NrS", "CS", "IW", "BoB")
 
 region_to_ecoregion <- function(region) {
   ifelse(region == "CS", "CSx", region)
@@ -510,6 +586,12 @@ dataset_config <- list(
 
   StockLandings = list(
     file_path = "shiny/Figure4_StockLandings.csv",
+    select_cols = NULL,
+    type_fixes = list(X = as.character)
+  ),
+
+  stfMtStkSum = list(
+    file_path = "shiny/Figures5-6-7_FO_catchComp_byStockFleet_data.csv",
     select_cols = NULL,
     type_fixes = list(X = as.character)
   ),
