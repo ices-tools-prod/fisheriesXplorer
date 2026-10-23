@@ -74,7 +74,9 @@ mod_landings_ui <- function(id) {
         layout_sidebar(
           bg = "white", fg = "black",
           sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black",
+            width = "20vw", 
+            bg = "white", 
+            fg = "black",
             open = TRUE,
             uiOutput(ns("landings_text"))
           ),
@@ -110,7 +112,9 @@ mod_landings_ui <- function(id) {
         layout_sidebar(
           bg = "white", fg = "black",
           sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black",
+            width = "20vw", 
+            bg = "white", 
+            fg = "black",
             open = TRUE,
             uiOutput(ns("discards_text"))
           ),
