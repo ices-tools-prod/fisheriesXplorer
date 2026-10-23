@@ -54,10 +54,10 @@ mod_bycatch_ui <- function(id) {
         value = "total_bycatch",
         layout_sidebar(
           sidebar = sidebar(
-            width = "33vw",
+            width = "20vw",
             bg = "white",
             fg = "black",
-            open = FALSE,
+            open = TRUE,
             uiOutput(ns("total_bycatch_text"))
           ),
           column(
@@ -131,10 +131,10 @@ mod_bycatch_ui <- function(id) {
         value = "bpue",
         layout_sidebar(
           sidebar = sidebar(
-            width = "33vw",
+            width = "20vw",
             bg = "white",
             fg = "black",
-            open = FALSE,
+            open = TRUE,
             uiOutput(ns("bpue_text_summary"))
           ),
           column(

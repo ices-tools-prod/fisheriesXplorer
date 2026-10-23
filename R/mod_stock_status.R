@@ -85,7 +85,7 @@ mod_stock_status_ui <- function(id) {
         value = "status_summary",
         layout_sidebar(
           sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black",
+            width = "20vw", bg = "white", fg = "black",
             open = TRUE,
             uiOutput(ns("status_text_summary"))
           ),
@@ -140,8 +140,8 @@ mod_stock_status_ui <- function(id) {
         value = "trends_by_group",
         layout_sidebar(
           sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black",
-            open = FALSE,
+            width = "20vw", bg = "white", fg = "black",
+            open = TRUE,
             uiOutput(ns("status_text_trends"))
           ),
           column(
@@ -177,7 +177,7 @@ mod_stock_status_ui <- function(id) {
         value = "kobe_cld",
         layout_sidebar(
           sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black", open = FALSE,
+            width = "20vw", bg = "white", fg = "black", open = TRUE,
             uiOutput(ns("status_cld_trends"))
           ),
           card(
@@ -238,7 +238,9 @@ mod_stock_status_ui <- function(id) {
         value = "status_lookup", # <-- NEW value
         layout_sidebar(
           sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black",
+            width = "20vw", 
+            bg = "white", 
+            fg = "black",
             open = FALSE,
             uiOutput(ns("status_text4"))
           ),

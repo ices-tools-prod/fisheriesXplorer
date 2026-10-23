@@ -22,8 +22,10 @@ mod_vms_ui <- function(id) {
     layout_sidebar(
       bg = "white", fg = "black",
       sidebar = sidebar(
-        width = "33vw", bg = "white", fg = "black",
-        open = FALSE,
+        width = "20vw", 
+        bg = "white", 
+        fg = "black",
+        open = TRUE,
         uiOutput(ns("effort_sar_text"))
       ),
       fluidRow(
