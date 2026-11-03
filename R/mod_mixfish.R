@@ -99,112 +99,6 @@ mod_mixfish_ui <- function(id) {
     tabsetPanel(
       id = ns("mixfish_tabset"),
 
-      ################################## History ##################################
-
-      tabPanel(
-        title = "History of fleet activity",
-        value = "history",
-
-        layout_sidebar(
-          bg = "white",
-          fg = "black",
-
-          sidebar = sidebar(
-            width = "20vw",
-            bg = "white",
-            fg = "black",
-            open = TRUE,
-            uiOutput(ns("mixfish_text_history"))
-          ),
-
-          card(
-            height = "85vh",
-            full_screen = TRUE,
-            fill = FALSE,
-
-            card_header(
-              div(
-                style = "
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  gap: 12px;
-                  width: 100%;
-                  flex-wrap: wrap;
-                ",
-
-                radioButtons(
-                  ns("subRegion_history"),
-                  "Select case study:",
-                  choices = character(0),
-                  selected = character(0),
-                  inline = TRUE
-                ),
-
-                # download_icon_label(
-                #   text = "Download data",
-                #   outputId = ns("download_mixfish_data"),
-                #   hover_text = "Total mix-fish data (.csv)",
-                #   size = "large"
-                # )
-                download_icon_label(
-                  text = "Download data",
-                  outputId = ns("download_mixfish_data_history"),
-                  hover_text = "Selected plot data (.csv)",
-                  size = "large"
-                )
-              )
-            ),
-
-            card_body(
-              fillable = TRUE,
-              fill = TRUE,
-              class = "p-1",
-
-              div(
-                style = "
-                  display: flex;
-                  gap: 12px;
-                  align-items: flex-start;
-                  width: 100%;
-                  margin-bottom: 8px;
-                ",
-                
-                mixfish_about_box(),
-                
-                # Plot selector
-                div(
-                  style = "flex: 0 0 300px; width: 300px;",
-
-                  selectizeInput(
-                    inputId = ns("plot_selected_history"),
-                    label = "Select plot:",
-                    choices = c(
-                      "Landings by métier & stock" = "plot3",
-                      "Landings by stock" = "plot4",
-                      "Landings composition by fleet" = "plot5",
-                      "Landings alluvial by stock" = "plot6"
-                    ),
-                    selected = "plot3",
-                    multiple = FALSE,
-                    width = "100%"
-                  )
-                )
-
-                
-              ),
-
-              uiOutput(ns("filter_ui_history")),
-
-              withSpinner(
-                plotlyOutput(ns("plot_history"), height = "75vh"),
-                caption = "Getting mix-fish results..."
-              )
-            )
-          )
-        )
-      ),
-
       ################################## Forecast ##################################
 
       tabPanel(
@@ -247,12 +141,6 @@ mod_mixfish_ui <- function(id) {
                   inline = TRUE
                 ),
 
-                # download_icon_label(
-                #   text = "Download data",
-                #   outputId = ns("download_mixfish_data"),
-                #   hover_text = "Total mix-fish data (.csv)",
-                #   size = "large"
-                # )
                 download_icon_label(
                   text = "Download data",
                   outputId = ns("download_mixfish_data_forecast"),
@@ -304,6 +192,106 @@ mod_mixfish_ui <- function(id) {
 
               withSpinner(
                 plotlyOutput(ns("plot_forecast"), height = "75vh"),
+                caption = "Getting mix-fish results..."
+              )
+            )
+          )
+        )
+      ),
+
+      ################################## History ##################################
+
+      tabPanel(
+        title = "History of fleet activity",
+        value = "history",
+
+        layout_sidebar(
+          bg = "white",
+          fg = "black",
+
+          sidebar = sidebar(
+            width = "20vw",
+            bg = "white",
+            fg = "black",
+            open = TRUE,
+            uiOutput(ns("mixfish_text_history"))
+          ),
+
+          card(
+            height = "85vh",
+            full_screen = TRUE,
+            fill = FALSE,
+
+            card_header(
+              div(
+                style = "
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  gap: 12px;
+                  width: 100%;
+                  flex-wrap: wrap;
+                ",
+
+                radioButtons(
+                  ns("subRegion_history"),
+                  "Select case study:",
+                  choices = character(0),
+                  selected = character(0),
+                  inline = TRUE
+                ),
+
+                download_icon_label(
+                  text = "Download data",
+                  outputId = ns("download_mixfish_data_history"),
+                  hover_text = "Selected plot data (.csv)",
+                  size = "large"
+                )
+              )
+            ),
+
+            card_body(
+              fillable = TRUE,
+              fill = TRUE,
+              class = "p-1",
+
+              div(
+                style = "
+                  display: flex;
+                  gap: 12px;
+                  align-items: flex-start;
+                  width: 100%;
+                  margin-bottom: 8px;
+                ",
+
+                mixfish_about_box(),
+
+                # Plot selector
+                div(
+                  style = "flex: 0 0 300px; width: 300px;",
+
+                  selectizeInput(
+                    inputId = ns("plot_selected_history"),
+                    label = "Select plot:",
+                    choices = c(
+                      "Landings by métier & stock" = "plot3",
+                      "Landings by stock" = "plot4",
+                      "Landings composition by fleet" = "plot5",
+                      "Landings alluvial by stock" = "plot6"
+                    ),
+                    selected = "plot3",
+                    multiple = FALSE,
+                    width = "100%"
+                  )
+                )
+
+
+              ),
+
+              uiOutput(ns("filter_ui_history")),
+
+              withSpinner(
+                plotlyOutput(ns("plot_history"), height = "75vh"),
                 caption = "Getting mix-fish results..."
               )
             )
@@ -857,7 +845,7 @@ mod_mixfish_server <- function(
             style = "width: 320px;",
             filter_selectize(
               input_id = "plot3_stock_filter",
-              label = "Fish stock:",
+              label = "Stock:",
               choices = safe_choices(df, "stock")
             )
           ),
@@ -1144,7 +1132,7 @@ plot6_data <- reactive({
             style = "width: 320px;",
             filter_selectize(
               input_id = "plot1_stock_filter",
-              label = "Fish stock:",
+              label = "Stock:",
               choices = safe_choices(df, "stock")
             )
           )

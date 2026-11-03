@@ -3623,6 +3623,83 @@ links <- dplyr::bind_rows(link_list)
     )
 
 
+  # ------------------------------------------------------------------
+  # Add hover highlighting for stock-fleet-metier connections
+  # ------------------------------------------------------------------
+
+  p <- p %>%
+    htmlwidgets::onRender("
+      function(el, x) {
+        var data = x.data;
+        var baseOpacity = 0.55;
+
+        // Build a map of node index to connected link indices
+        var nodeToLinks = {};
+        if (data[0] && data[0].source) {
+          var links = data[0];
+          for (var i = 0; i < links.source.length; i++) {
+            var source = links.source[i];
+            var target = links.target[i];
+
+            if (!nodeToLinks[source]) nodeToLinks[source] = [];
+            if (!nodeToLinks[target]) nodeToLinks[target] = [];
+
+            nodeToLinks[source].push(i);
+            nodeToLinks[target].push(i);
+          }
+        }
+
+        el.on('plotly_hover', function(data) {
+          if (!data.points || data.points.length === 0) return;
+
+          var point = data.points[0];
+          var hasSource = typeof point.source !== 'undefined';
+          var hasTarget = typeof point.target !== 'undefined';
+          var opacities = [];
+
+          // If hovering over a link
+          if (hasSource && hasTarget) {
+            var pointNumber = data.points[0].pointNumber;
+
+            // Dim all links except the hovered one
+            for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
+              opacities.push(i === pointNumber ? 1 : 0.15);
+            }
+            Plotly.restyle(el, {'line.opacity': opacities}, 0);
+          }
+          // If hovering over a node
+          else if (data.points[0].pointNumber !== undefined && !hasSource) {
+            var nodeIndex = data.points[0].pointNumber;
+            var connectedLinks = nodeToLinks[nodeIndex] || [];
+
+            // Set opacities: highlight connected links, dim others
+            for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
+              opacities.push(connectedLinks.indexOf(i) !== -1 ? 1 : 0.15);
+            }
+            Plotly.restyle(el, {'line.opacity': opacities}, 0);
+
+            // # COMMENTED OUT - Original node-only highlighting approach
+            // # var nodeIndex = data.points[0].pointNumber;
+            // # Highlight only the node itself without showing connections
+          }
+        });
+
+        el.on('plotly_unhover', function(data) {
+          // Restore original opacities
+          var opacities = [];
+          for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
+            opacities.push(baseOpacity);
+          }
+          Plotly.restyle(el, {'line.opacity': opacities}, 0);
+        });
+      }
+    ")
+
+  # # COMMENTED OUT - Previous approach without hover highlighting
+  # # This approach did not highlight connections on hover
+  # # To restore, comment out the onRender block above and uncomment this section
+
+
   return(p)
 }
 
