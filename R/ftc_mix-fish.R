@@ -1437,143 +1437,143 @@ for (stock in stocks) {
 
 #############################################################################
 
-plot_landByMetStock_plotly <- function(data, refTable,
-                                       xlab = "Métiers", ylab = "Landings (Thousand tonnes)",
-                                       fillLegendTitle = "Stock", source_note = NULL) {
-  if (is.null(data)) {
-    stop("object, data, does not exist")
-  }
+# plot_landByMetStock_plotly <- function(data, refTable,
+#                                        xlab = "Métiers", ylab = "Landings (Thousand tonnes)",
+#                                        fillLegendTitle = "Stock", source_note = NULL) {
+#   if (is.null(data)) {
+#     stop("object, data, does not exist")
+#   }
 
-  if (!all(c("metier", "stock", "value") %in% colnames(data))) {
-    stop("Column names not as expected")
-  }
+#   if (!all(c("metier", "stock", "value") %in% colnames(data))) {
+#     stop("Column names not as expected")
+#   }
 
-  # Merge color reference
-  data <- dplyr::left_join(data, refTable, by = "stock")
-  
-  # Order stocks by 'order' column in refTable and convert value to '000 t
-  data <- dplyr::mutate(
-    data,
-    stock = factor(stock, levels = refTable$stock[order(refTable$order, decreasing = TRUE)]),
-    value = value / 1000
-  )
-  data$metier <- as.factor(data$metier)
+#   # Merge color reference
+#   data <- dplyr::left_join(data, refTable, by = "stock")
+#   
+#   # Order stocks by 'order' column in refTable and convert value to '000 t
+#   data <- dplyr::mutate(
+#     data,
+#     stock = factor(stock, levels = refTable$stock[order(refTable$order, decreasing = TRUE)]),
+#     value = value / 1000
+#   )
+#   data$metier <- as.factor(data$metier)
 
-  # Estimate vertical space needed for the 45-degree rotated métier labels,
-  # since their length varies by case study and plotly does not auto-size margins.
-  max_label_nchar <- max(nchar(as.character(levels(data$metier))), 1, na.rm = TRUE)
-  tick_space <- min(250, max(60, max_label_nchar * 5))
-  bottom_margin <- tick_space + 90
+#   # Estimate vertical space needed for the 45-degree rotated métier labels,
+#   # since their length varies by case study and plotly does not auto-size margins.
+#   max_label_nchar <- max(nchar(as.character(levels(data$metier))), 1, na.rm = TRUE)
+#   tick_space <- min(250, max(60, max_label_nchar * 5))
+#   bottom_margin <- tick_space + 90
 
-  # Initialize plotly object
-  plot <- plotly::plot_ly()
+#   # Initialize plotly object
+#   plot <- plotly::plot_ly()
 
-  # Add a trace per stock
-  for (stk in levels(data$stock)) {
-    stk_data <- dplyr::filter(data, stock == stk)
-    stk_col <- unique(stk_data$col)
+#   # Add a trace per stock
+#   for (stk in levels(data$stock)) {
+#     stk_data <- dplyr::filter(data, stock == stk)
+#     stk_col <- unique(stk_data$col)
 
-    plot <- plotly::add_trace(
-      plot,
-      data = stk_data,
-      x = ~metier,
-      y = ~value,
-      type = 'bar',
-      name = stk,
-      marker = list(color = stk_col),
-      hovertemplate = paste(
-        "<b>Metier:</b> %{x}<br>",
-        "<b>Stock:</b> ", stk, "<br>",
-        "<b>Landings:</b> %{y:.2f} thousand t<br><extra></extra>"
-      )
-    )
-  }
+#     plot <- plotly::add_trace(
+#       plot,
+#       data = stk_data,
+#       x = ~metier,
+#       y = ~value,
+#       type = 'bar',
+#       name = stk,
+#       marker = list(color = stk_col),
+#       hovertemplate = paste(
+#         "<b>Metier:</b> %{x}<br>",
+#         "<b>Stock:</b> ", stk, "<br>",
+#         "<b>Landings:</b> %{y:.2f} thousand t<br><extra></extra>"
+#       )
+#     )
+#   }
 
-  # Apply layout
-  plot <- plotly::layout(
-    plot,
-    barmode = 'stack',
-    xaxis = list(title = xlab, tickangle = 45),
-    yaxis = list(title = ylab),
-    legend = list(title = list(text = fillLegendTitle)),
-    margin = list(b = bottom_margin),
-    font = list(size = 16),
-    annotations = list(
-      list(
-        text = source_note,
-        x = 1, y = 0,
-        xref = "paper", yref = "paper",
-        showarrow = FALSE,
-        xanchor = "right",
-        yanchor = "top",
-        yshift = -(tick_space + 45),
-        align = "right",
-        font = list(size = 10, color = "#707070")
-      )
-    )
-  )
+#   # Apply layout
+#   plot <- plotly::layout(
+#     plot,
+#     barmode = 'stack',
+#     xaxis = list(title = xlab, tickangle = 45),
+#     yaxis = list(title = ylab),
+#     legend = list(title = list(text = fillLegendTitle)),
+#     margin = list(b = bottom_margin),
+#     font = list(size = 16),
+#     annotations = list(
+#       list(
+#         text = source_note,
+#         x = 1, y = 0,
+#         xref = "paper", yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "right",
+#         yanchor = "top",
+#         yshift = -(tick_space + 45),
+#         align = "right",
+#         font = list(size = 10, color = "#707070")
+#       )
+#     )
+#   )
 
-  return(plot)
-}
+#   return(plot)
+# }
 
 
 #######################################################################
-plot_landByStock_plotly <- function(data, refTable,
-                                    ylab = "Landings (Thousand tonnes)",
-                                    fillLegendTitle = "Stock", source_note = NULL) {
-  if (is.null(data)) stop("object, data, does not exist")
-  if (!all(c("stock", "value") %in% colnames(data))) {
-    stop("Column names not as expected")
-  }
+# plot_landByStock_plotly <- function(data, refTable,
+#                                     ylab = "Landings (Thousand tonnes)",
+#                                     fillLegendTitle = "Stock", source_note = NULL) {
+#   if (is.null(data)) stop("object, data, does not exist")
+#   if (!all(c("stock", "value") %in% colnames(data))) {
+#     stop("Column names not as expected")
+#   }
 
-  # Merge color and ordering info
-  data <- dplyr::left_join(data, refTable, by = "stock")
-  data$stock <- factor(data$stock, levels = refTable$stock[order(refTable$order)])
-  data$value <- round(data$value / 1000, 1) # Convert to '000 t
-  data <- droplevels(data)
-  data <- data[order(data$stock), ]
+#   # Merge color and ordering info
+#   data <- dplyr::left_join(data, refTable, by = "stock")
+#   data$stock <- factor(data$stock, levels = refTable$stock[order(refTable$order)])
+#   data$value <- round(data$value / 1000, 1) # Convert to '000 t
+#   data <- droplevels(data)
+#   data <- data[order(data$stock), ]
 
-  # Create the pie chart
-  plot <- plotly::plot_ly(
-    data = data,
-    labels = ~stock,
-    values = ~value,
-    type = "pie",
-    marker = list(colors = data$col, line = list(color = "black", width = 1)),
-    textinfo = "label+percent",
-    hovertemplate = paste(
-      "<b>Stock:</b> %{label}<br>",
-      "<b>Landings:</b> %{value} thousand t<br>",
-      "<b>Percent:</b> %{percent}<extra></extra>"
-    ),
-    domain = list(x = c(0, 1), y = c(0.1, 0.9)) # shrink vertically to avoid cutoffs
-    # hole = 0.3   # uncomment if you prefer donut style
-  )
+#   # Create the pie chart
+#   plot <- plotly::plot_ly(
+#     data = data,
+#     labels = ~stock,
+#     values = ~value,
+#     type = "pie",
+#     marker = list(colors = data$col, line = list(color = "black", width = 1)),
+#     textinfo = "label+percent",
+#     hovertemplate = paste(
+#       "<b>Stock:</b> %{label}<br>",
+#       "<b>Landings:</b> %{value} thousand t<br>",
+#       "<b>Percent:</b> %{percent}<extra></extra>"
+#     ),
+#     domain = list(x = c(0, 1), y = c(0.1, 0.9)) # shrink vertically to avoid cutoffs
+#     # hole = 0.3   # uncomment if you prefer donut style
+#   )
 
-  # Apply layout
-  plot <- plotly::layout(
-    plot,
-    title = list(text = ylab, x = 0.5),
-    showlegend = TRUE,
-    legend = list(title = list(text = fillLegendTitle), font = list(size = 16)),
-    margin = list(t = 40, b = 70, l = 20, r = 20),
-    font = list(size = 14),
-    annotations = list(
-      list(
-        text = source_note,
-        x = 1, y = -0.05,
-        xref = "paper", yref = "paper",
-        showarrow = FALSE,
-        xanchor = "right",
-        yanchor = "top",
-        align = "right",
-        font = list(size = 10, color = "#707070")
-      )
-    )
-  )
+#   # Apply layout
+#   plot <- plotly::layout(
+#     plot,
+#     title = list(text = ylab, x = 0.5),
+#     showlegend = TRUE,
+#     legend = list(title = list(text = fillLegendTitle), font = list(size = 16)),
+#     margin = list(t = 40, b = 70, l = 20, r = 20),
+#     font = list(size = 14),
+#     annotations = list(
+#       list(
+#         text = source_note,
+#         x = 1, y = -0.05,
+#         xref = "paper", yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "right",
+#         yanchor = "top",
+#         align = "right",
+#         font = list(size = 10, color = "#707070")
+#       )
+#     )
+#   )
 
-  return(plot)
-}
+#   return(plot)
+# }
 
 
 #######################################################################

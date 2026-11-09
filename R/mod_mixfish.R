@@ -343,27 +343,26 @@ mod_mixfish_ui <- function(id) {
                   margin-bottom: 8px;
                 ",
 
-                mixfish_about_box(),
+                mixfish_about_box()
 
-                # Plot selector
-                div(
-                  style = "flex: 0 0 300px; width: 300px;",
-
-                  selectizeInput(
-                    inputId = ns("plot_selected_history"),
-                    label = "Select plot:",
-                    choices = c(
-                      "Landings by métier & stock" = "plot3",
-                      "Landings by stock" = "plot4",
-                      "Landings composition by fleet" = "plot5"
-                    ),
-                    selected = "plot3",
-                    multiple = FALSE,
-                    width = "100%"
-                  )
-                )
-
-
+                # Plot selector: removed, History now only shows plot5
+                # ,
+                # div(
+                #   style = "flex: 0 0 300px; width: 300px;",
+                #
+                #   selectizeInput(
+                #     inputId = ns("plot_selected_history"),
+                #     label = "Select plot:",
+                #     choices = c(
+                #       "Landings by métier & stock" = "plot3",
+                #       "Landings by stock" = "plot4",
+                #       "Landings composition by fleet" = "plot5"
+                #     ),
+                #     selected = "plot3",
+                #     multiple = FALSE,
+                #     width = "100%"
+                #   )
+                # )
               ),
 
               uiOutput(ns("filter_ui_history")),
@@ -417,8 +416,8 @@ mod_mixfish_server <- function(
     mixfish_plot_from_url <- function(subtab, plot) {
       mappings <- list(
         history = c(
-          landings_by_metier_stock = "plot3",
-          landings_by_stock = "plot4",
+          # landings_by_metier_stock = "plot3",
+          # landings_by_stock = "plot4",
           landings_composition_by_fleet = "plot5"
         ),
         fleet_activity = c(
@@ -505,13 +504,14 @@ mod_mixfish_server <- function(
           }
 
           if (!is.null(plot_id)) {
-            if (wanted_subtab == "history") {
-              updateSelectizeInput(
-                session,
-                "plot_selected_history",
-                selected = plot_id
-              )
-            }
+            # History has no plot selector anymore: it always shows plot5
+            # if (wanted_subtab == "history") {
+            #   updateSelectizeInput(
+            #     session,
+            #     "plot_selected_history",
+            #     selected = plot_id
+            #   )
+            # }
 
             if (wanted_subtab == "forecast") {
               updateSelectizeInput(
@@ -619,12 +619,18 @@ mod_mixfish_server <- function(
 
     ################################## Plot selection ##################################
 
-    filtered_plot_names <- c("plot1", "plot2", "plot3")
+    filtered_plot_names <- c("plot1", "plot2")
 
+    # History tab: single, fixed plot (landings composition by fleet).
+    # Kept as a reactive so the rest of the code can keep calling plot_name_history().
     plot_name_history <- reactive({
-      req(input$plot_selected_history)
-      input$plot_selected_history
+      "plot5"
     })
+
+    # plot_name_history <- reactive({
+    #   req(input$plot_selected_history)
+    #   input$plot_selected_history
+    # })
 
     plot_name_forecast <- reactive({
       req(input$plot_selected_forecast)
@@ -850,7 +856,7 @@ mod_mixfish_server <- function(
         name,
         "plot1" = data_reactive_all()$catchScenarioStk_filtered,
         "plot2" = data_reactive_all()$EffortByFleetStock_filtered,
-        "plot3" = data_reactive_all()$MetierStockLandings_filtered,
+        # "plot3" = data_reactive_all()$MetierStockLandings_filtered,
         "plot5" = data_reactive_all()$stfMtStkSum_filtered,
         NULL
       )
@@ -936,32 +942,32 @@ mod_mixfish_server <- function(
       df <- filter_source_data_history()
 
       switch(plot_name_history(),
-        "plot3" = div(
-          style = "
-            margin-bottom: 0px;
-            display: flex;
-            gap: 4px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-          ",
-          div(
-            style = "width: 320px;",
-            filter_selectize(
-              input_id = "plot3_stock_filter",
-              label = "Stock:",
-              choices = safe_choices(df, "stock")
-            )
-          ),
-          div(
-            style = "width: 320px;",
-            filter_selectize(
-              input_id = "plot3_metier_filter",
-              label = "Métier:",
-              choices = safe_choices(df, "metier")
-            )
-          )
-        ),
-        "plot4" = NULL,
+        # "plot3" = div(
+        #   style = "
+        #     margin-bottom: 0px;
+        #     display: flex;
+        #     gap: 4px;
+        #     align-items: flex-start;
+        #     flex-wrap: wrap;
+        #   ",
+        #   div(
+        #     style = "width: 320px;",
+        #     filter_selectize(
+        #       input_id = "plot3_stock_filter",
+        #       label = "Stock:",
+        #       choices = safe_choices(df, "stock")
+        #     )
+        #   ),
+        #   div(
+        #     style = "width: 320px;",
+        #     filter_selectize(
+        #       input_id = "plot3_metier_filter",
+        #       label = "Métier:",
+        #       choices = safe_choices(df, "metier")
+        #     )
+        #   )
+        # ),
+        # "plot4" = NULL,
         "plot5" = div(
           style = "
             margin-bottom: 0px;
@@ -1291,9 +1297,9 @@ plot6_data <- reactive({
     current_plot_data_history <- reactiveVal(NULL)
     current_plot_data_forecast <- reactiveVal(NULL)
 
-    filter_touched_history <- reactiveValues(
-      plot3 = FALSE
-    )
+    # filter_touched_history <- reactiveValues(
+    #   plot3 = FALSE
+    # )
 
     filter_touched_forecast <- reactiveValues(
       plot1 = FALSE,
@@ -1334,7 +1340,7 @@ plot6_data <- reactive({
         req(plot_name_history())
         req(region_ready())
 
-        filter_touched_history$plot3 <- FALSE
+        # filter_touched_history$plot3 <- FALSE
 
         if (plot_name_history() %in% filtered_plot_names) {
           reset_current_plot_data_history()
@@ -1371,47 +1377,47 @@ plot6_data <- reactive({
 
     ################################## Filter observers: History ##################################
 
-    observeEvent(
-      {
-        list(
-          input$plot3_stock_filter,
-          input$plot3_metier_filter
-        )
-      },
-      {
-        req(plot_name_history() == "plot3")
-        req(region_ready())
-
-        has_selection <- filter_has_selection(
-          input$plot3_stock_filter,
-          input$plot3_metier_filter
-        )
-
-        if (!has_selection &&
-            !isTRUE(filter_touched_history$plot3)) {
-          return()
-        }
-
-        if (has_selection) {
-          filter_touched_history$plot3 <- TRUE
-        }
-
-        df <- filter_source_data_history()
-
-        df <- df %>%
-          apply_optional_filter(
-            "stock",
-            input$plot3_stock_filter
-          ) %>%
-          apply_optional_filter(
-            "metier",
-            input$plot3_metier_filter
-          )
-
-        current_plot_data_history(df)
-      },
-      ignoreInit = TRUE
-    )
+    # observeEvent(
+    #   {
+    #     list(
+    #       input$plot3_stock_filter,
+    #       input$plot3_metier_filter
+    #     )
+    #   },
+    #   {
+    #     req(plot_name_history() == "plot3")
+    #     req(region_ready())
+    #
+    #     has_selection <- filter_has_selection(
+    #       input$plot3_stock_filter,
+    #       input$plot3_metier_filter
+    #     )
+    #
+    #     if (!has_selection &&
+    #         !isTRUE(filter_touched_history$plot3)) {
+    #       return()
+    #     }
+    #
+    #     if (has_selection) {
+    #       filter_touched_history$plot3 <- TRUE
+    #     }
+    #
+    #     df <- filter_source_data_history()
+    #
+    #     df <- df %>%
+    #       apply_optional_filter(
+    #         "stock",
+    #         input$plot3_stock_filter
+    #       ) %>%
+    #       apply_optional_filter(
+    #         "metier",
+    #         input$plot3_metier_filter
+    #       )
+    #
+    #     current_plot_data_history(df)
+    #   },
+    #   ignoreInit = TRUE
+    # )
 
     # No plot5 observer here.
     # plot5 filters are passed directly to plot_catchComp_plotly()
@@ -1555,22 +1561,22 @@ plot6_data <- reactive({
       req(region_ready())
 
       switch(plot_name_history(),
-        "plot3" = {
-          req(current_plot_data_history())
-
-          plot_landByMetStock_plotly(
-            data = current_plot_data_history(),
-            refTable = data_reactive_all()$refTable_filtered,
-            source_note = data_source_note()
-          )
-        },
-        "plot4" = {
-          plot_landByStock_plotly(
-            data = data_reactive_all()$StockLandings_filtered,
-            refTable = data_reactive_all()$refTable_filtered,
-            source_note = data_source_note()
-          )
-        },
+        # "plot3" = {
+        #   req(current_plot_data_history())
+        #
+        #   plot_landByMetStock_plotly(
+        #     data = current_plot_data_history(),
+        #     refTable = data_reactive_all()$refTable_filtered,
+        #     source_note = data_source_note()
+        #   )
+        # },
+        # "plot4" = {
+        #   plot_landByStock_plotly(
+        #     data = data_reactive_all()$StockLandings_filtered,
+        #     refTable = data_reactive_all()$refTable_filtered,
+        #     source_note = data_source_note()
+        #   )
+        # },
         "plot5" = {
           df <- filter_source_data_history()
 
@@ -1657,15 +1663,15 @@ plot6_data <- reactive({
 
       switch(
         plot_name_history(),
-        "plot3" = {
-          df <- current_plot_data_history()
-          if (is.null(df)) df <- filter_source_data_history()
-          list(data = df, label = "landings_by_metier_stock")
-        },
-        "plot4" = list(
-          data = data_reactive_all()$StockLandings_filtered,
-          label = "landings_by_stock"
-        ),
+        # "plot3" = {
+        #   df <- current_plot_data_history()
+        #   if (is.null(df)) df <- filter_source_data_history()
+        #   list(data = df, label = "landings_by_metier_stock")
+        # },
+        # "plot4" = list(
+        #   data = data_reactive_all()$StockLandings_filtered,
+        #   label = "landings_by_stock"
+        # ),
         "plot5" = list(
           data = filter_source_data_history(),
           label = "landings_composition_by_fleet"
