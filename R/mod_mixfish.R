@@ -99,116 +99,10 @@ mod_mixfish_ui <- function(id) {
     tabsetPanel(
       id = ns("mixfish_tabset"),
 
-      ################################## History ##################################
-
-      tabPanel(
-        title = "History of fleet activity",
-        value = "history",
-
-        layout_sidebar(
-          bg = "white",
-          fg = "black",
-
-          sidebar = sidebar(
-            width = "20vw",
-            bg = "white",
-            fg = "black",
-            open = TRUE,
-            uiOutput(ns("mixfish_text_history"))
-          ),
-
-          card(
-            height = "85vh",
-            full_screen = TRUE,
-            fill = FALSE,
-
-            card_header(
-              div(
-                style = "
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  gap: 12px;
-                  width: 100%;
-                  flex-wrap: wrap;
-                ",
-
-                radioButtons(
-                  ns("subRegion_history"),
-                  "Select case study:",
-                  choices = character(0),
-                  selected = character(0),
-                  inline = TRUE
-                ),
-
-                # download_icon_label(
-                #   text = "Download data",
-                #   outputId = ns("download_mixfish_data"),
-                #   hover_text = "Total mix-fish data (.csv)",
-                #   size = "large"
-                # )
-                download_icon_label(
-                  text = "Download data",
-                  outputId = ns("download_mixfish_data_history"),
-                  hover_text = "Selected plot data (.csv)",
-                  size = "large"
-                )
-              )
-            ),
-
-            card_body(
-              fillable = TRUE,
-              fill = TRUE,
-              class = "p-1",
-
-              div(
-                style = "
-                  display: flex;
-                  gap: 12px;
-                  align-items: flex-start;
-                  width: 100%;
-                  margin-bottom: 8px;
-                ",
-                
-                mixfish_about_box(),
-                
-                # Plot selector
-                div(
-                  style = "flex: 0 0 300px; width: 300px;",
-
-                  selectizeInput(
-                    inputId = ns("plot_selected_history"),
-                    label = "Select plot:",
-                    choices = c(
-                      "Landings by métier & stock" = "plot3",
-                      "Landings by stock" = "plot4",
-                      "Landings composition by fleet" = "plot5",
-                      "Landings alluvial by stock" = "plot6"
-                    ),
-                    selected = "plot3",
-                    multiple = FALSE,
-                    width = "100%"
-                  )
-                )
-
-                
-              ),
-
-              uiOutput(ns("filter_ui_history")),
-
-              withSpinner(
-                plotlyOutput(ns("plot_history"), height = "75vh"),
-                caption = "Getting mix-fish results..."
-              )
-            )
-          )
-        )
-      ),
-
       ################################## Forecast ##################################
 
       tabPanel(
-        title = "Forecast",
+        title = "Mixed fisheries options",
         value = "forecast",
 
         layout_sidebar(
@@ -241,18 +135,12 @@ mod_mixfish_ui <- function(id) {
 
                 radioButtons(
                   ns("subRegion_forecast"),
-                  "Select case study:",
+                  "Select case study area:",
                   choices = character(0),
                   selected = character(0),
                   inline = TRUE
                 ),
 
-                # download_icon_label(
-                #   text = "Download data",
-                #   outputId = ns("download_mixfish_data"),
-                #   hover_text = "Total mix-fish data (.csv)",
-                #   size = "large"
-                # )
                 download_icon_label(
                   text = "Download data",
                   outputId = ns("download_mixfish_data_forecast"),
@@ -309,6 +197,183 @@ mod_mixfish_ui <- function(id) {
             )
           )
         )
+      ),
+
+      ################################## Fleet activity ##################################
+
+      tabPanel(
+        title = "Fleet activity",
+        value = "fleet_activity",
+
+        layout_sidebar(
+          bg = "white",
+          fg = "black",
+
+          sidebar = sidebar(
+            width = "20vw",
+            bg = "white",
+            fg = "black",
+            open = TRUE,
+            uiOutput(ns("mixfish_text_fleet"))
+          ),
+
+          card(
+            height = "85vh",
+            full_screen = TRUE,
+            fill = FALSE,
+
+            card_header(
+              div(
+                style = "
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  gap: 12px;
+                  width: 100%;
+                  flex-wrap: wrap;
+                ",
+
+                radioButtons(
+                  ns("subRegion_fleet"),
+                  "Select case study area:",
+                  choices = character(0),
+                  selected = character(0),
+                  inline = TRUE
+                ),
+
+                download_icon_label(
+                  text = "Download data",
+                  outputId = ns("download_mixfish_data_fleet"),
+                  hover_text = "Selected plot data (.csv)",
+                  size = "large"
+                )
+              )
+            ),
+
+            card_body(
+              fillable = TRUE,
+              fill = TRUE,
+              class = "p-1",
+
+              div(
+                style = "
+                  display: flex;
+                  gap: 12px;
+                  align-items: flex-start;
+                  width: 100%;
+                  margin-bottom: 8px;
+                ",
+
+                mixfish_about_box()
+              ),
+
+              uiOutput(ns("filter_ui_fleet")),
+
+              withSpinner(
+                plotlyOutput(ns("plot_fleet"), height = "75vh"),
+                caption = "Getting mix-fish results..."
+              )
+            )
+          )
+        )
+      ),
+
+      ################################## History ##################################
+
+      tabPanel(
+        title = "History of fleet activity",
+        value = "history",
+
+        layout_sidebar(
+          bg = "white",
+          fg = "black",
+
+          sidebar = sidebar(
+            width = "20vw",
+            bg = "white",
+            fg = "black",
+            open = TRUE,
+            uiOutput(ns("mixfish_text_history"))
+          ),
+
+          card(
+            height = "85vh",
+            full_screen = TRUE,
+            fill = FALSE,
+
+            card_header(
+              div(
+                style = "
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  gap: 12px;
+                  width: 100%;
+                  flex-wrap: wrap;
+                ",
+
+                radioButtons(
+                  ns("subRegion_history"),
+                  "Select case study area:",
+                  choices = character(0),
+                  selected = character(0),
+                  inline = TRUE
+                ),
+
+                download_icon_label(
+                  text = "Download data",
+                  outputId = ns("download_mixfish_data_history"),
+                  hover_text = "Selected plot data (.csv)",
+                  size = "large"
+                )
+              )
+            ),
+
+            card_body(
+              fillable = TRUE,
+              fill = TRUE,
+              class = "p-1",
+
+              div(
+                style = "
+                  display: flex;
+                  gap: 12px;
+                  align-items: flex-start;
+                  width: 100%;
+                  margin-bottom: 8px;
+                ",
+
+                mixfish_about_box()
+
+                # Plot selector: removed, History now only shows plot5
+                # ,
+                # div(
+                #   style = "flex: 0 0 300px; width: 300px;",
+                #
+                #   selectizeInput(
+                #     inputId = ns("plot_selected_history"),
+                #     label = "Select plot:",
+                #     choices = c(
+                #       "Landings by métier & stock" = "plot3",
+                #       "Landings by stock" = "plot4",
+                #       "Landings composition by fleet" = "plot5"
+                #     ),
+                #     selected = "plot3",
+                #     multiple = FALSE,
+                #     width = "100%"
+                #   )
+                # )
+              ),
+
+              uiOutput(ns("filter_ui_history")),
+
+              withSpinner(
+                plotlyOutput(ns("plot_history"), height = "75vh"),
+                caption = "Getting mix-fish results..."
+              )
+            )
+          )
+        )
       )
     )
   )
@@ -321,7 +386,8 @@ mod_mixfish_ui <- function(id) {
 #' \itemize{
 #'   \item ecoregion and case-study selection, shared across both tabs;
 #'   \item independent plot selection per tab (History of fleet activity /
-#'     Forecast);
+#'     Forecast); the Fleet activity tab always shows the alluvial plot
+#'     ("plot6");
 #'   \item plot-specific filter UI, per tab;
 #'   \item data filtering;
 #'   \item plot rendering, per tab.
@@ -350,9 +416,11 @@ mod_mixfish_server <- function(
     mixfish_plot_from_url <- function(subtab, plot) {
       mappings <- list(
         history = c(
-          landings_by_metier_stock = "plot3",
-          landings_by_stock = "plot4",
-          landings_composition_by_fleet = "plot5",
+          # landings_by_metier_stock = "plot3",
+          # landings_by_stock = "plot4",
+          landings_composition_by_fleet = "plot5"
+        ),
+        fleet_activity = c(
           landings_alluvial_by_stock = "plot6"
         ),
         forecast = c(
@@ -391,7 +459,7 @@ mod_mixfish_server <- function(
       wanted_plot <- qs$plot
       wanted_subregion <- qs$subregion
 
-      if (wanted_subtab %in% c("history", "forecast")) {
+      if (wanted_subtab %in% c("history", "forecast", "fleet_activity")) {
         session$onFlushed(function() {
           updateTabsetPanel(
             session,
@@ -416,6 +484,12 @@ mod_mixfish_server <- function(
                 "subRegion_forecast",
                 selected = wanted_subregion
               )
+
+              updateRadioButtons(
+                session,
+                "subRegion_fleet",
+                selected = wanted_subregion
+              )
             }
           }
 
@@ -430,13 +504,14 @@ mod_mixfish_server <- function(
           }
 
           if (!is.null(plot_id)) {
-            if (wanted_subtab == "history") {
-              updateSelectizeInput(
-                session,
-                "plot_selected_history",
-                selected = plot_id
-              )
-            }
+            # History has no plot selector anymore: it always shows plot5
+            # if (wanted_subtab == "history") {
+            #   updateSelectizeInput(
+            #     session,
+            #     "plot_selected_history",
+            #     selected = plot_id
+            #   )
+            # }
 
             if (wanted_subtab == "forecast") {
               updateSelectizeInput(
@@ -477,6 +552,7 @@ mod_mixfish_server <- function(
       date_text <- switch(
         tab,
         "history" = "October, 2025",
+        "fleet_activity" = "October, 2025",
         "forecast" = "October, 2025",
         ""
       )
@@ -535,19 +611,34 @@ mod_mixfish_server <- function(
       mixfish_text_for_plot(plot_name_forecast())
     })
 
+    # The Fleet activity tab has no plot selector: it always shows plot6, so
+    # the sidebar text is looked up with that fixed plot name.
+    output$mixfish_text_fleet <- renderUI({
+      mixfish_text_for_plot(plot_name_fleet)
+    })
+
     ################################## Plot selection ##################################
 
-    filtered_plot_names <- c("plot1", "plot2", "plot3")
+    filtered_plot_names <- c("plot1", "plot2")
 
+    # History tab: single, fixed plot (landings composition by fleet).
+    # Kept as a reactive so the rest of the code can keep calling plot_name_history().
     plot_name_history <- reactive({
-      req(input$plot_selected_history)
-      input$plot_selected_history
+      "plot5"
     })
+
+    # plot_name_history <- reactive({
+    #   req(input$plot_selected_history)
+    #   input$plot_selected_history
+    # })
 
     plot_name_forecast <- reactive({
       req(input$plot_selected_forecast)
       input$plot_selected_forecast
     })
+
+    # Fleet activity tab: single, fixed plot (alluvial)
+    plot_name_fleet <- "plot6"
 
     ################################## Case-study selection ##################################
 
@@ -588,6 +679,11 @@ mod_mixfish_server <- function(
         session, "subRegion_forecast",
         choices = choices, selected = sel, inline = TRUE
       )
+
+      updateRadioButtons(
+        session, "subRegion_fleet",
+        choices = choices, selected = sel, inline = TRUE
+      )
     }, ignoreInit = FALSE)
 
     observeEvent(selected_ecoregion(), {
@@ -601,35 +697,32 @@ mod_mixfish_server <- function(
       }, once = TRUE)
     }, ignoreInit = FALSE)
 
-    observeEvent(input$subRegion_history, {
-      req(input$subRegion_history)
+    # Keep the case-study radio buttons of all tabs in sync
+    subregion_input_ids <- c(
+      "subRegion_history",
+      "subRegion_forecast",
+      "subRegion_fleet"
+    )
 
-      if (!identical(input$subRegion_history, selected_subRegion())) {
-        selected_subRegion(input$subRegion_history)
-        updateRadioButtons(
-          session,
-          "subRegion_forecast",
-          selected = input$subRegion_history
-        )
-      }
+    lapply(subregion_input_ids, function(this_id) {
+      observeEvent(input[[this_id]], {
+        req(input[[this_id]])
 
-      region_ready(TRUE)
-    }, ignoreInit = TRUE)
+        if (!identical(input[[this_id]], selected_subRegion())) {
+          selected_subRegion(input[[this_id]])
 
-    observeEvent(input$subRegion_forecast, {
-      req(input$subRegion_forecast)
+          for (other_id in setdiff(subregion_input_ids, this_id)) {
+            updateRadioButtons(
+              session,
+              other_id,
+              selected = input[[this_id]]
+            )
+          }
+        }
 
-      if (!identical(input$subRegion_forecast, selected_subRegion())) {
-        selected_subRegion(input$subRegion_forecast)
-        updateRadioButtons(
-          session,
-          "subRegion_history",
-          selected = input$subRegion_forecast
-        )
-      }
-
-      region_ready(TRUE)
-    }, ignoreInit = TRUE)
+        region_ready(TRUE)
+      }, ignoreInit = TRUE)
+    })
 
 
 
@@ -763,9 +856,8 @@ mod_mixfish_server <- function(
         name,
         "plot1" = data_reactive_all()$catchScenarioStk_filtered,
         "plot2" = data_reactive_all()$EffortByFleetStock_filtered,
-        "plot3" = data_reactive_all()$MetierStockLandings_filtered,
+        # "plot3" = data_reactive_all()$MetierStockLandings_filtered,
         "plot5" = data_reactive_all()$stfMtStkSum_filtered,
-        "plot6" = data_reactive_all()$stfMtStkSum_filtered,
         NULL
       )
     }
@@ -780,6 +872,11 @@ mod_mixfish_server <- function(
       req(plot_name_forecast())
       req(region_ready())
       filter_source_data_impl(plot_name_forecast())
+    })
+
+    filter_source_data_fleet <- reactive({
+      req(region_ready())
+      data_reactive_all()$stfMtStkSum_filtered
     })
 
     safe_choices <- function(data, var) {
@@ -845,32 +942,32 @@ mod_mixfish_server <- function(
       df <- filter_source_data_history()
 
       switch(plot_name_history(),
-        "plot3" = div(
-          style = "
-            margin-bottom: 0px;
-            display: flex;
-            gap: 4px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-          ",
-          div(
-            style = "width: 320px;",
-            filter_selectize(
-              input_id = "plot3_stock_filter",
-              label = "Fish stock:",
-              choices = safe_choices(df, "stock")
-            )
-          ),
-          div(
-            style = "width: 320px;",
-            filter_selectize(
-              input_id = "plot3_metier_filter",
-              label = "Métier:",
-              choices = safe_choices(df, "metier")
-            )
-          )
-        ),
-        "plot4" = NULL,
+        # "plot3" = div(
+        #   style = "
+        #     margin-bottom: 0px;
+        #     display: flex;
+        #     gap: 4px;
+        #     align-items: flex-start;
+        #     flex-wrap: wrap;
+        #   ",
+        #   div(
+        #     style = "width: 320px;",
+        #     filter_selectize(
+        #       input_id = "plot3_stock_filter",
+        #       label = "Stock:",
+        #       choices = safe_choices(df, "stock")
+        #     )
+        #   ),
+        #   div(
+        #     style = "width: 320px;",
+        #     filter_selectize(
+        #       input_id = "plot3_metier_filter",
+        #       label = "Métier:",
+        #       choices = safe_choices(df, "metier")
+        #     )
+        #   )
+        # ),
+        # "plot4" = NULL,
         "plot5" = div(
           style = "
             margin-bottom: 0px;
@@ -879,27 +976,34 @@ mod_mixfish_server <- function(
             align-items: flex-start;
             flex-wrap: wrap;
           ",
-          div(
-            style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
-            selectizeInput(
-              ns("plot5_selectors"),
-              "X-axis variable(s):",
-              choices = available_comp_vars,
-              selected = "year",
-              multiple = FALSE,
-              width = "100%",
-              options = list(
-                plugins = list("remove_button"),
-                placeholder = "Choose variable(s)"
-              )
-            )
-          ),
+          # X-axis selector removed: the X axis is always Year
+          # div(
+          #   style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
+          #   selectizeInput(
+          #     ns("plot5_selectors"),
+          #     "X-axis variable(s):",
+          #     choices = available_comp_vars,
+          #     selected = "year",
+          #     multiple = FALSE,
+          #     width = "100%",
+          #     options = list(
+          #       plugins = list("remove_button"),
+          #       placeholder = "Choose variable(s)"
+          #     )
+          #   )
+          # ),
           div(
             style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
             selectizeInput(
               ns("plot5_divider"),
               "Divide plot by:",
-              choices = c("None" = "", available_comp_vars),
+              # Year is the fixed X axis, so it is not offered as a divider;
+              # only Country and Fleet are offered (Métier and Area removed)
+              # choices = c("None" = "", available_comp_vars[available_comp_vars != "year"]),
+              choices = c(
+                "None" = "",
+                available_comp_vars[available_comp_vars %in% c("country", "fleet")]
+              ),
               selected = "fleet",
               multiple = FALSE,
               width = "100%"
@@ -944,69 +1048,102 @@ mod_mixfish_server <- function(
               width = "100%"
             )
           )
-        ),
-        "plot6" = div(
-          style = "
-            margin-bottom: 0px;
-            display: flex;
-            gap: 8px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-          ",
-          div(
-            style = "width: 260px;",
-            selectizeInput(
-              ns("plot6_year_filter"),
-              "Year:",
-              choices = safe_choices(df, "year"),
-              selected = tail(safe_choices(df, "year"), 1),
-              multiple = FALSE,
-              width = "100%"
-            )
-          ),
-          div(
-            style = "width: 260px;",
-            selectizeInput(
-              ns("plot6_country_filter"),
-              "Country:",
-              choices = safe_choices(df, "country"),
-              selected = NULL,
-              multiple = TRUE,
-              width = "100%",
-              options = list(
-                plugins = list("remove_button"),
-                placeholder = "All countries"
-              )
+        )
+      )
+    })
+
+    ################################## Dynamic filter UI: Fleet activity ##################################
+
+    output$filter_ui_fleet <- renderUI({
+      req(region_ready())
+
+      df <- filter_source_data_fleet()
+
+      div(
+        style = "
+          margin-bottom: 0px;
+          display: flex;
+          gap: 8px;
+          align-items: flex-start;
+          flex-wrap: wrap;
+        ",
+        # Year filter removed: the plot shows the average of the last
+        # plot6_n_years years available in the data
+        # div(
+        #   style = "width: 260px;",
+        #   selectizeInput(
+        #     ns("plot6_year_filter"),
+        #     "Year:",
+        #     choices = safe_choices(df, "year"),
+        #     selected = tail(safe_choices(df, "year"), 1),
+        #     multiple = FALSE,
+        #     width = "100%"
+        #   )
+        # ),
+        div(
+          style = "width: 260px;",
+          selectizeInput(
+            ns("plot6_stock_filter"),
+            "Stock:",
+            choices = safe_choices(df, "stock"),
+            selected = NULL,
+            multiple = TRUE,
+            width = "100%",
+            options = list(
+              plugins = list("remove_button"),
+              placeholder = "All stocks"
             )
           )
-          # div(
-          #   style = "width: 260px;",
-          #   selectizeInput(
-          #     ns("plot6_scenario_filter"),
-          #     "Scenario:",
-          #     choices = safe_choices(df, "scenario"),
-          #     selected = if ("min" %in% safe_choices(df, "scenario")) {
-          #       "min"
-          #     } else {
-          #       safe_choices(df, "scenario")[1]
-          #     },
-          #     multiple = FALSE,
-          #     width = "100%"
-          #   )
-          # )
+        ),
+        div(
+          style = "width: 260px;",
+          selectizeInput(
+            ns("plot6_country_filter"),
+            "Country:",
+            choices = safe_choices(df, "country"),
+            selected = NULL,
+            multiple = TRUE,
+            width = "100%",
+            options = list(
+              plugins = list("remove_button"),
+              placeholder = "All countries"
+            )
+          )
         )
+        # div(
+        #   style = "width: 260px;",
+        #   selectizeInput(
+        #     ns("plot6_scenario_filter"),
+        #     "Scenario:",
+        #     choices = safe_choices(df, "scenario"),
+        #     selected = if ("min" %in% safe_choices(df, "scenario")) {
+        #       "min"
+        #     } else {
+        #       safe_choices(df, "scenario")[1]
+        #     },
+        #     multiple = FALSE,
+        #     width = "100%"
+        #   )
+        # )
       )
     })
 
     ################################## Plot 5 structural inputs ##################################
 
+    # The X axis of plot5 is fixed to Year (the selector was removed)
     plot5_selectors <- reactive({
       req(plot_name_history() == "plot5")
-      req(input$plot5_selectors)
-      req(length(input$plot5_selectors) > 0)
 
-      input$plot5_selectors
+      "year"
     })
+
+    # plot5_selectors <- reactive({
+    #   req(plot_name_history() == "plot5")
+    #   req(input$plot5_selectors)
+    #   req(length(input$plot5_selectors) > 0)
+    #
+    #   input$plot5_selectors
+    # })
 
     plot5_divider <- reactive({
       req(plot_name_history() == "plot5")
@@ -1042,48 +1179,54 @@ mod_mixfish_server <- function(
 
     ################################## Keep divider different from selectors ##################################
 
-    observeEvent(input$plot5_selectors, {
-      req(plot_name_history() == "plot5")
-
-      selectors <- input$plot5_selectors
-      if (is.null(selectors)) selectors <- character(0)
-
-      divider_choices <- available_comp_vars[
-        !available_comp_vars %in% selectors
-      ]
-
-      current_divider <- isolate(input$plot5_divider)
-
-      if (is.null(current_divider) ||
-          current_divider %in% selectors ||
-          !current_divider %in% divider_choices) {
-        current_divider <- ""
-      }
-
-      updateSelectizeInput(
-        session,
-        "plot5_divider",
-        choices = c("None" = "", divider_choices),
-        selected = current_divider
-      )
-    }, ignoreInit = TRUE)
+    # Not needed anymore: the X axis is fixed to Year and Year is already
+    # excluded from the divider choices.
+    # observeEvent(input$plot5_selectors, {
+    #   req(plot_name_history() == "plot5")
+    #
+    #   selectors <- input$plot5_selectors
+    #   if (is.null(selectors)) selectors <- character(0)
+    #
+    #   divider_choices <- available_comp_vars[
+    #     !available_comp_vars %in% selectors
+    #   ]
+    #
+    #   current_divider <- isolate(input$plot5_divider)
+    #
+    #   if (is.null(current_divider) ||
+    #       current_divider %in% selectors ||
+    #       !current_divider %in% divider_choices) {
+    #     current_divider <- ""
+    #   }
+    #
+    #   updateSelectizeInput(
+    #     session,
+    #     "plot5_divider",
+    #     choices = c("None" = "", divider_choices),
+    #     selected = current_divider
+    #   )
+    # }, ignoreInit = TRUE)
 
 
     ################################## Plot 6 alluvial data ##################################
 
+# Number of most recent years averaged in the alluvial plot
+plot6_n_years <- 3
+
+# Yearly data (last years are selected and averaged later, see
+# average_last_years() / plot_alluvial_plotly(year_var = "year"))
 plot6_data <- reactive({
 
-  req(plot_name_history() == "plot6")
-  req(input$plot6_year_filter)
+  req(region_ready())
 
   # Same source dataset used by Plot 5
-  df <- data_reactive_all()$stfMtStkSum_filtered
+  df <- filter_source_data_fleet()
 
-  # Filter selected year
-  df <- df %>%
-    dplyr::filter(
-      as.character(year) == as.character(input$plot6_year_filter)
-    )
+  # Year filter removed: the plot averages the last plot6_n_years years
+  # df <- df %>%
+  #   dplyr::filter(
+  #     as.character(year) == as.character(input$plot6_year_filter)
+  #   )
 
   # Optional country filter
   if (!is.null(input$plot6_country_filter) &&
@@ -1095,10 +1238,21 @@ plot6_data <- reactive({
       )
   }
 
+  # Optional stock filter
+  if (!is.null(input$plot6_stock_filter) &&
+      length(input$plot6_stock_filter) > 0) {
+
+    df <- df %>%
+      dplyr::filter(
+        as.character(stock) %in% as.character(input$plot6_stock_filter)
+      )
+  }
+
   # Prepare data for Sankey
   # Stock identifiers are already in the correct format
   df <- df %>%
     dplyr::select(
+      year,
       fleet,
       metier,
       stock,
@@ -1144,7 +1298,7 @@ plot6_data <- reactive({
             style = "width: 320px;",
             filter_selectize(
               input_id = "plot1_stock_filter",
-              label = "Fish stock:",
+              label = "Stock:",
               choices = safe_choices(df, "stock")
             )
           )
@@ -1191,9 +1345,9 @@ plot6_data <- reactive({
     current_plot_data_history <- reactiveVal(NULL)
     current_plot_data_forecast <- reactiveVal(NULL)
 
-    filter_touched_history <- reactiveValues(
-      plot3 = FALSE
-    )
+    # filter_touched_history <- reactiveValues(
+    #   plot3 = FALSE
+    # )
 
     filter_touched_forecast <- reactiveValues(
       plot1 = FALSE,
@@ -1234,7 +1388,7 @@ plot6_data <- reactive({
         req(plot_name_history())
         req(region_ready())
 
-        filter_touched_history$plot3 <- FALSE
+        # filter_touched_history$plot3 <- FALSE
 
         if (plot_name_history() %in% filtered_plot_names) {
           reset_current_plot_data_history()
@@ -1271,47 +1425,47 @@ plot6_data <- reactive({
 
     ################################## Filter observers: History ##################################
 
-    observeEvent(
-      {
-        list(
-          input$plot3_stock_filter,
-          input$plot3_metier_filter
-        )
-      },
-      {
-        req(plot_name_history() == "plot3")
-        req(region_ready())
-
-        has_selection <- filter_has_selection(
-          input$plot3_stock_filter,
-          input$plot3_metier_filter
-        )
-
-        if (!has_selection &&
-            !isTRUE(filter_touched_history$plot3)) {
-          return()
-        }
-
-        if (has_selection) {
-          filter_touched_history$plot3 <- TRUE
-        }
-
-        df <- filter_source_data_history()
-
-        df <- df %>%
-          apply_optional_filter(
-            "stock",
-            input$plot3_stock_filter
-          ) %>%
-          apply_optional_filter(
-            "metier",
-            input$plot3_metier_filter
-          )
-
-        current_plot_data_history(df)
-      },
-      ignoreInit = TRUE
-    )
+    # observeEvent(
+    #   {
+    #     list(
+    #       input$plot3_stock_filter,
+    #       input$plot3_metier_filter
+    #     )
+    #   },
+    #   {
+    #     req(plot_name_history() == "plot3")
+    #     req(region_ready())
+    #
+    #     has_selection <- filter_has_selection(
+    #       input$plot3_stock_filter,
+    #       input$plot3_metier_filter
+    #     )
+    #
+    #     if (!has_selection &&
+    #         !isTRUE(filter_touched_history$plot3)) {
+    #       return()
+    #     }
+    #
+    #     if (has_selection) {
+    #       filter_touched_history$plot3 <- TRUE
+    #     }
+    #
+    #     df <- filter_source_data_history()
+    #
+    #     df <- df %>%
+    #       apply_optional_filter(
+    #         "stock",
+    #         input$plot3_stock_filter
+    #       ) %>%
+    #       apply_optional_filter(
+    #         "metier",
+    #         input$plot3_metier_filter
+    #       )
+    #
+    #     current_plot_data_history(df)
+    #   },
+    #   ignoreInit = TRUE
+    # )
 
     # No plot5 observer here.
     # plot5 filters are passed directly to plot_catchComp_plotly()
@@ -1455,22 +1609,22 @@ plot6_data <- reactive({
       req(region_ready())
 
       switch(plot_name_history(),
-        "plot3" = {
-          req(current_plot_data_history())
-
-          plot_landByMetStock_plotly(
-            data = current_plot_data_history(),
-            refTable = data_reactive_all()$refTable_filtered,
-            source_note = data_source_note()
-          )
-        },
-        "plot4" = {
-          plot_landByStock_plotly(
-            data = data_reactive_all()$StockLandings_filtered,
-            refTable = data_reactive_all()$refTable_filtered,
-            source_note = data_source_note()
-          )
-        },
+        # "plot3" = {
+        #   req(current_plot_data_history())
+        #
+        #   plot_landByMetStock_plotly(
+        #     data = current_plot_data_history(),
+        #     refTable = data_reactive_all()$refTable_filtered,
+        #     source_note = data_source_note()
+        #   )
+        # },
+        # "plot4" = {
+        #   plot_landByStock_plotly(
+        #     data = data_reactive_all()$StockLandings_filtered,
+        #     refTable = data_reactive_all()$refTable_filtered,
+        #     source_note = data_source_note()
+        #   )
+        # },
         "plot5" = {
           df <- filter_source_data_history()
 
@@ -1488,22 +1642,29 @@ plot6_data <- reactive({
              else isTRUE(input$plot5_relative),
             source_note = data_source_note()
           )
-        },
-        "plot6" = {
-          df <- plot6_data()
-
-          plot_alluvial_plotly(
-            data = df,
-            refTable = data_reactive_all()$refTable_filtered,
-            group_vars = c("fleet", "metier", "stock"),
-            fill_var = "stock",
-            group_labs = c("Fleet", "Métier", "Stock"),
-            ylab = "Landings (tonnes)",
-            fillLegendTitle = "Stock",
-            addLegend = TRUE,
-            source_note = data_source_note()  
-          )
         }
+      )
+    })
+
+    ################################## Plot rendering: Fleet activity ##################################
+
+    output$plot_fleet <- renderPlotly({
+      req(region_ready())
+
+      df <- plot6_data()
+
+      plot_alluvial_plotly(
+        data = df,
+        refTable = data_reactive_all()$refTable_filtered,
+        group_vars = c("fleet", "metier", "stock"),
+        fill_var = "stock",
+        group_labs = c("Fleet", "Métier", "Stock"),
+        ylab = paste0("Average landings, last ", plot6_n_years, " years (tonnes)"),
+        fillLegendTitle = "Stock",
+        addLegend = TRUE,
+        source_note = data_source_note(),
+        year_var = "year",
+        n_years = plot6_n_years
       )
     })
 
@@ -1552,24 +1713,37 @@ plot6_data <- reactive({
 
       switch(
         plot_name_history(),
-        "plot3" = {
-          df <- current_plot_data_history()
-          if (is.null(df)) df <- filter_source_data_history()
-          list(data = df, label = "landings_by_metier_stock")
-        },
-        "plot4" = list(
-          data = data_reactive_all()$StockLandings_filtered,
-          label = "landings_by_stock"
-        ),
+        # "plot3" = {
+        #   df <- current_plot_data_history()
+        #   if (is.null(df)) df <- filter_source_data_history()
+        #   list(data = df, label = "landings_by_metier_stock")
+        # },
+        # "plot4" = list(
+        #   data = data_reactive_all()$StockLandings_filtered,
+        #   label = "landings_by_stock"
+        # ),
         "plot5" = list(
           data = filter_source_data_history(),
           label = "landings_composition_by_fleet"
         ),
-        "plot6" = list(
-          data = plot6_data(),
-          label = "landings_alluvial_by_stock"
-        ),
         list(data = NULL, label = "mixfish_history")
+      )
+    })
+
+    # Fleet activity tab: always the alluvial plot data.
+    export_data_fleet <- reactive({
+      req(region_ready())
+
+      list(
+        # Same averaged values that are shown in the plot
+        data = average_last_years(
+          data = plot6_data(),
+          group_vars = c("fleet", "metier", "stock"),
+          year_var = "year",
+          value_var = "value",
+          n_years = plot6_n_years
+        ),
+        label = "landings_alluvial_by_stock"
       )
     })
 
@@ -1637,6 +1811,18 @@ plot6_data <- reactive({
       },
       content = function(file) {
         build_mixfish_bundle(file, export_data_history())
+      },
+      contentType = "application/zip"
+    )
+
+    output$download_mixfish_data_fleet <- downloadHandler(
+      filename = function() {
+        acronym <- get_ecoregion_acronym(selected_ecoregion())
+        date_tag <- format(Sys.Date(), "%d-%b-%y")
+        paste0("mixfish_fleet_activity_", export_data_fleet()$label, "_", acronym, "_", date_tag, ".zip")
+      },
+      content = function(file) {
+        build_mixfish_bundle(file, export_data_fleet())
       },
       contentType = "application/zip"
     )

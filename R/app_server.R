@@ -147,6 +147,12 @@ app_server <- function(input, output, session) {
         "mixfish_1-subRegion_forecast",
         selected = d$subregion
       )
+
+      updateRadioButtons(
+        session,
+        "mixfish_1-subRegion_fleet",
+        selected = d$subregion
+      )
     }
 
 
@@ -158,21 +164,22 @@ app_server <- function(input, output, session) {
       plot_id <- switch(d$plot,
         scenarios = "plot1",
         effort_by_fleet_stock = "plot2",
-        landings_by_metier_stock = "plot3",
-        landings_by_stock = "plot4",
+        # landings_by_metier_stock = "plot3",
+        # landings_by_stock = "plot4",
         landings_composition_by_fleet = "plot5",
         landings_alluvial_by_stock = "plot6",
         NULL
       )
 
       if (!is.null(plot_id)) {
-        if (identical(d$subtab, "history")) {
-          updateSelectizeInput(
-            session,
-            "mixfish_1-plot_selected_history",
-            selected = plot_id
-          )
-        }
+        # History has no plot selector anymore: it always shows plot5
+        # if (identical(d$subtab, "history")) {
+        #   updateSelectizeInput(
+        #     session,
+        #     "mixfish_1-plot_selected_history",
+        #     selected = plot_id
+        #   )
+        # }
 
         if (identical(d$subtab, "forecast")) {
           updateSelectizeInput(
@@ -322,6 +329,9 @@ app_server <- function(input, output, session) {
   } else if (identical(subtab, "forecast")) {
     input[["mixfish_1-subRegion_forecast"]] %|?% ""
 
+  } else if (identical(subtab, "fleet_activity")) {
+    input[["mixfish_1-subRegion_fleet"]] %|?% ""
+
   } else {
     ""
   }
@@ -330,9 +340,14 @@ app_server <- function(input, output, session) {
   get_current_mixfish_plot <- function(input, subtab) {
 
   plot_id <- if (identical(subtab, "history")) {
-    input[["mixfish_1-plot_selected_history"]] %|?% ""
+    # History has no plot selector anymore: it always shows plot5
+    "plot5"
+    # input[["mixfish_1-plot_selected_history"]] %|?% ""
   } else if (identical(subtab, "forecast")) {
     input[["mixfish_1-plot_selected_forecast"]] %|?% ""
+  } else if (identical(subtab, "fleet_activity")) {
+    # Fleet activity has no plot selector: it always shows the alluvial plot
+    "plot6"
   } else {
     ""
   }
@@ -341,8 +356,8 @@ app_server <- function(input, output, session) {
     plot_id,
     plot1 = "scenarios",
     plot2 = "effort_by_fleet_stock",
-    plot3 = "landings_by_metier_stock",
-    plot4 = "landings_by_stock",
+    # plot3 = "landings_by_metier_stock",
+    # plot4 = "landings_by_stock",
     plot5 = "landings_composition_by_fleet",
     plot6 = "landings_alluvial_by_stock",
     ""

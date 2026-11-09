@@ -1437,143 +1437,143 @@ for (stock in stocks) {
 
 #############################################################################
 
-plot_landByMetStock_plotly <- function(data, refTable,
-                                       xlab = "Métiers", ylab = "Landings (Thousand tonnes)",
-                                       fillLegendTitle = "Stock", source_note = NULL) {
-  if (is.null(data)) {
-    stop("object, data, does not exist")
-  }
+# plot_landByMetStock_plotly <- function(data, refTable,
+#                                        xlab = "Métiers", ylab = "Landings (Thousand tonnes)",
+#                                        fillLegendTitle = "Stock", source_note = NULL) {
+#   if (is.null(data)) {
+#     stop("object, data, does not exist")
+#   }
 
-  if (!all(c("metier", "stock", "value") %in% colnames(data))) {
-    stop("Column names not as expected")
-  }
+#   if (!all(c("metier", "stock", "value") %in% colnames(data))) {
+#     stop("Column names not as expected")
+#   }
 
-  # Merge color reference
-  data <- dplyr::left_join(data, refTable, by = "stock")
-  
-  # Order stocks by 'order' column in refTable and convert value to '000 t
-  data <- dplyr::mutate(
-    data,
-    stock = factor(stock, levels = refTable$stock[order(refTable$order, decreasing = TRUE)]),
-    value = value / 1000
-  )
-  data$metier <- as.factor(data$metier)
+#   # Merge color reference
+#   data <- dplyr::left_join(data, refTable, by = "stock")
+#   
+#   # Order stocks by 'order' column in refTable and convert value to '000 t
+#   data <- dplyr::mutate(
+#     data,
+#     stock = factor(stock, levels = refTable$stock[order(refTable$order, decreasing = TRUE)]),
+#     value = value / 1000
+#   )
+#   data$metier <- as.factor(data$metier)
 
-  # Estimate vertical space needed for the 45-degree rotated métier labels,
-  # since their length varies by case study and plotly does not auto-size margins.
-  max_label_nchar <- max(nchar(as.character(levels(data$metier))), 1, na.rm = TRUE)
-  tick_space <- min(250, max(60, max_label_nchar * 5))
-  bottom_margin <- tick_space + 90
+#   # Estimate vertical space needed for the 45-degree rotated métier labels,
+#   # since their length varies by case study and plotly does not auto-size margins.
+#   max_label_nchar <- max(nchar(as.character(levels(data$metier))), 1, na.rm = TRUE)
+#   tick_space <- min(250, max(60, max_label_nchar * 5))
+#   bottom_margin <- tick_space + 90
 
-  # Initialize plotly object
-  plot <- plotly::plot_ly()
+#   # Initialize plotly object
+#   plot <- plotly::plot_ly()
 
-  # Add a trace per stock
-  for (stk in levels(data$stock)) {
-    stk_data <- dplyr::filter(data, stock == stk)
-    stk_col <- unique(stk_data$col)
+#   # Add a trace per stock
+#   for (stk in levels(data$stock)) {
+#     stk_data <- dplyr::filter(data, stock == stk)
+#     stk_col <- unique(stk_data$col)
 
-    plot <- plotly::add_trace(
-      plot,
-      data = stk_data,
-      x = ~metier,
-      y = ~value,
-      type = 'bar',
-      name = stk,
-      marker = list(color = stk_col),
-      hovertemplate = paste(
-        "<b>Metier:</b> %{x}<br>",
-        "<b>Stock:</b> ", stk, "<br>",
-        "<b>Landings:</b> %{y:.2f} thousand t<br><extra></extra>"
-      )
-    )
-  }
+#     plot <- plotly::add_trace(
+#       plot,
+#       data = stk_data,
+#       x = ~metier,
+#       y = ~value,
+#       type = 'bar',
+#       name = stk,
+#       marker = list(color = stk_col),
+#       hovertemplate = paste(
+#         "<b>Metier:</b> %{x}<br>",
+#         "<b>Stock:</b> ", stk, "<br>",
+#         "<b>Landings:</b> %{y:.2f} thousand t<br><extra></extra>"
+#       )
+#     )
+#   }
 
-  # Apply layout
-  plot <- plotly::layout(
-    plot,
-    barmode = 'stack',
-    xaxis = list(title = xlab, tickangle = 45),
-    yaxis = list(title = ylab),
-    legend = list(title = list(text = fillLegendTitle)),
-    margin = list(b = bottom_margin),
-    font = list(size = 16),
-    annotations = list(
-      list(
-        text = source_note,
-        x = 1, y = 0,
-        xref = "paper", yref = "paper",
-        showarrow = FALSE,
-        xanchor = "right",
-        yanchor = "top",
-        yshift = -(tick_space + 45),
-        align = "right",
-        font = list(size = 10, color = "#707070")
-      )
-    )
-  )
+#   # Apply layout
+#   plot <- plotly::layout(
+#     plot,
+#     barmode = 'stack',
+#     xaxis = list(title = xlab, tickangle = 45),
+#     yaxis = list(title = ylab),
+#     legend = list(title = list(text = fillLegendTitle)),
+#     margin = list(b = bottom_margin),
+#     font = list(size = 16),
+#     annotations = list(
+#       list(
+#         text = source_note,
+#         x = 1, y = 0,
+#         xref = "paper", yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "right",
+#         yanchor = "top",
+#         yshift = -(tick_space + 45),
+#         align = "right",
+#         font = list(size = 10, color = "#707070")
+#       )
+#     )
+#   )
 
-  return(plot)
-}
+#   return(plot)
+# }
 
 
 #######################################################################
-plot_landByStock_plotly <- function(data, refTable,
-                                    ylab = "Landings (Thousand tonnes)",
-                                    fillLegendTitle = "Stock", source_note = NULL) {
-  if (is.null(data)) stop("object, data, does not exist")
-  if (!all(c("stock", "value") %in% colnames(data))) {
-    stop("Column names not as expected")
-  }
+# plot_landByStock_plotly <- function(data, refTable,
+#                                     ylab = "Landings (Thousand tonnes)",
+#                                     fillLegendTitle = "Stock", source_note = NULL) {
+#   if (is.null(data)) stop("object, data, does not exist")
+#   if (!all(c("stock", "value") %in% colnames(data))) {
+#     stop("Column names not as expected")
+#   }
 
-  # Merge color and ordering info
-  data <- dplyr::left_join(data, refTable, by = "stock")
-  data$stock <- factor(data$stock, levels = refTable$stock[order(refTable$order)])
-  data$value <- round(data$value / 1000, 1) # Convert to '000 t
-  data <- droplevels(data)
-  data <- data[order(data$stock), ]
+#   # Merge color and ordering info
+#   data <- dplyr::left_join(data, refTable, by = "stock")
+#   data$stock <- factor(data$stock, levels = refTable$stock[order(refTable$order)])
+#   data$value <- round(data$value / 1000, 1) # Convert to '000 t
+#   data <- droplevels(data)
+#   data <- data[order(data$stock), ]
 
-  # Create the pie chart
-  plot <- plotly::plot_ly(
-    data = data,
-    labels = ~stock,
-    values = ~value,
-    type = "pie",
-    marker = list(colors = data$col, line = list(color = "black", width = 1)),
-    textinfo = "label+percent",
-    hovertemplate = paste(
-      "<b>Stock:</b> %{label}<br>",
-      "<b>Landings:</b> %{value} thousand t<br>",
-      "<b>Percent:</b> %{percent}<extra></extra>"
-    ),
-    domain = list(x = c(0, 1), y = c(0.1, 0.9)) # shrink vertically to avoid cutoffs
-    # hole = 0.3   # uncomment if you prefer donut style
-  )
+#   # Create the pie chart
+#   plot <- plotly::plot_ly(
+#     data = data,
+#     labels = ~stock,
+#     values = ~value,
+#     type = "pie",
+#     marker = list(colors = data$col, line = list(color = "black", width = 1)),
+#     textinfo = "label+percent",
+#     hovertemplate = paste(
+#       "<b>Stock:</b> %{label}<br>",
+#       "<b>Landings:</b> %{value} thousand t<br>",
+#       "<b>Percent:</b> %{percent}<extra></extra>"
+#     ),
+#     domain = list(x = c(0, 1), y = c(0.1, 0.9)) # shrink vertically to avoid cutoffs
+#     # hole = 0.3   # uncomment if you prefer donut style
+#   )
 
-  # Apply layout
-  plot <- plotly::layout(
-    plot,
-    title = list(text = ylab, x = 0.5),
-    showlegend = TRUE,
-    legend = list(title = list(text = fillLegendTitle), font = list(size = 16)),
-    margin = list(t = 40, b = 70, l = 20, r = 20),
-    font = list(size = 14),
-    annotations = list(
-      list(
-        text = source_note,
-        x = 1, y = -0.05,
-        xref = "paper", yref = "paper",
-        showarrow = FALSE,
-        xanchor = "right",
-        yanchor = "top",
-        align = "right",
-        font = list(size = 10, color = "#707070")
-      )
-    )
-  )
+#   # Apply layout
+#   plot <- plotly::layout(
+#     plot,
+#     title = list(text = ylab, x = 0.5),
+#     showlegend = TRUE,
+#     legend = list(title = list(text = fillLegendTitle), font = list(size = 16)),
+#     margin = list(t = 40, b = 70, l = 20, r = 20),
+#     font = list(size = 14),
+#     annotations = list(
+#       list(
+#         text = source_note,
+#         x = 1, y = -0.05,
+#         xref = "paper", yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "right",
+#         yanchor = "top",
+#         align = "right",
+#         font = list(size = 10, color = "#707070")
+#       )
+#     )
+#   )
 
-  return(plot)
-}
+#   return(plot)
+# }
 
 
 #######################################################################
@@ -3108,6 +3108,73 @@ plot_catchComp_plotly_v3 <- function(
 
 
 
+#' Average landings over the last years available in the data
+#'
+#' Keeps the last `n_years` distinct values of `year_var`, sums `value_var`
+#' within each year for every combination of `group_vars`, and then averages
+#' those yearly totals across the selected years. A combination with no
+#' records in one of the selected years counts as 0 for that year.
+#'
+#' @param data data.frame containing `group_vars`, `year_var` and `value_var`.
+#' @param group_vars character vector of grouping variables to keep.
+#' @param year_var character. Name of the year column.
+#' @param value_var character. Name of the value column.
+#' @param n_years integer. Number of most recent years to average over.
+#'
+#' @return data.frame with `group_vars`, the averaged `value_var`, and an
+#'   attribute `"years"` listing the years that were used.
+#'
+#' @noRd
+average_last_years <- function(
+    data,
+    group_vars,
+    year_var = "year",
+    value_var = "value",
+    n_years = 3) {
+
+  missing_vars <- setdiff(c(group_vars, year_var, value_var), names(data))
+
+  if (length(missing_vars) > 0) {
+    stop(
+      paste(
+        "Missing required variables in data:",
+        paste(missing_vars, collapse = ", ")
+      )
+    )
+  }
+
+  yrs <- unique(data[[year_var]])
+  yrs <- yrs[!is.na(yrs)]
+
+  # Sort numerically when the years can be read as numbers
+  yrs_num <- suppressWarnings(as.numeric(as.character(yrs)))
+  yrs <- if (!anyNA(yrs_num)) yrs[order(yrs_num)] else sort(yrs)
+
+  yrs <- utils::tail(yrs, n_years)
+
+  dat <- data[data[[year_var]] %in% yrs, , drop = FALSE]
+  dat[[value_var]] <- as.numeric(dat[[value_var]])
+
+  out <- dat %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(c(group_vars, year_var)))) %>%
+    dplyr::summarise(
+      .total = sum(.data[[value_var]], na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) %>%
+    dplyr::summarise(
+      .avg = sum(.total, na.rm = TRUE) / length(yrs),
+      .groups = "drop"
+    )
+
+  names(out)[names(out) == ".avg"] <- value_var
+
+  attr(out, "years") <- yrs
+
+  out
+}
+
+
 #' Interactive alluvial plot
 #'
 #' @param data data.frame containing grouping variables and a `value` column.
@@ -3128,6 +3195,11 @@ plot_catchComp_plotly_v3 <- function(
 #' @param addLegend logical. Add colour legend.
 #' @param plotTitle plot title.
 #' @param source_note optional data-source citation shown bottom-right.
+#' @param year_var optional character. Name of a year column in `data`. When
+#'   given, the plot shows the average of the last `n_years` years available
+#'   in `data` (see [average_last_years()]) instead of the values as supplied.
+#' @param n_years integer. Number of most recent years to average over when
+#'   `year_var` is given.
 #'
 #' @return plotly object
 #'
@@ -3149,18 +3221,34 @@ plot_alluvial_plotly <- function(
     fillLegendTitle = "Stock",
     addLegend = TRUE,
     plotTitle = NULL,
-    source_note = NULL) {
+    source_note = NULL,
+    year_var = NULL,
+    n_years = 3) {
 
   # ------------------------------------------------------------------
   # Checks
   # ------------------------------------------------------------------
-  
+
   if (length(fill_var) != 1) {
     stop("fill_var must contain exactly one variable name")
   }
 
   if (!fill_var %in% names(refTable)) {
     stop("fill_var must be variable in refTable")
+  }
+
+  # ------------------------------------------------------------------
+  # Average over the last n_years available in the data
+  # ------------------------------------------------------------------
+
+  if (!is.null(year_var)) {
+    data <- average_last_years(
+      data = data,
+      group_vars = unique(c(group_vars, fill_var)),
+      year_var = year_var,
+      value_var = "value",
+      n_years = n_years
+    )
   }
 
 required_vars <- c(group_vars, fill_var, "value")
@@ -3409,13 +3497,36 @@ links <- dplyr::bind_rows(link_list)
   # Hover text
   # ------------------------------------------------------------------
 
+  # Axis names shown in the hover use group_labs (e.g. "Stock", not "stock")
+  axis_lab <- function(var) group_labs[match(var, group_vars)]
+
+  # The fill variable only gets its own line when it is not already one of
+  # the axes shown above (otherwise e.g. the stock would appear twice)
+  fill_in_axes <- fill_var %in% group_vars
+
+  # links$hover <- paste0(
+  #   links$source_var, ": ", links$source_label,
+  #   "<br>",
+  #   links$target_var, ": ", links$target_label,
+  #   "<br>",
+  #   fillLegendTitle, ": ", links$fill_value,
+  #   "<br>",
+  #   ylab, ": ", format(
+  #     round(links$value, 1),
+  #     big.mark = ",",
+  #     trim = TRUE
+  #   )
+  # )
+
   links$hover <- paste0(
-    links$source_var, ": ", links$source_label,
+    axis_lab(links$source_var), ": ", links$source_label,
     "<br>",
-    links$target_var, ": ", links$target_label,
+    axis_lab(links$target_var), ": ", links$target_label,
     "<br>",
-    fillLegendTitle, ": ", links$fill_value,
-    "<br>",
+    if (fill_in_axes) "" else paste0(
+      fillLegendTitle, ": ", links$fill_value,
+      "<br>"
+    ),
     ylab, ": ", format(
       round(links$value, 1),
       big.mark = ",",
@@ -3424,7 +3535,7 @@ links <- dplyr::bind_rows(link_list)
   )
 
   nodes$hover <- paste0(
-    nodes$variable, ": ", nodes$label,
+    axis_lab(nodes$variable), ": ", nodes$label,
     "<br>",
     ylab, ": ", format(
       round(nodes$total, 1),
@@ -3621,6 +3732,83 @@ links <- dplyr::bind_rows(link_list)
         b = 140
       )
     )
+
+
+  # ------------------------------------------------------------------
+  # Add hover highlighting for stock-fleet-metier connections
+  # ------------------------------------------------------------------
+
+  p <- p %>%
+    htmlwidgets::onRender("
+      function(el, x) {
+        var data = x.data;
+        var baseOpacity = 0.55;
+
+        // Build a map of node index to connected link indices
+        var nodeToLinks = {};
+        if (data[0] && data[0].source) {
+          var links = data[0];
+          for (var i = 0; i < links.source.length; i++) {
+            var source = links.source[i];
+            var target = links.target[i];
+
+            if (!nodeToLinks[source]) nodeToLinks[source] = [];
+            if (!nodeToLinks[target]) nodeToLinks[target] = [];
+
+            nodeToLinks[source].push(i);
+            nodeToLinks[target].push(i);
+          }
+        }
+
+        el.on('plotly_hover', function(data) {
+          if (!data.points || data.points.length === 0) return;
+
+          var point = data.points[0];
+          var hasSource = typeof point.source !== 'undefined';
+          var hasTarget = typeof point.target !== 'undefined';
+          var opacities = [];
+
+          // If hovering over a link
+          if (hasSource && hasTarget) {
+            var pointNumber = data.points[0].pointNumber;
+
+            // Dim all links except the hovered one
+            for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
+              opacities.push(i === pointNumber ? 1 : 0.15);
+            }
+            Plotly.restyle(el, {'line.opacity': opacities}, 0);
+          }
+          // If hovering over a node
+          else if (data.points[0].pointNumber !== undefined && !hasSource) {
+            var nodeIndex = data.points[0].pointNumber;
+            var connectedLinks = nodeToLinks[nodeIndex] || [];
+
+            // Set opacities: highlight connected links, dim others
+            for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
+              opacities.push(connectedLinks.indexOf(i) !== -1 ? 1 : 0.15);
+            }
+            Plotly.restyle(el, {'line.opacity': opacities}, 0);
+
+            // # COMMENTED OUT - Original node-only highlighting approach
+            // # var nodeIndex = data.points[0].pointNumber;
+            // # Highlight only the node itself without showing connections
+          }
+        });
+
+        el.on('plotly_unhover', function(data) {
+          // Restore original opacities
+          var opacities = [];
+          for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
+            opacities.push(baseOpacity);
+          }
+          Plotly.restyle(el, {'line.opacity': opacities}, 0);
+        });
+      }
+    ")
+
+  # # COMMENTED OUT - Previous approach without hover highlighting
+  # # This approach did not highlight connections on hover
+  # # To restore, comment out the onRender block above and uncomment this section
 
 
   return(p)
