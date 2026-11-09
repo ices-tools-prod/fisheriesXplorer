@@ -976,27 +976,29 @@ mod_mixfish_server <- function(
             align-items: flex-start;
             flex-wrap: wrap;
           ",
-          div(
-            style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
-            selectizeInput(
-              ns("plot5_selectors"),
-              "X-axis variable(s):",
-              choices = available_comp_vars,
-              selected = "year",
-              multiple = FALSE,
-              width = "100%",
-              options = list(
-                plugins = list("remove_button"),
-                placeholder = "Choose variable(s)"
-              )
-            )
-          ),
+          # X-axis selector removed: the X axis is always Year
+          # div(
+          #   style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
+          #   selectizeInput(
+          #     ns("plot5_selectors"),
+          #     "X-axis variable(s):",
+          #     choices = available_comp_vars,
+          #     selected = "year",
+          #     multiple = FALSE,
+          #     width = "100%",
+          #     options = list(
+          #       plugins = list("remove_button"),
+          #       placeholder = "Choose variable(s)"
+          #     )
+          #   )
+          # ),
           div(
             style = "flex: 1 1 150px; min-width: 150px; max-width: 260px;",
             selectizeInput(
               ns("plot5_divider"),
               "Divide plot by:",
-              choices = c("None" = "", available_comp_vars),
+              # Year is the fixed X axis, so it is not offered as a divider
+              choices = c("None" = "", available_comp_vars[available_comp_vars != "year"]),
               selected = "fleet",
               multiple = FALSE,
               width = "100%"
@@ -1106,13 +1108,20 @@ mod_mixfish_server <- function(
 
     ################################## Plot 5 structural inputs ##################################
 
+    # The X axis of plot5 is fixed to Year (the selector was removed)
     plot5_selectors <- reactive({
       req(plot_name_history() == "plot5")
-      req(input$plot5_selectors)
-      req(length(input$plot5_selectors) > 0)
 
-      input$plot5_selectors
+      "year"
     })
+
+    # plot5_selectors <- reactive({
+    #   req(plot_name_history() == "plot5")
+    #   req(input$plot5_selectors)
+    #   req(length(input$plot5_selectors) > 0)
+    #
+    #   input$plot5_selectors
+    # })
 
     plot5_divider <- reactive({
       req(plot_name_history() == "plot5")
@@ -1148,31 +1157,33 @@ mod_mixfish_server <- function(
 
     ################################## Keep divider different from selectors ##################################
 
-    observeEvent(input$plot5_selectors, {
-      req(plot_name_history() == "plot5")
-
-      selectors <- input$plot5_selectors
-      if (is.null(selectors)) selectors <- character(0)
-
-      divider_choices <- available_comp_vars[
-        !available_comp_vars %in% selectors
-      ]
-
-      current_divider <- isolate(input$plot5_divider)
-
-      if (is.null(current_divider) ||
-          current_divider %in% selectors ||
-          !current_divider %in% divider_choices) {
-        current_divider <- ""
-      }
-
-      updateSelectizeInput(
-        session,
-        "plot5_divider",
-        choices = c("None" = "", divider_choices),
-        selected = current_divider
-      )
-    }, ignoreInit = TRUE)
+    # Not needed anymore: the X axis is fixed to Year and Year is already
+    # excluded from the divider choices.
+    # observeEvent(input$plot5_selectors, {
+    #   req(plot_name_history() == "plot5")
+    #
+    #   selectors <- input$plot5_selectors
+    #   if (is.null(selectors)) selectors <- character(0)
+    #
+    #   divider_choices <- available_comp_vars[
+    #     !available_comp_vars %in% selectors
+    #   ]
+    #
+    #   current_divider <- isolate(input$plot5_divider)
+    #
+    #   if (is.null(current_divider) ||
+    #       current_divider %in% selectors ||
+    #       !current_divider %in% divider_choices) {
+    #     current_divider <- ""
+    #   }
+    #
+    #   updateSelectizeInput(
+    #     session,
+    #     "plot5_divider",
+    #     choices = c("None" = "", divider_choices),
+    #     selected = current_divider
+    #   )
+    # }, ignoreInit = TRUE)
 
 
     ################################## Plot 6 alluvial data ##################################
