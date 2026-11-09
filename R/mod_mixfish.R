@@ -997,8 +997,13 @@ mod_mixfish_server <- function(
             selectizeInput(
               ns("plot5_divider"),
               "Divide plot by:",
-              # Year is the fixed X axis, so it is not offered as a divider
-              choices = c("None" = "", available_comp_vars[available_comp_vars != "year"]),
+              # Year is the fixed X axis, so it is not offered as a divider;
+              # only Country and Fleet are offered (Métier and Area removed)
+              # choices = c("None" = "", available_comp_vars[available_comp_vars != "year"]),
+              choices = c(
+                "None" = "",
+                available_comp_vars[available_comp_vars %in% c("country", "fleet")]
+              ),
               selected = "fleet",
               multiple = FALSE,
               width = "100%"
