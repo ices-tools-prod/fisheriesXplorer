@@ -135,7 +135,7 @@ mod_mixfish_ui <- function(id) {
 
                 radioButtons(
                   ns("subRegion_forecast"),
-                  "Select case study:",
+                  "Select case study area:",
                   choices = character(0),
                   selected = character(0),
                   inline = TRUE
@@ -235,7 +235,7 @@ mod_mixfish_ui <- function(id) {
 
                 radioButtons(
                   ns("subRegion_fleet"),
-                  "Select case study:",
+                  "Select case study area:",
                   choices = character(0),
                   selected = character(0),
                   inline = TRUE
@@ -314,7 +314,7 @@ mod_mixfish_ui <- function(id) {
 
                 radioButtons(
                   ns("subRegion_history"),
-                  "Select case study:",
+                  "Select case study area:",
                   choices = character(0),
                   selected = character(0),
                   inline = TRUE
@@ -1062,15 +1062,32 @@ mod_mixfish_server <- function(
           align-items: flex-start;
           flex-wrap: wrap;
         ",
+        # Year filter removed: the plot shows the average of the last
+        # plot6_n_years years available in the data
+        # div(
+        #   style = "width: 260px;",
+        #   selectizeInput(
+        #     ns("plot6_year_filter"),
+        #     "Year:",
+        #     choices = safe_choices(df, "year"),
+        #     selected = tail(safe_choices(df, "year"), 1),
+        #     multiple = FALSE,
+        #     width = "100%"
+        #   )
+        # ),
         div(
           style = "width: 260px;",
           selectizeInput(
-            ns("plot6_year_filter"),
-            "Year:",
-            choices = safe_choices(df, "year"),
-            selected = tail(safe_choices(df, "year"), 1),
-            multiple = FALSE,
-            width = "100%"
+            ns("plot6_stock_filter"),
+            "Stock:",
+            choices = safe_choices(df, "stock"),
+            selected = NULL,
+            multiple = TRUE,
+            width = "100%",
+            options = list(
+              plugins = list("remove_button"),
+              placeholder = "All stocks"
+            )
           )
         ),
         div(
@@ -1188,19 +1205,23 @@ mod_mixfish_server <- function(
 
     ################################## Plot 6 alluvial data ##################################
 
+# Number of most recent years averaged in the alluvial plot
+plot6_n_years <- 3
+
+# Yearly data (last years are selected and averaged later, see
+# average_last_years() / plot_alluvial_plotly(year_var = "year"))
 plot6_data <- reactive({
 
   req(region_ready())
-  req(input$plot6_year_filter)
 
   # Same source dataset used by Plot 5
   df <- filter_source_data_fleet()
 
-  # Filter selected year
-  df <- df %>%
-    dplyr::filter(
-      as.character(year) == as.character(input$plot6_year_filter)
-    )
+  # Year filter removed: the plot averages the last plot6_n_years years
+  # df <- df %>%
+  #   dplyr::filter(
+  #     as.character(year) == as.character(input$plot6_year_filter)
+  #   )
 
   # Optional country filter
   if (!is.null(input$plot6_country_filter) &&
@@ -1212,10 +1233,21 @@ plot6_data <- reactive({
       )
   }
 
+  # Optional stock filter
+  if (!is.null(input$plot6_stock_filter) &&
+      length(input$plot6_stock_filter) > 0) {
+
+    df <- df %>%
+      dplyr::filter(
+        as.character(stock) %in% as.character(input$plot6_stock_filter)
+      )
+  }
+
   # Prepare data for Sankey
   # Stock identifiers are already in the correct format
   df <- df %>%
     dplyr::select(
+      year,
       fleet,
       metier,
       stock,
@@ -1622,10 +1654,12 @@ plot6_data <- reactive({
         group_vars = c("fleet", "metier", "stock"),
         fill_var = "stock",
         group_labs = c("Fleet", "Métier", "Stock"),
-        ylab = "Landings (tonnes)",
+        ylab = paste0("Average landings, last ", plot6_n_years, " years (tonnes)"),
         fillLegendTitle = "Stock",
         addLegend = TRUE,
-        source_note = data_source_note()  
+        source_note = data_source_note(),
+        year_var = "year",
+        n_years = plot6_n_years
       )
     })
 
@@ -1696,7 +1730,14 @@ plot6_data <- reactive({
       req(region_ready())
 
       list(
-        data = plot6_data(),
+        # Same averaged values that are shown in the plot
+        data = average_last_years(
+          data = plot6_data(),
+          group_vars = c("fleet", "metier", "stock"),
+          year_var = "year",
+          value_var = "value",
+          n_years = plot6_n_years
+        ),
         label = "landings_alluvial_by_stock"
       )
     })

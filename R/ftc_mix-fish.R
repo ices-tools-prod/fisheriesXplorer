@@ -3108,6 +3108,73 @@ plot_catchComp_plotly_v3 <- function(
 
 
 
+#' Average landings over the last years available in the data
+#'
+#' Keeps the last `n_years` distinct values of `year_var`, sums `value_var`
+#' within each year for every combination of `group_vars`, and then averages
+#' those yearly totals across the selected years. A combination with no
+#' records in one of the selected years counts as 0 for that year.
+#'
+#' @param data data.frame containing `group_vars`, `year_var` and `value_var`.
+#' @param group_vars character vector of grouping variables to keep.
+#' @param year_var character. Name of the year column.
+#' @param value_var character. Name of the value column.
+#' @param n_years integer. Number of most recent years to average over.
+#'
+#' @return data.frame with `group_vars`, the averaged `value_var`, and an
+#'   attribute `"years"` listing the years that were used.
+#'
+#' @noRd
+average_last_years <- function(
+    data,
+    group_vars,
+    year_var = "year",
+    value_var = "value",
+    n_years = 3) {
+
+  missing_vars <- setdiff(c(group_vars, year_var, value_var), names(data))
+
+  if (length(missing_vars) > 0) {
+    stop(
+      paste(
+        "Missing required variables in data:",
+        paste(missing_vars, collapse = ", ")
+      )
+    )
+  }
+
+  yrs <- unique(data[[year_var]])
+  yrs <- yrs[!is.na(yrs)]
+
+  # Sort numerically when the years can be read as numbers
+  yrs_num <- suppressWarnings(as.numeric(as.character(yrs)))
+  yrs <- if (!anyNA(yrs_num)) yrs[order(yrs_num)] else sort(yrs)
+
+  yrs <- utils::tail(yrs, n_years)
+
+  dat <- data[data[[year_var]] %in% yrs, , drop = FALSE]
+  dat[[value_var]] <- as.numeric(dat[[value_var]])
+
+  out <- dat %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(c(group_vars, year_var)))) %>%
+    dplyr::summarise(
+      .total = sum(.data[[value_var]], na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) %>%
+    dplyr::summarise(
+      .avg = sum(.total, na.rm = TRUE) / length(yrs),
+      .groups = "drop"
+    )
+
+  names(out)[names(out) == ".avg"] <- value_var
+
+  attr(out, "years") <- yrs
+
+  out
+}
+
+
 #' Interactive alluvial plot
 #'
 #' @param data data.frame containing grouping variables and a `value` column.
@@ -3128,6 +3195,11 @@ plot_catchComp_plotly_v3 <- function(
 #' @param addLegend logical. Add colour legend.
 #' @param plotTitle plot title.
 #' @param source_note optional data-source citation shown bottom-right.
+#' @param year_var optional character. Name of a year column in `data`. When
+#'   given, the plot shows the average of the last `n_years` years available
+#'   in `data` (see [average_last_years()]) instead of the values as supplied.
+#' @param n_years integer. Number of most recent years to average over when
+#'   `year_var` is given.
 #'
 #' @return plotly object
 #'
@@ -3149,18 +3221,34 @@ plot_alluvial_plotly <- function(
     fillLegendTitle = "Stock",
     addLegend = TRUE,
     plotTitle = NULL,
-    source_note = NULL) {
+    source_note = NULL,
+    year_var = NULL,
+    n_years = 3) {
 
   # ------------------------------------------------------------------
   # Checks
   # ------------------------------------------------------------------
-  
+
   if (length(fill_var) != 1) {
     stop("fill_var must contain exactly one variable name")
   }
 
   if (!fill_var %in% names(refTable)) {
     stop("fill_var must be variable in refTable")
+  }
+
+  # ------------------------------------------------------------------
+  # Average over the last n_years available in the data
+  # ------------------------------------------------------------------
+
+  if (!is.null(year_var)) {
+    data <- average_last_years(
+      data = data,
+      group_vars = unique(c(group_vars, fill_var)),
+      year_var = year_var,
+      value_var = "value",
+      n_years = n_years
+    )
   }
 
 required_vars <- c(group_vars, fill_var, "value")
@@ -3409,13 +3497,36 @@ links <- dplyr::bind_rows(link_list)
   # Hover text
   # ------------------------------------------------------------------
 
+  # Axis names shown in the hover use group_labs (e.g. "Stock", not "stock")
+  axis_lab <- function(var) group_labs[match(var, group_vars)]
+
+  # The fill variable only gets its own line when it is not already one of
+  # the axes shown above (otherwise e.g. the stock would appear twice)
+  fill_in_axes <- fill_var %in% group_vars
+
+  # links$hover <- paste0(
+  #   links$source_var, ": ", links$source_label,
+  #   "<br>",
+  #   links$target_var, ": ", links$target_label,
+  #   "<br>",
+  #   fillLegendTitle, ": ", links$fill_value,
+  #   "<br>",
+  #   ylab, ": ", format(
+  #     round(links$value, 1),
+  #     big.mark = ",",
+  #     trim = TRUE
+  #   )
+  # )
+
   links$hover <- paste0(
-    links$source_var, ": ", links$source_label,
+    axis_lab(links$source_var), ": ", links$source_label,
     "<br>",
-    links$target_var, ": ", links$target_label,
+    axis_lab(links$target_var), ": ", links$target_label,
     "<br>",
-    fillLegendTitle, ": ", links$fill_value,
-    "<br>",
+    if (fill_in_axes) "" else paste0(
+      fillLegendTitle, ": ", links$fill_value,
+      "<br>"
+    ),
     ylab, ": ", format(
       round(links$value, 1),
       big.mark = ",",
@@ -3424,7 +3535,7 @@ links <- dplyr::bind_rows(link_list)
   )
 
   nodes$hover <- paste0(
-    nodes$variable, ": ", nodes$label,
+    axis_lab(nodes$variable), ": ", nodes$label,
     "<br>",
     ylab, ": ", format(
       round(nodes$total, 1),
