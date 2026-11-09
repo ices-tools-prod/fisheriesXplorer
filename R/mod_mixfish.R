@@ -102,7 +102,7 @@ mod_mixfish_ui <- function(id) {
       ################################## Forecast ##################################
 
       tabPanel(
-        title = "Forecast",
+        title = "Mixed fisheries options",
         value = "forecast",
 
         layout_sidebar(
@@ -199,6 +199,85 @@ mod_mixfish_ui <- function(id) {
         )
       ),
 
+      ################################## Fleet activity ##################################
+
+      tabPanel(
+        title = "Fleet activity",
+        value = "fleet_activity",
+
+        layout_sidebar(
+          bg = "white",
+          fg = "black",
+
+          sidebar = sidebar(
+            width = "20vw",
+            bg = "white",
+            fg = "black",
+            open = TRUE,
+            uiOutput(ns("mixfish_text_fleet"))
+          ),
+
+          card(
+            height = "85vh",
+            full_screen = TRUE,
+            fill = FALSE,
+
+            card_header(
+              div(
+                style = "
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  gap: 12px;
+                  width: 100%;
+                  flex-wrap: wrap;
+                ",
+
+                radioButtons(
+                  ns("subRegion_fleet"),
+                  "Select case study:",
+                  choices = character(0),
+                  selected = character(0),
+                  inline = TRUE
+                ),
+
+                download_icon_label(
+                  text = "Download data",
+                  outputId = ns("download_mixfish_data_fleet"),
+                  hover_text = "Selected plot data (.csv)",
+                  size = "large"
+                )
+              )
+            ),
+
+            card_body(
+              fillable = TRUE,
+              fill = TRUE,
+              class = "p-1",
+
+              div(
+                style = "
+                  display: flex;
+                  gap: 12px;
+                  align-items: flex-start;
+                  width: 100%;
+                  margin-bottom: 8px;
+                ",
+
+                mixfish_about_box()
+              ),
+
+              uiOutput(ns("filter_ui_fleet")),
+
+              withSpinner(
+                plotlyOutput(ns("plot_fleet"), height = "75vh"),
+                caption = "Getting mix-fish results..."
+              )
+            )
+          )
+        )
+      ),
+
       ################################## History ##################################
 
       tabPanel(
@@ -276,8 +355,7 @@ mod_mixfish_ui <- function(id) {
                     choices = c(
                       "Landings by métier & stock" = "plot3",
                       "Landings by stock" = "plot4",
-                      "Landings composition by fleet" = "plot5",
-                      "Landings alluvial by stock" = "plot6"
+                      "Landings composition by fleet" = "plot5"
                     ),
                     selected = "plot3",
                     multiple = FALSE,
@@ -309,7 +387,8 @@ mod_mixfish_ui <- function(id) {
 #' \itemize{
 #'   \item ecoregion and case-study selection, shared across both tabs;
 #'   \item independent plot selection per tab (History of fleet activity /
-#'     Forecast);
+#'     Forecast); the Fleet activity tab always shows the alluvial plot
+#'     ("plot6");
 #'   \item plot-specific filter UI, per tab;
 #'   \item data filtering;
 #'   \item plot rendering, per tab.
@@ -340,7 +419,9 @@ mod_mixfish_server <- function(
         history = c(
           landings_by_metier_stock = "plot3",
           landings_by_stock = "plot4",
-          landings_composition_by_fleet = "plot5",
+          landings_composition_by_fleet = "plot5"
+        ),
+        fleet_activity = c(
           landings_alluvial_by_stock = "plot6"
         ),
         forecast = c(
@@ -379,7 +460,7 @@ mod_mixfish_server <- function(
       wanted_plot <- qs$plot
       wanted_subregion <- qs$subregion
 
-      if (wanted_subtab %in% c("history", "forecast")) {
+      if (wanted_subtab %in% c("history", "forecast", "fleet_activity")) {
         session$onFlushed(function() {
           updateTabsetPanel(
             session,
@@ -402,6 +483,12 @@ mod_mixfish_server <- function(
               updateRadioButtons(
                 session,
                 "subRegion_forecast",
+                selected = wanted_subregion
+              )
+
+              updateRadioButtons(
+                session,
+                "subRegion_fleet",
                 selected = wanted_subregion
               )
             }
@@ -465,6 +552,7 @@ mod_mixfish_server <- function(
       date_text <- switch(
         tab,
         "history" = "October, 2025",
+        "fleet_activity" = "October, 2025",
         "forecast" = "October, 2025",
         ""
       )
@@ -523,6 +611,12 @@ mod_mixfish_server <- function(
       mixfish_text_for_plot(plot_name_forecast())
     })
 
+    # The Fleet activity tab has no plot selector: it always shows plot6, so
+    # the sidebar text is looked up with that fixed plot name.
+    output$mixfish_text_fleet <- renderUI({
+      mixfish_text_for_plot(plot_name_fleet)
+    })
+
     ################################## Plot selection ##################################
 
     filtered_plot_names <- c("plot1", "plot2", "plot3")
@@ -536,6 +630,9 @@ mod_mixfish_server <- function(
       req(input$plot_selected_forecast)
       input$plot_selected_forecast
     })
+
+    # Fleet activity tab: single, fixed plot (alluvial)
+    plot_name_fleet <- "plot6"
 
     ################################## Case-study selection ##################################
 
@@ -576,6 +673,11 @@ mod_mixfish_server <- function(
         session, "subRegion_forecast",
         choices = choices, selected = sel, inline = TRUE
       )
+
+      updateRadioButtons(
+        session, "subRegion_fleet",
+        choices = choices, selected = sel, inline = TRUE
+      )
     }, ignoreInit = FALSE)
 
     observeEvent(selected_ecoregion(), {
@@ -589,35 +691,32 @@ mod_mixfish_server <- function(
       }, once = TRUE)
     }, ignoreInit = FALSE)
 
-    observeEvent(input$subRegion_history, {
-      req(input$subRegion_history)
+    # Keep the case-study radio buttons of all tabs in sync
+    subregion_input_ids <- c(
+      "subRegion_history",
+      "subRegion_forecast",
+      "subRegion_fleet"
+    )
 
-      if (!identical(input$subRegion_history, selected_subRegion())) {
-        selected_subRegion(input$subRegion_history)
-        updateRadioButtons(
-          session,
-          "subRegion_forecast",
-          selected = input$subRegion_history
-        )
-      }
+    lapply(subregion_input_ids, function(this_id) {
+      observeEvent(input[[this_id]], {
+        req(input[[this_id]])
 
-      region_ready(TRUE)
-    }, ignoreInit = TRUE)
+        if (!identical(input[[this_id]], selected_subRegion())) {
+          selected_subRegion(input[[this_id]])
 
-    observeEvent(input$subRegion_forecast, {
-      req(input$subRegion_forecast)
+          for (other_id in setdiff(subregion_input_ids, this_id)) {
+            updateRadioButtons(
+              session,
+              other_id,
+              selected = input[[this_id]]
+            )
+          }
+        }
 
-      if (!identical(input$subRegion_forecast, selected_subRegion())) {
-        selected_subRegion(input$subRegion_forecast)
-        updateRadioButtons(
-          session,
-          "subRegion_history",
-          selected = input$subRegion_forecast
-        )
-      }
-
-      region_ready(TRUE)
-    }, ignoreInit = TRUE)
+        region_ready(TRUE)
+      }, ignoreInit = TRUE)
+    })
 
 
 
@@ -753,7 +852,6 @@ mod_mixfish_server <- function(
         "plot2" = data_reactive_all()$EffortByFleetStock_filtered,
         "plot3" = data_reactive_all()$MetierStockLandings_filtered,
         "plot5" = data_reactive_all()$stfMtStkSum_filtered,
-        "plot6" = data_reactive_all()$stfMtStkSum_filtered,
         NULL
       )
     }
@@ -768,6 +866,11 @@ mod_mixfish_server <- function(
       req(plot_name_forecast())
       req(region_ready())
       filter_source_data_impl(plot_name_forecast())
+    })
+
+    filter_source_data_fleet <- reactive({
+      req(region_ready())
+      data_reactive_all()$stfMtStkSum_filtered
     })
 
     safe_choices <- function(data, var) {
@@ -932,57 +1035,66 @@ mod_mixfish_server <- function(
               width = "100%"
             )
           )
+        )
+      )
+    })
+
+    ################################## Dynamic filter UI: Fleet activity ##################################
+
+    output$filter_ui_fleet <- renderUI({
+      req(region_ready())
+
+      df <- filter_source_data_fleet()
+
+      div(
+        style = "
+          margin-bottom: 0px;
+          display: flex;
+          gap: 8px;
+          align-items: flex-start;
+          flex-wrap: wrap;
+        ",
+        div(
+          style = "width: 260px;",
+          selectizeInput(
+            ns("plot6_year_filter"),
+            "Year:",
+            choices = safe_choices(df, "year"),
+            selected = tail(safe_choices(df, "year"), 1),
+            multiple = FALSE,
+            width = "100%"
+          )
         ),
-        "plot6" = div(
-          style = "
-            margin-bottom: 0px;
-            display: flex;
-            gap: 8px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-          ",
-          div(
-            style = "width: 260px;",
-            selectizeInput(
-              ns("plot6_year_filter"),
-              "Year:",
-              choices = safe_choices(df, "year"),
-              selected = tail(safe_choices(df, "year"), 1),
-              multiple = FALSE,
-              width = "100%"
-            )
-          ),
-          div(
-            style = "width: 260px;",
-            selectizeInput(
-              ns("plot6_country_filter"),
-              "Country:",
-              choices = safe_choices(df, "country"),
-              selected = NULL,
-              multiple = TRUE,
-              width = "100%",
-              options = list(
-                plugins = list("remove_button"),
-                placeholder = "All countries"
-              )
+        div(
+          style = "width: 260px;",
+          selectizeInput(
+            ns("plot6_country_filter"),
+            "Country:",
+            choices = safe_choices(df, "country"),
+            selected = NULL,
+            multiple = TRUE,
+            width = "100%",
+            options = list(
+              plugins = list("remove_button"),
+              placeholder = "All countries"
             )
           )
-          # div(
-          #   style = "width: 260px;",
-          #   selectizeInput(
-          #     ns("plot6_scenario_filter"),
-          #     "Scenario:",
-          #     choices = safe_choices(df, "scenario"),
-          #     selected = if ("min" %in% safe_choices(df, "scenario")) {
-          #       "min"
-          #     } else {
-          #       safe_choices(df, "scenario")[1]
-          #     },
-          #     multiple = FALSE,
-          #     width = "100%"
-          #   )
-          # )
         )
+        # div(
+        #   style = "width: 260px;",
+        #   selectizeInput(
+        #     ns("plot6_scenario_filter"),
+        #     "Scenario:",
+        #     choices = safe_choices(df, "scenario"),
+        #     selected = if ("min" %in% safe_choices(df, "scenario")) {
+        #       "min"
+        #     } else {
+        #       safe_choices(df, "scenario")[1]
+        #     },
+        #     multiple = FALSE,
+        #     width = "100%"
+        #   )
+        # )
       )
     })
 
@@ -1061,11 +1173,11 @@ mod_mixfish_server <- function(
 
 plot6_data <- reactive({
 
-  req(plot_name_history() == "plot6")
+  req(region_ready())
   req(input$plot6_year_filter)
 
   # Same source dataset used by Plot 5
-  df <- data_reactive_all()$stfMtStkSum_filtered
+  df <- filter_source_data_fleet()
 
   # Filter selected year
   df <- df %>%
@@ -1476,22 +1588,27 @@ plot6_data <- reactive({
              else isTRUE(input$plot5_relative),
             source_note = data_source_note()
           )
-        },
-        "plot6" = {
-          df <- plot6_data()
-
-          plot_alluvial_plotly(
-            data = df,
-            refTable = data_reactive_all()$refTable_filtered,
-            group_vars = c("fleet", "metier", "stock"),
-            fill_var = "stock",
-            group_labs = c("Fleet", "Métier", "Stock"),
-            ylab = "Landings (tonnes)",
-            fillLegendTitle = "Stock",
-            addLegend = TRUE,
-            source_note = data_source_note()  
-          )
         }
+      )
+    })
+
+    ################################## Plot rendering: Fleet activity ##################################
+
+    output$plot_fleet <- renderPlotly({
+      req(region_ready())
+
+      df <- plot6_data()
+
+      plot_alluvial_plotly(
+        data = df,
+        refTable = data_reactive_all()$refTable_filtered,
+        group_vars = c("fleet", "metier", "stock"),
+        fill_var = "stock",
+        group_labs = c("Fleet", "Métier", "Stock"),
+        ylab = "Landings (tonnes)",
+        fillLegendTitle = "Stock",
+        addLegend = TRUE,
+        source_note = data_source_note()  
       )
     })
 
@@ -1553,11 +1670,17 @@ plot6_data <- reactive({
           data = filter_source_data_history(),
           label = "landings_composition_by_fleet"
         ),
-        "plot6" = list(
-          data = plot6_data(),
-          label = "landings_alluvial_by_stock"
-        ),
         list(data = NULL, label = "mixfish_history")
+      )
+    })
+
+    # Fleet activity tab: always the alluvial plot data.
+    export_data_fleet <- reactive({
+      req(region_ready())
+
+      list(
+        data = plot6_data(),
+        label = "landings_alluvial_by_stock"
       )
     })
 
@@ -1625,6 +1748,18 @@ plot6_data <- reactive({
       },
       content = function(file) {
         build_mixfish_bundle(file, export_data_history())
+      },
+      contentType = "application/zip"
+    )
+
+    output$download_mixfish_data_fleet <- downloadHandler(
+      filename = function() {
+        acronym <- get_ecoregion_acronym(selected_ecoregion())
+        date_tag <- format(Sys.Date(), "%d-%b-%y")
+        paste0("mixfish_fleet_activity_", export_data_fleet()$label, "_", acronym, "_", date_tag, ".zip")
+      },
+      content = function(file) {
+        build_mixfish_bundle(file, export_data_fleet())
       },
       contentType = "application/zip"
     )

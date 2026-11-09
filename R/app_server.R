@@ -147,6 +147,12 @@ app_server <- function(input, output, session) {
         "mixfish_1-subRegion_forecast",
         selected = d$subregion
       )
+
+      updateRadioButtons(
+        session,
+        "mixfish_1-subRegion_fleet",
+        selected = d$subregion
+      )
     }
 
 
@@ -322,6 +328,9 @@ app_server <- function(input, output, session) {
   } else if (identical(subtab, "forecast")) {
     input[["mixfish_1-subRegion_forecast"]] %|?% ""
 
+  } else if (identical(subtab, "fleet_activity")) {
+    input[["mixfish_1-subRegion_fleet"]] %|?% ""
+
   } else {
     ""
   }
@@ -333,6 +342,9 @@ app_server <- function(input, output, session) {
     input[["mixfish_1-plot_selected_history"]] %|?% ""
   } else if (identical(subtab, "forecast")) {
     input[["mixfish_1-plot_selected_forecast"]] %|?% ""
+  } else if (identical(subtab, "fleet_activity")) {
+    # Fleet activity has no plot selector: it always shows the alluvial plot
+    "plot6"
   } else {
     ""
   }
