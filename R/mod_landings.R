@@ -28,14 +28,11 @@
 #'             in \code{shinycssloaders::withSpinner()}.
 #'         }
 #'       \item \code{"Discards"}: a sidebar with dynamic text
-#'         (\code{discards_text}) and cards containing:
+#'         (\code{discards_text}) and a viewport-height card containing:
 #'         \itemize{
-#'           \item A \code{plotly} discard trends plot
-#'             (\code{discard_trends}) with a CSV download link
+#'           \item An HTML discard trends plot
+#'             (\code{discard_trends_html}) with a CSV download link
 #'             (\code{download_discard_data}).
-#'           \item Two additional \code{plotly} outputs for recorded and
-#'             all discards (\code{recorded_discards}, \code{all_discards}),
-#'             each wrapped in \code{withSpinner()}.
 #'         }
 #'     }
 #' }
@@ -119,6 +116,7 @@ mod_landings_ui <- function(id) {
             uiOutput(ns("discards_text"))
           ),
           card(
+            height = "85vh",
             card_header(
               "Discard trends",
               download_icon_label(
@@ -130,17 +128,7 @@ mod_landings_ui <- function(id) {
             ),
             card_body(
               style = "overflow-y: hidden;",
-              withSpinner(plotlyOutput(ns("discard_trends")))
-            )
-          ),
-          card(
-            card_body(
-              style = "overflow-y: hidden;",
-              layout_column_wrap(
-                width = 1 / 2,
-                withSpinner(plotlyOutput(ns("recorded_discards"))),
-                withSpinner(plotlyOutput(ns("all_discards")))
-              )
+              uiOutput(ns("discard_trends_html"), fill = TRUE)
             )
           )
         )
@@ -201,9 +189,8 @@ mod_landings_ui <- function(id) {
 #'     \itemize{
 #'       \item Uses \code{format_sag()} and \code{CLD_trends()} based on
 #'         \code{shared$SAG} and \code{shared$SID}.
-#'       \item Produces a \code{plotly} time-series trends plot and two
-#'         current-year summary plots (stocks with recorded discards and all
-#'         stocks).
+#'       \item Displays a pre-generated HTML time-series trends plot in an
+#'         iframe that fills the available card body.
 #'       \item Provides a ZIP bundle download
 #'         (\code{download_discard_data}) containing a CSV export and a
 #'         disclaimer.
@@ -227,6 +214,43 @@ mod_landings_server <- function(
     set_subtab = function(...) {}) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    plot_dir <- app_sys("app/plots")
+    plot_index <- utils::read.csv(
+      file.path(plot_dir, "plot_index.csv"),
+      colClasses = "character",
+      na.strings = character()
+    )
+    plot_report <- utils::read.csv(
+      file.path(plot_dir, "plot_export_report.csv"),
+      colClasses = "character",
+      na.strings = character()
+    )
+    required_plot_columns <- c("plot_type", "ecoregion_id", "guild_id", "file")
+    required_report_columns <- c(required_plot_columns, "status", "reason")
+    if (!all(required_plot_columns %in% names(plot_index)) ||
+        !all(required_report_columns %in% names(plot_report))) {
+      stop("The HTML plot index or export report is missing required columns.")
+    }
+
+    discard_index <- plot_index[plot_index$plot_type == "discards", , drop = FALSE]
+    discard_report <- plot_report[plot_report$plot_type == "discards", , drop = FALSE]
+    if (any(discard_index$guild_id != "") ||
+        any(discard_report$guild_id != "") ||
+        anyDuplicated(discard_index$ecoregion_id) ||
+        anyDuplicated(discard_report$ecoregion_id) ||
+        any(!discard_report$status %in% c("exported", "no_data")) ||
+        any(discard_report$status == "no_data" & !nzchar(discard_report$reason))) {
+      stop("The discard plot index or export report contains invalid selections.")
+    }
+
+    exported_discards <- discard_report[discard_report$status == "exported", , drop = FALSE]
+    if (nrow(discard_index) != nrow(exported_discards) ||
+        !setequal(discard_index$ecoregion_id, exported_discards$ecoregion_id) ||
+        !all(discard_index$file[match(exported_discards$ecoregion_id, discard_index$ecoregion_id)] ==
+          exported_discards$file)) {
+      stop("The discard plot index does not match the successful exports.")
+    }
 
     ################################## bookmarking #########################################
     # This module participates in the global bookmarking via two hooks:
@@ -462,70 +486,52 @@ output$landings_layer <- renderPlotly({
     )
     ############### Discards plots ##########################################################
 
-    year <- Sys.Date() %>%
-      format("%Y") %>%
-      as.numeric()
-    
-    discard_base_data <- reactive({
-      CLD_trends(format_sag(shared$SAG, shared$SID))
-    })
+    output$discard_trends_html <- renderUI({
+      ecoregion_id <- get_ecoregion_acronym(selected_ecoregion())
+      report_row <- discard_report[
+        discard_report$ecoregion_id == ecoregion_id,
+        ,
+        drop = FALSE
+      ]
 
-    discard_target_year <- reactive({
-      discard_base_data() %>% 
-      dplyr::filter(Discards > 0) %>%
-        dplyr::mutate(Year = as.numeric(Year)) %>%
-        dplyr::filter(!is.na(Year)) %>%
-        dplyr::summarise(target_year = max(Year, na.rm = TRUE)) %>%
-        dplyr::pull(target_year)
-    })
-
-    output$discard_trends <- renderPlotly({
-      fig2 <- ggplotly(plot_discard_trends_app_plotly(discard_base_data(),
-        year,
-        ecoregion = get_ecoregion_acronym(selected_ecoregion())
+      validate(need(
+        nrow(report_row) == 1L,
+        "The discard plot selection is missing or ambiguous in the export report."
       ))
-      for (i in seq_along(fig2$x$data)) {
-        if (!is.null(fig2$x$data[[i]]$name)) {
-          fig2$x$data[[i]]$name <- gsub("\\(", "", strsplit(fig2$x$data[[i]]$name, ",")[[1]][1])
-        }
+
+      if (report_row$status == "no_data") {
+        return(tags$div(
+          style = paste(
+            "height: 100%; display: flex; align-items: center;",
+            "justify-content: center;"
+          ),
+          "No discards available"
+        ))
       }
-      fig2
-    })
-    
-    # output$recorded_discards <- renderPlotly({
-    #   catch_trends2 <- CLD_trends(format_sag(shared$SAG, shared$SID)) %>% filter(Discards > 0)
-    #   plot_discard_current_plotly(catch_trends2,
-    #     year = year,
-    #     position_letter = paste0("Current discards & Landings\nStocks with recorded discards (", year-1, ", ", get_active_region_acronym(selected_ecoregion()), ")"),
-    #     ecoregion = get_ecoregion_acronym(selected_ecoregion())
-    #   )
-    # })
 
-    # output$all_discards <- renderPlotly({
-    #   plot_discard_current_plotly(CLD_trends(format_sag(shared$SAG, shared$SID)),
-    #     year = year,
-    #     position_letter = paste0("Current discards & Landings\nAll Stocks (", year-1, ", ", get_active_region_acronym(selected_ecoregion()), ")") ,
-    #     ecoregion = get_ecoregion_acronym(selected_ecoregion())
-    #   )
-    # })
+      index_row <- discard_index[
+        discard_index$ecoregion_id == ecoregion_id,
+        ,
+        drop = FALSE
+      ]
+      validate(need(
+        nrow(index_row) == 1L &&
+          identical(index_row$file, report_row$file) &&
+          grepl("^discards__[A-Za-z0-9_-]+\\.html$", index_row$file),
+        "The discard plot selection is invalid in the export index."
+      ))
 
-    output$recorded_discards <- renderPlotly({
-      plot_discard_current_plotly(
-        discard_base_data() %>% dplyr::filter(Discards > 0),
-        target_year = discard_target_year(),
-        plot_type = "withDiscards",
-        ecoregion = get_ecoregion_acronym(selected_ecoregion()),
-        region_label = get_active_region_acronym(selected_ecoregion())
-      )
-    })
+      plot_path <- file.path(plot_dir, index_row$file)
+      validate(need(
+        isTRUE(file.exists(plot_path) && file.info(plot_path)$size > 0),
+        "The exported discard plot is missing or empty."
+      ))
 
-    output$all_discards <- renderPlotly({
-      plot_discard_current_plotly(
-        discard_base_data(),
-        target_year = discard_target_year(),
-        plot_type = "all",
-        ecoregion = get_ecoregion_acronym(selected_ecoregion()),
-        region_label = get_active_region_acronym(selected_ecoregion())
+      tags$iframe(
+        src = paste0("plots/", index_row$file),
+        title = paste("Discard trends for", selected_ecoregion()),
+        loading = "lazy",
+        style = "width: 100%; height: 100%; border: 0; display: block;"
       )
     })
 
