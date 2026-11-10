@@ -20,10 +20,10 @@
 #'       \item \strong{Status Summary} (\code{"status_summary"}):
 #'         \itemize{
 #'           \item Sidebar with explanatory text (\code{status_text1}).
-#'           \item Two cards containing static plots:
-#'             \code{status_summary_ices} (MSY & Precautionary Approach)
-#'             and \code{status_summary_ges} (catches vs MSY status),
-#'             each with a combined data + graph download link
+#'           \item One full-width HTML plot (\code{status_summary_html}),
+#'             selected with \code{status_summary_selector}: Stocks
+#'             (stock summary) or Catches (GES).
+#'           \item The selected view's existing live-data and static-graph download
 #'             (\code{download_clean_status_data},
 #'             \code{download_status_catch_data}).
 #'         }
@@ -40,11 +40,11 @@
 #'         \itemize{
 #'           \item Sidebar with explanatory text (\code{status_text3}).
 #'           \item Controls for group selection
-#'             (\code{status_kobe_cld_selector}) and a year/period slider
-#'             (\code{kobe_cld_slider}), plus a combined data + graphs
+#'             (\code{status_kobe_cld_selector}), including All Stocks,
+#'             plus a combined live data + static graphs
 #'             download link (\code{download_CLD_data}).
-#'           \item Two plots: CLD (\code{status_cld}) and Kobe diagram
-#'             (\code{status_kobe}).
+#'           \item A full-width HTML Kobe diagram
+#'             (\code{status_kobe_html}) for the selected ecoregion and guild.
 #'         }
 #'       \item \strong{Stock status Lookup} (\code{"status_lookup"}):
 #'         \itemize{
@@ -89,48 +89,38 @@ mod_stock_status_ui <- function(id) {
             open = TRUE,
             uiOutput(ns("status_text_summary"))
           ),
-          fluidRow(
-            column(
-              6,
-              card(
-                height = "85vh", full_screen = TRUE,
-                card_header(
-                  "MSY & Precautionary Approach",
-                  download_icon_label(
-                    text = "Download data",
-                    outputId = ns("download_clean_status_data"),
-                    hover_text = "Status summary (.csv & plot)",
-                    size = "large"
-                  )
-                ),
-                card_body(
-                  fillable = TRUE,
-                  withSpinner(plotOutput(ns("status_summary_ices"), height = "75vh"),
-                    caption = "Getting status data..."
-                  )
+          card(
+            height = "85vh", full_screen = TRUE,
+            card_header(
+              radioButtons(
+                ns("status_summary_selector"), "Show:",
+                choices = c("Stocks" = "stock_summary", "Catches" = "ges"),
+                selected = "stock_summary", inline = TRUE
+              ),
+              shiny::conditionalPanel(
+                condition = "input.status_summary_selector === 'stock_summary'",
+                ns = ns,
+                download_icon_label(
+                  text = "Download data",
+                  outputId = ns("download_clean_status_data"),
+                  hover_text = "Live status data and static plot (.csv & plot)",
+                  size = "large"
+                )
+              ),
+              shiny::conditionalPanel(
+                condition = "input.status_summary_selector === 'ges'",
+                ns = ns,
+                download_icon_label(
+                  text = "Download data",
+                  outputId = ns("download_status_catch_data"),
+                  hover_text = "Live catch status data and static plot (.csv & plot)",
+                  size = "large"
                 )
               )
             ),
-            column(
-              6,
-              card(
-                height = "85vh", full_screen = TRUE,
-                card_header(
-                  "Catches in relation to MSY status",
-                  download_icon_label(
-                    text = "Download data",
-                    outputId = ns("download_status_catch_data"),
-                    hover_text = "Catches vs MSY status (.csv & plot)",
-                    size = "large"
-                  )
-                ),
-                card_body(
-                  fillable = TRUE,
-                  withSpinner(plotOutput(ns("status_summary_ges"), height = "75vh"),
-                    caption = "Getting assessment data..."
-                  )
-                )
-              )
+            card_body(
+              style = "overflow-y: hidden;",
+              uiOutput(ns("status_summary_html"), fill = TRUE)
             )
           )
         )
@@ -173,7 +163,7 @@ mod_stock_status_ui <- function(id) {
         )
       ),
       nav_panel(
-        "Catch & Kobe plot",
+        "Kobe plot",
         value = "kobe_cld",
         layout_sidebar(
           sidebar = sidebar(
@@ -181,54 +171,30 @@ mod_stock_status_ui <- function(id) {
             uiOutput(ns("status_cld_trends"))
           ),
           card(
+            height = "85vh", full_screen = TRUE,
             card_header(
-              column(
-                6,
-                div(
-                  style = "display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 16px;",
-                  radioButtons(ns("status_kobe_cld_selector"), "Select a fisheries guild:",
-                    inline = TRUE,
-                    choices = c(
-                      "All Stocks" = "All",
-                      "Benthic" = "benthic",
-                      "Demersal" = "demersal",
-                      "Elasmobranchs" = "elasmobranch",
-                      "Pelagic" = "pelagic",
-                      "Shellfish" = "shellfish"
-                    ),
-                    selected = "All"
-                  )
-                )
+              radioButtons(ns("status_kobe_cld_selector"), "Select a fisheries guild:",
+                inline = TRUE,
+                choices = c(
+                  "All Stocks" = "All",
+                  "Benthic" = "benthic",
+                  "Demersal" = "demersal",
+                  "Elasmobranchs" = "elasmobranch",
+                  "Pelagic" = "pelagic",
+                  "Shellfish" = "shellfish"
+                ),
+                selected = "All"
               ),
-              column(
-                6,
-                div(
-                  style = "display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 16px;",
-                  uiOutput(ns("kobe_cld_slider")),
-                  download_icon_label(
-                    text = "Download data",
-                    outputId = ns("download_CLD_data"),
-                    hover_text = "CLD & Kobe (.csv & plots)",
-                    size = "large"
-                  )
-                )
-              )
-            )
-          ),
-          fluidRow(
-            column(
-              6,
-              card(
-                fillable = TRUE, height = "70vh", full_screen = TRUE,
-                withSpinner(plotOutput(ns("status_cld"), height = "67vh"))
+              download_icon_label(
+                text = "Download data",
+                outputId = ns("download_CLD_data"),
+                hover_text = "Live CLD & Kobe data and static plots (.csv & plots)",
+                size = "large"
               )
             ),
-            column(
-              6,
-              card(
-                fillable = TRUE, height = "75vh", full_screen = TRUE,
-                withSpinner(plotOutput(ns("status_kobe"), height = "67vh"))
-              )
+            card_body(
+              style = "overflow-y: hidden;",
+              uiOutput(ns("status_kobe_html"), fill = TRUE)
             )
           )
         )
@@ -327,14 +293,16 @@ mod_stock_status_ui <- function(id) {
 #'         \code{shared$SID} via \code{format_sag()},
 #'         \code{add_proxyRefPoints()}, and
 #'         \code{stockstatus_CLD_current_proxy()}.
-#'       \item Renders MSY/PA pies with \code{plot_status_prop_pies()} and
-#'         GES pies with \code{plot_GES_pies()}, using client data width for
-#'         responsive sizing.
+#'       \item Displays an indexed stock-summary or GES HTML in a full-width
+#'         iframe, according to \code{status_summary_selector}, only when
+#'         the Summary tab is active. Documented no-data selections show
+#'         the export report's reason.
 #'       \item Provides ZIP bundles for clean status data
 #'         (\code{download_clean_status_data}) and GES/catch status
 #'         (\code{download_status_catch_data}), each containing a CSV export,
 #'         a disclaimer text (fetched via \code{safe_download()}), and a PNG
-#'         plot (generated with \code{ragg::agg_png()} or
+#'         plot from live app data, not the HTML export snapshot
+#'         (generated with \code{ragg::agg_png()} or
 #'         \code{ggplot2::ggsave()} where possible).
 #'     }
 #'   \item For the \strong{Trends by group} tab:
@@ -351,13 +319,12 @@ mod_stock_status_ui <- function(id) {
 #'       \item Computes \code{kobe_cld_data()} from \code{catch_current()}
 #'         filtered by the selected guild(s) and \code{plot_CLD_bar_app()}
 #'         with \code{return_data = TRUE}.
-#'       \item Renders \code{status_kobe} and \code{status_cld} plots by
-#'         slicing the top \code{n} stocks and passing them to
-#'         \code{plot_kobe_app()} and \code{plot_CLD_bar_app()}
-#'         (\code{return_data = FALSE}).
+#'       \item Displays an indexed HTML Kobe plot for the selected ecoregion
+#'         and guild when the tab is active, mapping All Stocks to
+#'         \code{all_stocks}. Documented no-data selections show their reason.
 #'       \item Provides a ZIP bundle (\code{download_CLD_data}) containing the
-#'         filtered CSV, a disclaimer, and PNG images of both Kobe and CLD
-#'         plots.
+#'         full selected-guild live-data CSV, a disclaimer, and static PNG
+#'         images of both Kobe and CLD plots, not the HTML export snapshot.
 #'     }
 #'   \item For the \strong{Stock status lookup} tab:
 #'     \itemize{
@@ -378,7 +345,7 @@ mod_stock_status_ui <- function(id) {
 #'   handlers in a Shiny server context.
 #'
 #' @importFrom shiny moduleServer observeEvent updateTabsetPanel renderUI
-#'   reactive req tags tagList downloadHandler sliderInput
+#'   reactive req tags tagList downloadHandler
 #' @importFrom bslib nav_select
 #' @importFrom plotly renderPlotly
 #' @importFrom reactable renderReactable
@@ -398,6 +365,7 @@ mod_stock_status_server <- function(
     set_subtab = function(...) {}) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    summary_catalog <- html_plot_catalog()
 
     ################################## bookmarking #########################################
     # This module participates in the global bookmarking via two hooks:
@@ -496,12 +464,20 @@ mod_stock_status_server <- function(
       stockstatus_CLD_current_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID),  sag_settings = shared$SAG_Settings)) #custom_refpoints_path = "data/custom_refpoints_2025.csv",
     })
 
-    output$status_summary_ices <- renderPlot({
-      key <- "output_stock_status_1-status_summary_ices_width"
-      req(!is.null(session$clientData[[key]]), session$clientData[[key]] > 0)
-      w <- session$clientData[[key]]
-      # plot_status_prop_pies(shared$clean_status, return_data = FALSE)
-      plot_status_prop_pies(shared$clean_status, width_px = w, return_data = FALSE)
+    output$status_summary_html <- renderUI({
+      req(input$main_tabset == "status_summary", selected_ecoregion())
+      plot_type <- input$status_summary_selector
+      req(plot_type %in% c("stock_summary", "ges"))
+      region <- get_ecoregion_acronym(selected_ecoregion())
+      validate(need(
+        length(region) == 1L && !is.na(region),
+        "The selected ecoregion has no HTML plot identifier."
+      ))
+      html_plot_frame(
+        summary_catalog, plot_type, region,
+        paste(if (plot_type == "stock_summary") "Stock summary for" else "Catch status for",
+          selected_ecoregion())
+      )
     })
 
     
@@ -590,15 +566,6 @@ mod_stock_status_server <- function(
       },
       contentType = "application/zip"
     )
-
-    ################################ GES pies ##################################################
-    output$status_summary_ges <- renderPlot({
-      key <- "output_stock_status_1-status_summary_ges_width" # adjust if different
-      req(!is.null(session$clientData[[key]]), session$clientData[[key]] > 0)
-      w <- session$clientData[[key]]
-
-      plot_GES_pies(shared$clean_status, catch_current(), width_px = w, return_data = FALSE)
-    })
 
     ############################### GES download ##################################################
     output$download_status_catch_data <- downloadHandler(
@@ -750,18 +717,19 @@ mod_stock_status_server <- function(
     )
 
     ######################### Kobe-CLD tab ################################################
-    output$kobe_cld_slider <- renderUI({
-      slider_max <- nrow(kobe_cld_data())
-      div(
-        id = "custom_slider",
-        sliderInput(ns("n_selector"), 
-          HTML("Select <em>n</em> of stocks:"),
-          min = 1, 
-          max = slider_max, 
-          value = min(10, slider_max), 
-          step = 1,
-          width = "200px"
-        )
+    output$status_kobe_html <- renderUI({
+      req(input$main_tabset == "kobe_cld", selected_ecoregion())
+      guild <- input$status_kobe_cld_selector
+      req(guild %in% c("All", "benthic", "demersal", "elasmobranch", "pelagic", "shellfish"))
+      region <- get_ecoregion_acronym(selected_ecoregion())
+      validate(need(
+        length(region) == 1L && !is.na(region),
+        "The selected ecoregion has no HTML plot identifier."
+      ))
+      html_plot_frame(
+        summary_catalog, "kobe", region,
+        paste("Kobe plot for", selected_ecoregion(), "-", if (guild == "All") "All Stocks" else guild),
+        guild_id = if (guild == "All") "all_stocks" else guild
       )
     })
 
@@ -776,21 +744,6 @@ mod_stock_status_server <- function(
         tmp <- plot_CLD_bar_app(tmp, guild = input$status_kobe_cld_selector, return_data = TRUE)
       }
     })
-    ########################### Kobe-CLD plots ##############################################
-    output$status_kobe <- renderPlot({
-      req(!is.null(input$status_kobe_cld_selector))
-      req(!is.null(input$n_selector))
-      plot_data <- kobe_cld_data() %>% dplyr::slice_max(order_by = total, n = input$n_selector)
-      plot_kobe_app(plot_data, guild = input$status_kobe_cld_selector, return_data = FALSE)
-    })
-
-    output$status_cld <- renderPlot({
-      req(!is.null(input$status_kobe_cld_selector))
-      req(!is.null(input$n_selector))
-      plot_data <- kobe_cld_data() %>% dplyr::slice_max(order_by = total, n = input$n_selector)
-      plot_CLD_bar_app(plot_data, guild = input$status_kobe_cld_selector,  return_data = FALSE)
-    })
-
     ######################### CLD/Kobe download ################################################
     output$download_CLD_data <- downloadHandler(
       filename = function() {
@@ -814,8 +767,6 @@ mod_stock_status_server <- function(
 
         # --- Inputs for plots (with safe fallbacks)
         guild <- input$status_kobe_cld_selector %|?% "All"
-        n_sel <- input$n_selector
-        if (is.null(n_sel) || !is.finite(n_sel) || n_sel <= 0) n_sel <- 10L
 
         # Optional caption tokens (fallback to current date if not in scope)
         capY <- if (exists("cap_year", inherits = TRUE)) get("cap_year") else format(Sys.Date(), "%Y")
@@ -823,7 +774,7 @@ mod_stock_status_server <- function(
 
         # --- 1) CSV (with acronym + date)
         dat <- kobe_cld_data()
-        plot_data <- dat %>% dplyr::slice_max(order_by = total, n = n_sel)
+        plot_data <- dat
         csv_name <- paste0("status_CLD_data_", acronym, "_", date_tag, ".csv")
         csv_path <- file.path(td, csv_name)
         utils::write.csv(plot_data, csv_path, row.names = FALSE)
