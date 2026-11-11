@@ -233,8 +233,9 @@ mod_bycatch_ui <- function(id) {
 #'   \item Updates the flexible module header with the selected ecoregion,
 #'   ecoregion acronym, last data update date, and glossary link.
 #'   \item Retrieves raw bycatch data for the selected ecoregion using
-#'   \code{get_bycatch_ecoregion()} and cleans it using
-#'   \code{clean_bycatch_data()}.
+#'   the BEAM API (assessment year 2026), configured with the
+#'   \code{BYCATCH_API_TOKEN} environment variable, and cleans it using
+#'   \code{clean_bycatch_data()}. Request failures are reported to the user.
 #'   \item Creates tab-specific datasets for total bycatch and BPUE.
 #'   \item Updates metier and species filter choices according to the selected
 #'   taxon and available data.
@@ -259,7 +260,7 @@ mod_bycatch_ui <- function(id) {
 #' objects:
 #' \itemize{
 #'   \item \code{get_ecoregion_acronym()}
-#'   \item \code{get_bycatch_ecoregion()}
+#'   \item \code{get_beam_bycatch_ecoregion()}
 #'   \item \code{clean_bycatch_data()}
 #'   \item \code{empty_bycatch_data()}
 #'   \item \code{plot_bpue_interactive()}
@@ -390,16 +391,18 @@ mod_bycatch_server <- function(
 
       out <- tryCatch(
         {
-          raw <- get_bycatch_ecoregion(eco)
+          # raw <- get_bycatch_ecoregion(eco)
+          raw <- get_beam_bycatch_ecoregion(eco)
           clean_bycatch_data(raw)
         },
         error = function(e) {
-          empty_bycatch_data()
+          shiny::showNotification(conditionMessage(e), type = "error")
+          validate(need(FALSE, conditionMessage(e)))
         }
       )
 
       if (!is.data.frame(out) || !"taxon" %in% names(out)) {
-        return(empty_bycatch_data())
+        stop("The cleaned BEAM bycatch data has an invalid schema.")
       }
 
       out

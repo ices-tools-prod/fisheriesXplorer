@@ -1,3 +1,49 @@
+# Fetch the 2026 BEAM assessment; the API token must be configured at runtime.
+get_beam_bycatch_ecoregion <- function(ecoregion) {
+  token <- Sys.getenv("BYCATCH_API_TOKEN")
+  if (!nzchar(token)) {
+    stop("Set BYCATCH_API_TOKEN to access the BEAM bycatch API.")
+  }
+  url <- paste0(
+    "https://bycatch.ices.dk/API/GetBeamResults?token=",
+    utils::URLencode(token, reserved = TRUE),
+    "&assessmentYear=2026&selectedReliability=more+reliable"
+  )
+  response <- tryCatch(
+    curl::curl_fetch_memory(url, handle = curl::new_handle(timeout = 90)),
+    error = function(e) stop("The BEAM bycatch API request failed.", call. = FALSE)
+  )
+  if (response$status_code != 200L) {
+    stop("The BEAM bycatch API returned HTTP ", response$status_code, ".")
+  }
+  raw <- tryCatch(
+    jsonlite::fromJSON(rawToChar(response$content)),
+    error = function(e) stop("The BEAM bycatch API returned invalid JSON.", call. = FALSE)
+  )
+  mapping <- c(
+    bycatch_2024 = "total_bycatch_2024",
+    bycatch_lower_CI = "tB_lower",
+    bycatch_upper_CI = "tB_upper",
+    bpuE_Numeric = "bpue",
+    bpuE_lower_CI_Numeric = "lower",
+    bpuE_upper_CI_Numeric = "upper"
+  )
+  required <- c("ecoregion", "taxon", "metier_L4", "common_name", unname(mapping))
+  if (!is.data.frame(raw) || !all(required %in% names(raw))) {
+    stop("The BEAM bycatch API response is missing required columns.")
+  }
+  raw <- raw[
+    !is.na(raw$ecoregion) &
+      tolower(trimws(raw$ecoregion)) == tolower(trimws(ecoregion)),
+    , drop = FALSE
+  ]
+  for (column in names(mapping)) {
+    raw[[column]] <- raw[[mapping[[column]]]]
+  }
+  raw <- raw %>% filter(reliability == "more reliable")
+  raw
+}
+
 #' Create an empty bycatch data frame
 #'
 #' Returns an empty data frame with the expected column names and column types
@@ -495,7 +541,7 @@ plot_bycatch_interactive <- function(df,
     value_col = "bycatch_2024",
     lower_col = "bycatch_lower_CI",
     upper_col = "bycatch_upper_CI",
-    y_label = "Total Bycatch in 2024 \n (individuals)",
+    y_label = "Total Bycatch in 2025 \n (individuals)",
     empty_title = "No bycatch data available",
     palette = palette,
     ecoregion = get_ecoregion_acronym(ecoregion)
@@ -569,4 +615,3 @@ select_default_taxon <- function(current, valid_taxa) {
 
       valid_taxa[1]
     }
-

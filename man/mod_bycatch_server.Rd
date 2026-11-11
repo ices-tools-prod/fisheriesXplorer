@@ -39,8 +39,9 @@ The server performs the following tasks:
   \item Updates the flexible module header with the selected ecoregion,
   ecoregion acronym, last data update date, and glossary link.
   \item Retrieves raw bycatch data for the selected ecoregion using
-  \code{get_bycatch_ecoregion()} and cleans it using
-  \code{clean_bycatch_data()}.
+  the BEAM API (assessment year 2026), configured with the
+  \code{BYCATCH_API_TOKEN} environment variable, and cleans it using
+  \code{clean_bycatch_data()}. Request failures are reported to the user.
   \item Creates tab-specific datasets for total bycatch and BPUE.
   \item Updates metier and species filter choices according to the selected
   taxon and available data.
@@ -66,7 +67,7 @@ This module depends on the following project-level helper functions and data
 objects:
 \itemize{
   \item \code{get_ecoregion_acronym()}
-  \item \code{get_bycatch_ecoregion()}
+  \item \code{get_beam_bycatch_ecoregion()}
   \item \code{clean_bycatch_data()}
   \item \code{empty_bycatch_data()}
   \item \code{plot_bpue_interactive()}
@@ -88,4 +89,3 @@ The cleaned bycatch data must contain, at minimum, the following columns:
   \item \code{bycatch_2024}
 }
 }
-
