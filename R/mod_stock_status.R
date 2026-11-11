@@ -33,8 +33,8 @@
 #'           \item A card with a radio-button selector
 #'             (\code{status_trend_selector}) for functional groups
 #'             (elasmobranch, benthic, shellfish, demersal, pelagic),
-#'             a CSV download link (\code{download_trends_data}), and a
-#'             \code{plotly} trends plot (\code{status_trends}).
+#'             a live-data CSV download link (\code{download_trends_data}), and a
+#'             full-width HTML trends plot (\code{status_trends}).
 #'         }
 #'       \item \strong{Kobe-CLD} (\code{"kobe_cld"}):
 #'         \itemize{
@@ -67,7 +67,6 @@
 #' @importFrom bslib navset_tab nav_panel layout_sidebar sidebar card
 #'   card_header card_body
 #' @importFrom shinycssloaders withSpinner
-#' @importFrom plotly plotlyOutput
 #' @importFrom reactable reactableOutput
 #'
 #' @export
@@ -153,11 +152,14 @@ mod_stock_status_ui <- function(id) {
                 download_icon_label(
                   text = "Download data",
                   outputId = ns("download_trends_data"),
-                  hover_text = "Status trends (.csv)",
+                  hover_text = "Live status trends data (.csv)",
                   size = "large"
                 )
               ),
-              card_body(withSpinner(plotlyOutput(ns("status_trends")))) # , height = "68vh"
+              card_body(
+                style = "overflow-y: hidden;",
+                uiOutput(ns("status_trends"), fill = TRUE)
+              )
             )
           )
         )
@@ -307,12 +309,12 @@ mod_stock_status_ui <- function(id) {
 #'     }
 #'   \item For the \strong{Trends by group} tab:
 #'     \itemize{
-#'       \item Builds trends data with \code{stock_trends_proxy()} and
-#'         \code{trends_data()}.
-#'       \item Renders a \code{plotly} time-series plot via
-#'         \code{plot_stock_trends()} for the selected fisheries guild(s).
-#'       \item Exposes a ZIP download (\code{download_trends_data}) with the
-#'         trends CSV and a disclaimer.
+#'       \item Displays an indexed HTML trends plot for the selected ecoregion
+#'         and guild when the tab is active, mapping All guilds to
+#'         \code{all_guilds}. Documented no-data selections show their reason.
+#'       \item Exposes a ZIP download (\code{download_trends_data}) with a
+#'         live-data trends CSV from \code{stock_trends_proxy()} and
+#'         \code{trends_data()}, plus a disclaimer.
 #'     }
 #'   \item For the \strong{Kobe-CLD} tab:
 #'     \itemize{
@@ -347,7 +349,6 @@ mod_stock_status_ui <- function(id) {
 #' @importFrom shiny moduleServer observeEvent updateTabsetPanel renderUI
 #'   reactive req tags tagList downloadHandler
 #' @importFrom bslib nav_select
-#' @importFrom plotly renderPlotly
 #' @importFrom reactable renderReactable
 #' @importFrom utils write.csv
 #' @importFrom dplyr filter slice_max mutate select
@@ -655,14 +656,20 @@ mod_stock_status_server <- function(
       stock_trends_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID), sag_settings = shared$SAG_Settings))
     })
 
-    output$status_trends <- renderPlotly({
-      req(!is.null(input$status_trend_selector))
-      if (input$status_trend_selector == "all_stocks") {
-        guild <- c("demersal", "pelagic", "shellfish", "benthic", "elasmobranch")
-      } else {
-        guild <- input$status_trend_selector
-      }
-      plot_stock_trends(trends_data(), guild,  return_data = FALSE, ecoregion = get_ecoregion_acronym(selected_ecoregion()))
+    output$status_trends <- renderUI({
+      req(input$main_tabset == "trends_by_group", selected_ecoregion())
+      guild <- input$status_trend_selector
+      req(guild %in% c("All", "benthic", "demersal", "elasmobranch", "pelagic", "shellfish"))
+      region <- get_ecoregion_acronym(selected_ecoregion())
+      validate(need(
+        length(region) == 1L && !is.na(region),
+        "The selected ecoregion has no HTML plot identifier."
+      ))
+      html_plot_frame(
+        summary_catalog, "status_trends", region,
+        paste("Status trends for", selected_ecoregion(), "-", if (guild == "All") "All guilds" else guild),
+        guild_id = if (guild == "All") "all_guilds" else guild
+      )
     })
 
     ######################### Download stock trends data ##########################################

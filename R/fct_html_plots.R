@@ -29,6 +29,11 @@ html_plot_catalog <- local({
         plot_type = "kobe", ecoregion_id = regions,
         guild_id = c("benthic", "demersal", "elasmobranch", "pelagic", "shellfish", "all_stocks"),
         stringsAsFactors = FALSE
+      ),
+      expand.grid(
+        plot_type = "status_trends", ecoregion_id = regions,
+        guild_id = c("benthic", "demersal", "elasmobranch", "pelagic", "shellfish", "all_guilds"),
+        stringsAsFactors = FALSE
       )
     )
     if (anyDuplicated(keys(index)) || anyDuplicated(keys(report)) ||
