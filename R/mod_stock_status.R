@@ -23,7 +23,7 @@
 #'           \item One full-width HTML plot (\code{status_summary_html}),
 #'             selected with \code{status_summary_selector}: Stocks
 #'             (stock summary) or Catches (GES).
-#'           \item The selected view's existing live-data and static-graph download
+#'           \item The selected view's full current-data download
 #'             (\code{download_clean_status_data},
 #'             \code{download_status_catch_data}).
 #'         }
@@ -33,7 +33,7 @@
 #'           \item A card with a radio-button selector
 #'             (\code{status_trend_selector}) for functional groups
 #'             (elasmobranch, benthic, shellfish, demersal, pelagic),
-#'             a live-data CSV download link (\code{download_trends_data}), and a
+#'             a full annual-data download link (\code{download_trends_data}), and a
 #'             full-width HTML trends plot (\code{status_trends}).
 #'         }
 #'       \item \strong{Kobe-CLD} (\code{"kobe_cld"}):
@@ -41,8 +41,8 @@
 #'           \item Sidebar with explanatory text (\code{status_text3}).
 #'           \item Controls for group selection
 #'             (\code{status_kobe_cld_selector}), including All Stocks,
-#'             plus a combined live data + static graphs
-#'             download link (\code{download_CLD_data}).
+#'             plus a full current-data download link
+#'             (\code{download_CLD_data}).
 #'           \item A full-width HTML Kobe diagram
 #'             (\code{status_kobe_html}) for the selected ecoregion and guild.
 #'         }
@@ -102,7 +102,7 @@ mod_stock_status_ui <- function(id) {
                 download_icon_label(
                   text = "Download data",
                   outputId = ns("download_clean_status_data"),
-                  hover_text = "Live status data and static plot (.csv & plot)",
+                  hover_text = "Full current ecoregion data (.csv in .zip)",
                   size = "large"
                 )
               ),
@@ -112,7 +112,7 @@ mod_stock_status_ui <- function(id) {
                 download_icon_label(
                   text = "Download data",
                   outputId = ns("download_status_catch_data"),
-                  hover_text = "Live catch status data and static plot (.csv & plot)",
+                  hover_text = "Full current ecoregion data (.csv in .zip)",
                   size = "large"
                 )
               )
@@ -152,7 +152,7 @@ mod_stock_status_ui <- function(id) {
                 download_icon_label(
                   text = "Download data",
                   outputId = ns("download_trends_data"),
-                  hover_text = "Live status trends data (.csv)",
+                  hover_text = "Full annual ecoregion data (.csv in .zip)",
                   size = "large"
                 )
               ),
@@ -190,7 +190,7 @@ mod_stock_status_ui <- function(id) {
               download_icon_label(
                 text = "Download data",
                 outputId = ns("download_CLD_data"),
-                hover_text = "Live CLD & Kobe data and static plots (.csv & plots)",
+                hover_text = "Full current ecoregion data (.csv in .zip)",
                 size = "large"
               )
             ),
@@ -260,9 +260,7 @@ mod_stock_status_ui <- function(id) {
 #'   in file naming tokens.
 #' @param shared A list or environment containing shared data objects, typically
 #'   including \code{SAG}, \code{SID}, and \code{clean_status}, which are used
-#'   by helper functions such as \code{format_sag()}, \code{CLD_trends()},
-#'   \code{stockstatus_CLD_current_proxy()}, \code{stock_trends_proxy()}, and
-#'   \code{format_annex_table()}.
+#'   by \code{format_annex_table()} for the stock list.
 #' @param bookmark_qs A reactive returning a list of bookmark query-string
 #'   parameters (including \code{subtab}) or \code{NULL}. Used to restore the
 #'   selected main tab (\code{"status_summary"}, \code{"trends_by_group"},
@@ -291,42 +289,33 @@ mod_stock_status_ui <- function(id) {
 #'     \code{select_text(texts, "status", "sidebar")}.
 #'   \item For the \strong{Status Summary} tab:
 #'     \itemize{
-#'       \item Computes \code{catch_current()} from \code{shared$SAG} and
-#'         \code{shared$SID} via \code{format_sag()},
-#'         \code{add_proxyRefPoints()}, and
-#'         \code{stockstatus_CLD_current_proxy()}.
 #'       \item Displays an indexed stock-summary or GES HTML in a full-width
 #'         iframe, according to \code{status_summary_selector}, only when
 #'         the Summary tab is active. Documented no-data selections show
 #'         the export report's reason.
 #'       \item Provides ZIP bundles for clean status data
 #'         (\code{download_clean_status_data}) and GES/catch status
-#'         (\code{download_status_catch_data}), each containing a CSV export,
-#'         a disclaimer text (fetched via \code{safe_download()}), and a PNG
-#'         plot from live app data, not the HTML export snapshot
-#'         (generated with \code{ragg::agg_png()} or
-#'         \code{ggplot2::ggsave()} where possible).
+#'         (\code{download_status_catch_data}), each containing the selected
+#'         ecoregion's complete current RDS data as a CSV and a disclaimer
+#'         fetched via \code{safe_download()}.
 #'     }
 #'   \item For the \strong{Trends by group} tab:
 #'     \itemize{
 #'       \item Displays an indexed HTML trends plot for the selected ecoregion
 #'         and guild when the tab is active, mapping All guilds to
 #'         \code{all_guilds}. Documented no-data selections show their reason.
-#'       \item Exposes a ZIP download (\code{download_trends_data}) with a
-#'         live-data trends CSV from \code{stock_trends_proxy()} and
-#'         \code{trends_data()}, plus a disclaimer.
+#'       \item Exposes a ZIP download (\code{download_trends_data}) with the
+#'         selected ecoregion's complete annual RDS data as a CSV and a
+#'         disclaimer.
 #'     }
 #'   \item For the \strong{Kobe-CLD} tab:
 #'     \itemize{
-#'       \item Computes \code{kobe_cld_data()} from \code{catch_current()}
-#'         filtered by the selected guild(s) and \code{plot_CLD_bar_app()}
-#'         with \code{return_data = TRUE}.
 #'       \item Displays an indexed HTML Kobe plot for the selected ecoregion
 #'         and guild when the tab is active, mapping All Stocks to
 #'         \code{all_stocks}. Documented no-data selections show their reason.
-#'       \item Provides a ZIP bundle (\code{download_CLD_data}) containing the
-#'         full selected-guild live-data CSV, a disclaimer, and static PNG
-#'         images of both Kobe and CLD plots, not the HTML export snapshot.
+#'       \item Provides a ZIP bundle (\code{download_CLD_data}) containing
+#'         the selected ecoregion's complete current RDS data as a CSV and
+#'         a disclaimer.
 #'     }
 #'   \item For the \strong{Stock status lookup} tab:
 #'     \itemize{
@@ -461,9 +450,6 @@ mod_stock_status_server <- function(
 
     ######################### Status summary tab #################################################
 
-    catch_current <- reactive({
-      stockstatus_CLD_current_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID),  sag_settings = shared$SAG_Settings)) #custom_refpoints_path = "data/custom_refpoints_2025.csv",
-    })
 
     output$status_summary_html <- renderUI({
       req(input$main_tabset == "status_summary", selected_ecoregion())
@@ -504,7 +490,7 @@ mod_stock_status_server <- function(
         # --- 1) CSV (with acronym + date)
         csv_name <- paste0("status_data_", acronym, "_", date_tag, ".csv")
         csv_path <- file.path(td, csv_name)
-        dat <- shared$clean_status
+        dat <- readRDS(app_sys(paste0("app/plot_data/current_", acronym, ".rds")))
         utils::write.csv(dat, csv_path, row.names = FALSE)
 
         # --- 2) Disclaimer.txt (fixed name; no acronym/date)
@@ -518,45 +504,8 @@ mod_stock_status_server <- function(
           ), con = disc_path)
         }
 
-        # --- 3) Plot image (PNG) of the static pies
-        png_name <- paste0("status_pie_plot_", acronym, "_", date_tag, ".png")
-        png_path <- file.path(td, png_name)
-
-        plot_ok <- FALSE
-        try(
-          {
-            p <- plot_status_prop_pies(dat) # your static ggplot function
-            if (inherits(p, "ggplot")) {
-              # Prefer ragg for crisp text; fall back to ggsave
-              if (requireNamespace("ragg", quietly = TRUE)) {
-                ragg::agg_png(filename = png_path, width = 2200, height = 1400, units = "px", res = 144)
-                print(p)
-                grDevices::dev.off()
-              } else {
-                ggplot2::ggsave(
-                  filename = png_path, plot = p, width = 14, height = 9,
-                  dpi = 150, limitsize = FALSE
-                )
-              }
-              plot_ok <- file.exists(png_path) && file.info(png_path)$size > 0
-            }
-          },
-          silent = TRUE
-        )
-
-        if (!plot_ok) {
-          writeLines(
-            c(
-              "Plot image could not be generated.",
-              "Check that 'shared$clean_status' has these columns:",
-              "StockKeyLabel, FisheriesGuild, lineDescription, FishingPressure, StockSize."
-            ),
-            con = file.path(td, "PLOT_GENERATION_FAILED.txt")
-          )
-        }
-
         # --- Zip everything
-        files_to_zip <- c(csv_path, disc_path, if (plot_ok) png_path)
+        files_to_zip <- c(csv_path, disc_path)
         if (requireNamespace("zip", quietly = TRUE) && "zipr" %in% getNamespaceExports("zip")) {
           zip::zipr(zipfile = file, files = files_to_zip, root = td)
         } else {
@@ -590,7 +539,7 @@ mod_stock_status_server <- function(
         date_tag <- format(Sys.Date(), "%d-%b-%y")
 
         # 1) CSV (includes acronym + date)
-        dat <- plot_GES_pies(shared$clean_status, catch_current(), return_data = TRUE)
+        dat <- readRDS(app_sys(paste0("app/plot_data/current_", acronym, ".rds")))
         csv_name <- paste0("status_catch_data_", acronym, "_", date_tag, ".csv")
         csv_path <- file.path(td, csv_name)
         utils::write.csv(dat, csv_path, row.names = FALSE)
@@ -606,39 +555,8 @@ mod_stock_status_server <- function(
           ), con = disc_path)
         }
 
-        # 3) PNG plot image
-        png_name <- paste0("status_catch_pie_plot_", acronym, "_", date_tag, ".png")
-        png_path <- file.path(td, png_name)
-        plot_ok <- FALSE
-        try(
-          {
-            p <- plot_GES_pies(shared$clean_status, catch_current(), return_data = FALSE)
-            if (inherits(p, "ggplot")) {
-              if (requireNamespace("ragg", quietly = TRUE)) {
-                ragg::agg_png(filename = png_path, width = 2200, height = 1400, units = "px", res = 144)
-                print(p)
-                grDevices::dev.off()
-              } else {
-                ggplot2::ggsave(filename = png_path, plot = p, width = 14, height = 9, dpi = 150, limitsize = FALSE)
-              }
-              plot_ok <- file.exists(png_path) && file.info(png_path)$size > 0
-            }
-          },
-          silent = TRUE
-        )
-
-        if (!plot_ok) {
-          writeLines(
-            c(
-              "Plot image could not be generated.",
-              "Check that 'plot_GES_pies' returns a ggplot object when return_data = FALSE."
-            ),
-            con = file.path(td, "PLOT_GENERATION_FAILED.txt")
-          )
-        }
-
         # Zip bundle
-        files_to_zip <- c(csv_path, disc_path, if (plot_ok) png_path)
+        files_to_zip <- c(csv_path, disc_path)
         if (requireNamespace("zip", quietly = TRUE) && "zipr" %in% getNamespaceExports("zip")) {
           zip::zipr(zipfile = file, files = files_to_zip, root = td)
         } else {
@@ -652,9 +570,6 @@ mod_stock_status_server <- function(
 
 
     ##################### Stock trends tab ###############################################
-    trends_data <- reactive({
-      stock_trends_proxy(add_proxyRefPoints(format_sag(shared$SAG, shared$SID), sag_settings = shared$SAG_Settings))
-    })
 
     output$status_trends <- renderUI({
       req(input$main_tabset == "trends_by_group", selected_ecoregion())
@@ -694,7 +609,7 @@ mod_stock_status_server <- function(
         date_tag <- format(Sys.Date(), "%d-%b-%y")
 
         # --- 1) CSV (includes acronym + date)
-        dat <- trends_data()
+        dat <- readRDS(app_sys(paste0("app/plot_data/annual_", acronym, ".rds")))
         csv_name <- paste0("status_trends_data_", acronym, "_", date_tag, ".csv")
         csv_path <- file.path(td, csv_name)
         utils::write.csv(dat, csv_path, row.names = FALSE)
@@ -740,17 +655,6 @@ mod_stock_status_server <- function(
       )
     })
 
-    kobe_cld_data <- reactive({
-      if (input$status_kobe_cld_selector == "All") {
-        guild <- c("demersal", "pelagic", "shellfish", "benthic", "elasmobranch")
-        tmp <- catch_current() %>% dplyr::filter(FisheriesGuild %in% guild)
-        tmp <- plot_CLD_bar_app(tmp, guild = input$status_kobe_cld_selector, return_data = TRUE)
-      } else {
-        guild <- input$status_kobe_cld_selector
-        tmp <- catch_current() %>% dplyr::filter(FisheriesGuild %in% guild)
-        tmp <- plot_CLD_bar_app(tmp, guild = input$status_kobe_cld_selector, return_data = TRUE)
-      }
-    })
     ######################### CLD/Kobe download ################################################
     output$download_CLD_data <- downloadHandler(
       filename = function() {
@@ -772,19 +676,11 @@ mod_stock_status_server <- function(
         acronym <- get_ecoregion_acronym(ecoregion)
         date_tag <- format(Sys.Date(), "%d-%b-%y")
 
-        # --- Inputs for plots (with safe fallbacks)
-        guild <- input$status_kobe_cld_selector %|?% "All"
-
-        # Optional caption tokens (fallback to current date if not in scope)
-        capY <- if (exists("cap_year", inherits = TRUE)) get("cap_year") else format(Sys.Date(), "%Y")
-        capM <- if (exists("cap_month", inherits = TRUE)) get("cap_month") else format(Sys.Date(), "%m")
-
         # --- 1) CSV (with acronym + date)
-        dat <- kobe_cld_data()
-        plot_data <- dat
+        dat <- readRDS(app_sys(paste0("app/plot_data/current_", acronym, ".rds")))
         csv_name <- paste0("status_CLD_data_", acronym, "_", date_tag, ".csv")
         csv_path <- file.path(td, csv_name)
-        utils::write.csv(plot_data, csv_path, row.names = FALSE)
+        utils::write.csv(dat, csv_path, row.names = FALSE)
 
         # --- 2) Disclaimer.txt (fixed name; no acronym/date)
         disc_path <- file.path(td, "Disclaimer.txt")
@@ -797,68 +693,8 @@ mod_stock_status_server <- function(
           ), con = disc_path)
         }
 
-        # --- 3) PNGs: Kobe + CLD bar (saved at high resolution)
-        kobe_png_name <- paste0("status_kobe_plot_", acronym, "_", date_tag, ".png")
-        kobe_png_path <- file.path(td, kobe_png_name)
-        cld_png_name <- paste0("status_CLD_bar_", acronym, "_", date_tag, ".png")
-        cld_png_path <- file.path(td, cld_png_name)
-
-        # Generate Kobe plot
-        kobe_ok <- FALSE
-        try(
-          {
-            p_kobe <- plot_kobe_app(
-              plot_data,
-              guild = guild,              
-              return_data = FALSE
-            )
-            if (inherits(p_kobe, "ggplot")) {
-              if (requireNamespace("ragg", quietly = TRUE)) {
-                ragg::agg_png(filename = kobe_png_path, width = 2200, height = 1600, units = "px", res = 144)
-                print(p_kobe)
-                grDevices::dev.off()
-              } else {
-                ggplot2::ggsave(kobe_png_path, plot = p_kobe, width = 14, height = 10, dpi = 150, limitsize = FALSE)
-              }
-              kobe_ok <- file.exists(kobe_png_path) && file.info(kobe_png_path)$size > 0
-            }
-          },
-          silent = TRUE
-        )
-
-        # Generate CLD bar plot
-        cld_ok <- FALSE
-        try(
-          {
-            p_cld <- plot_CLD_bar_app(
-              plot_data,
-              guild = guild,
-              return_data = FALSE
-            )
-            if (inherits(p_cld, "ggplot")) {
-              if (requireNamespace("ragg", quietly = TRUE)) {
-                ragg::agg_png(filename = cld_png_path, width = 2200, height = 1400, units = "px", res = 144)
-                print(p_cld)
-                grDevices::dev.off()
-              } else {
-                ggplot2::ggsave(cld_png_path, plot = p_cld, width = 14, height = 9, dpi = 150, limitsize = FALSE)
-              }
-              cld_ok <- file.exists(cld_png_path) && file.info(cld_png_path)$size > 0
-            }
-          },
-          silent = TRUE
-        )
-
-        if (!kobe_ok || !cld_ok) {
-          msg <- c("One or more plot images could not be generated.")
-          if (!kobe_ok) msg <- c(msg, "• Kobe plot failed.")
-          if (!cld_ok) msg <- c(msg, "• CLD bar plot failed.")
-          msg <- c(msg, "Check that plot_* functions return ggplot objects and inputs are available.")
-          writeLines(msg, con = file.path(td, "PLOT_GENERATION_FAILED.txt"))
-        }
-
         # --- Zip everything
-        files_to_zip <- c(csv_path, disc_path, if (kobe_ok) kobe_png_path, if (cld_ok) cld_png_path)
+        files_to_zip <- c(csv_path, disc_path)
         if (requireNamespace("zip", quietly = TRUE) && "zipr" %in% getNamespaceExports("zip")) {
           zip::zipr(zipfile = file, files = files_to_zip, root = td)
         } else {

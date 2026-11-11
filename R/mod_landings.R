@@ -122,7 +122,7 @@ mod_landings_ui <- function(id) {
               download_icon_label(
                 text = "Download data",
                 outputId = ns("download_discard_data"),
-                hover_text = "Discards (.csv)",
+                hover_text = "Full annual ecoregion data (.csv in .zip)",
                 size = "large"  
               )
             ),
@@ -152,9 +152,7 @@ mod_landings_ui <- function(id) {
 #' @param selected_ecoregion A reactive expression returning the currently
 #'   selected ecoregion name (character). Used for labelling and to select
 #'   the appropriate cached data file.
-#' @param shared A list or environment containing shared data objects,
-#'   typically including \code{SAG} and \code{SID} tables used by
-#'   \code{format_sag()} and \code{CLD_trends()} for discard calculations.
+#' @param shared Shared app data supplied by the parent server.
 #' @param bookmark_qs A reactive returning a list of bookmark query-string
 #'   parameters (including \code{subtab}) or \code{NULL}. Used to restore
 #'   the selected main tab (\code{"landings"} or \code{"discards"}) on load.
@@ -187,13 +185,13 @@ mod_landings_ui <- function(id) {
 #'     }
 #'   \item For discards:
 #'     \itemize{
-#'       \item Uses \code{format_sag()} and \code{CLD_trends()} based on
-#'         \code{shared$SAG} and \code{shared$SID}.
+#'       \item Reads the selected ecoregion's complete annual RDS snapshot
+#'         from \code{app/plot_data} when a download is requested.
 #'       \item Displays a pre-generated HTML time-series trends plot in an
 #'         iframe that fills the available card body.
 #'       \item Provides a ZIP bundle download
-#'         (\code{download_discard_data}) containing a CSV export and a
-#'         disclaimer.
+#'         (\code{download_discard_data}) containing every row and column
+#'         of that snapshot as a CSV, plus a disclaimer.
 #'     }
 #' }
 #'
@@ -556,8 +554,7 @@ output$landings_layer <- renderPlotly({
         date_tag <- format(Sys.Date(), "%d-%b-%y")
 
         # ---- Build CSV (include acronym + date) ----
-        # If CLD_trends() returns multiple measures, filter upstream if needed to "discards" only.
-        dat <- CLD_trends(format_sag(shared$SAG, shared$SID))
+        dat <- readRDS(app_sys(paste0("app/plot_data/annual_", acronym, ".rds")))
 
         csv_name <- paste0("discard_data_", acronym, "_", date_tag, ".csv")
         csv_path <- file.path(td, csv_name)
