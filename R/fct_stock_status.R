@@ -343,118 +343,183 @@ format_sag_status_new <- function(df,sag) {
 
 
 
-#' Format annex table with GES summary
+# #' Format annex table with GES summary
+# #'
+# #' Prepares a merged annex-style table combining stock status
+# #' information with SID/SAG metadata. It aligns \code{StockKeyLabel}
+# #' across sources (including substocks), attaches assessment keys and
+# #' components, and computes summary columns for Descriptor 3 (D3C1,
+# #' D3C2) and an overall GES status.
+# #'
+# #' @param status A data frame of formatted status information, typically
+# #'   the output of \code{format_sag_status_new()}, containing at least
+# #'   \code{StockKeyLabel}, \code{FishingPressure}, \code{StockSize},
+# #'   \code{StockKeyDescription}, and \code{FisheriesGuild}.
+# #' @param year Numeric assessment year (currently not used inside the
+# #'   function, but kept for interface compatibility and potential
+# #'   future filtering).
+# #' @param sid A SID stock list data frame, usually from \code{getSID()},
+# #'   containing \code{StockKeyLabel}, \code{AssessmentKey}, 
+# #'   \code{FisheriesGuild}, \code{StockKeyDescription}, etc.
+# #' @param sag A SAG data object, typically from
+# #'   \code{getSAG_ecoregion_new()}, containing at least
+# #'   \code{StockKeyLabel}, \code{AssessmentKey}, and
+# #'   \code{AssessmentComponent}.
+# #'
+# #' @return
+# #' A data frame with one row per stock (or stock component), including:
+# #' \describe{
+# #'   \item{StockKeyLabel}{Stock label, with \code{AssessmentComponent}
+# #'     appended (and “Substock” removed) where applicable.}
+# #'   \item{AssessmentKey}{Assessment key aligned with the SAG/SID data.}
+# #'   \item{AssessmentComponent}{Assessment component (or \code{NA} if
+# #'     none).}
+# #'   \item{FisheriesGuild}{Fisheries guild from SID/status.}
+# #'   \item{FishingPressure}{Categorical status (e.g. \code{"GREEN"},
+# #'     \code{"RED"}, \code{"GREY"}).}
+# #'   \item{StockSize}{Categorical status for stock size.}
+# #'   \item{D3C1}{Alias of \code{FishingPressure}.}
+# #'   \item{D3C2}{Alias of \code{StockSize}.}
+# #'   \item{GES}{Overall GES summary:
+# #'     \code{"GREEN"} if both \code{FishingPressure} and \code{StockSize}
+# #'     are \code{"GREEN"};
+# #'     \code{"RED"} if either is \code{"RED"};
+# #'     \code{"GREY"} if either is \code{"GREY"} or if none of the above
+# #'     apply.}
+# #'   \item{StockKeyDescription}{Cleaned description with any text in
+# #'     parentheses removed.}
+# #' }
+# #'
+# #' @details
+# #' The function:
+# #' \enumerate{
+# #'   \item Merges \code{sag} (selecting \code{StockKeyLabel},
+# #'     \code{AssessmentKey}, \code{AssessmentComponent}) with \code{sid}
+# #'     by \code{StockKeyLabel}, then de-duplicates and renames
+# #'     \code{AssessmentKey.x} to \code{AssessmentKey}.
+# #'   \item Filters \code{sid} to stocks present in \code{status}, using
+# #'     the base (pre-substock) \code{StockKeyLabel}.
+# #'   \item Rebuilds \code{StockKeyLabel} including \code{AssessmentComponent}
+# #'     (where non-empty) and strips any trailing “Substock” text.
+# #'   \item Joins the resulting \code{sid} back onto \code{status} by
+# #'     \code{StockKeyLabel}, normalising some column names and dropping
+# #'     duplicates.
+# #'   \item Creates D3 columns:
+# #'     \code{D3C1 = FishingPressure}, \code{D3C2 = StockSize}, and
+# #'     \code{GES} as described above.
+# #'   \item Cleans \code{StockKeyDescription} by removing any
+# #'     parenthesised text.
+# #' }
+# #'
+# #' This helper is designed to produce the annex-style summary table used
+# #' for reporting and export from the application.
+# #
+# #' @importFrom dplyr select distinct rename filter mutate case_when left_join
+# #' @noRd
+# format_annex_table <- function(status, year, sid, sag) {
+        
+#         sid <- merge(sag %>% dplyr::select(StockKeyLabel, AssessmentKey, AssessmentComponent), sid, by = "StockKeyLabel")
+              
+#         sid <- sid %>%
+#                 dplyr::distinct() %>%
+#                 dplyr::rename(AssessmentKey = AssessmentKey.x) %>%
+#                 dplyr::select(-AssessmentKey.y) %>%
+#                 dplyr::filter(StockKeyLabel %in% sub("_.*$", "", status$StockKeyLabel))
+        
+#         # need this step to make stocks with substocks match between sid and status
+#         sid$StockKeyLabel <- ifelse(is.na(sid$AssessmentComponent) |sid$AssessmentComponent == "", sid$StockKeyLabel, paste0(sid$StockKeyLabel, "_", sid$AssessmentComponent))
+#         sid$StockKeyLabel <- gsub("\\s*Substock\\b", "", sid$StockKeyLabel, ignore.case = TRUE)
+
+#         df <- dplyr::left_join(status, sid, by = "StockKeyLabel")
+      
+#         df <- dplyr::rename(df,                
+#                 AssessmentKey = AssessmentKey.y,                
+#                 FisheriesGuild = FisheriesGuild.x )  %>% 
+#                 dplyr::select(-c(AssessmentKey.x, FisheriesGuild.y)) %>% 
+#                 # if AssessmentComponent is "", make it empty NA
+#                 dplyr::mutate(AssessmentComponent = dplyr::if_else(AssessmentComponent == "", NA_character_, AssessmentComponent))
+
+#         df <- dplyr::mutate(df,
+#                 D3C1 = FishingPressure,
+#                 D3C2 = StockSize,
+#                 GES = dplyr::case_when(
+#                         FishingPressure == "GREEN" & StockSize == "GREEN" ~ "GREEN",
+#                         FishingPressure == "RED" | StockSize == "RED" ~ "RED",
+#                         FishingPressure == "GREY" | StockSize == "GREY" ~ "GREY",
+#                         TRUE ~ "GREY"
+#                 )
+#         )
+
+#         df$StockKeyDescription <- gsub("\\s*\\([^\\)]+\\)", "", df$StockKeyDescription, perl = TRUE)
+
+#         return(df)
+# }
+#' Enrich the current TAF stock snapshot for the stock list
 #'
-#' Prepares a merged annex-style table combining stock status
-#' information with SID/SAG metadata. It aligns \code{StockKeyLabel}
-#' across sources (including substocks), attaches assessment keys and
-#' components, and computes summary columns for Descriptor 3 (D3C1,
-#' D3C2) and an overall GES status.
+#' Adds descriptive SID fields and the saved assessment identity to each
+#' current stock or component. Reference points, statuses and guilds come
+#' from the current snapshot.
 #'
-#' @param status A data frame of formatted status information, typically
-#'   the output of \code{format_sag_status_new()}, containing at least
-#'   \code{StockKeyLabel}, \code{FishingPressure}, \code{StockSize},
-#'   \code{StockKeyDescription}, and \code{FisheriesGuild}.
-#' @param year Numeric assessment year (currently not used inside the
-#'   function, but kept for interface compatibility and potential
-#'   future filtering).
-#' @param sid A SID stock list data frame, usually from \code{getSID()},
-#'   containing \code{StockKeyLabel}, \code{AssessmentKey}, 
-#'   \code{FisheriesGuild}, \code{StockKeyDescription}, etc.
-#' @param sag A SAG data object, typically from
-#'   \code{getSAG_ecoregion_new()}, containing at least
-#'   \code{StockKeyLabel}, \code{AssessmentKey}, and
-#'   \code{AssessmentComponent}.
-#'
-#' @return
-#' A data frame with one row per stock (or stock component), including:
-#' \describe{
-#'   \item{StockKeyLabel}{Stock label, with \code{AssessmentComponent}
-#'     appended (and “Substock” removed) where applicable.}
-#'   \item{AssessmentKey}{Assessment key aligned with the SAG/SID data.}
-#'   \item{AssessmentComponent}{Assessment component (or \code{NA} if
-#'     none).}
-#'   \item{FisheriesGuild}{Fisheries guild from SID/status.}
-#'   \item{FishingPressure}{Categorical status (e.g. \code{"GREEN"},
-#'     \code{"RED"}, \code{"GREY"}).}
-#'   \item{StockSize}{Categorical status for stock size.}
-#'   \item{D3C1}{Alias of \code{FishingPressure}.}
-#'   \item{D3C2}{Alias of \code{StockSize}.}
-#'   \item{GES}{Overall GES summary:
-#'     \code{"GREEN"} if both \code{FishingPressure} and \code{StockSize}
-#'     are \code{"GREEN"};
-#'     \code{"RED"} if either is \code{"RED"};
-#'     \code{"GREY"} if either is \code{"GREY"} or if none of the above
-#'     apply.}
-#'   \item{StockKeyDescription}{Cleaned description with any text in
-#'     parentheses removed.}
-#' }
+#' @param current Regional data from \code{current_<ecoregion>.rds}.
+#' @param sid The regional SID stock list from \code{getSID()}.
+#' @param annual Regional data from \code{annual_<ecoregion>.rds}, supplying
+#'   assessment years and exact component names for adviceXplorer links.
 #'
 #' @details
-#' The function:
-#' \enumerate{
-#'   \item Merges \code{sag} (selecting \code{StockKeyLabel},
-#'     \code{AssessmentKey}, \code{AssessmentComponent}) with \code{sid}
-#'     by \code{StockKeyLabel}, then de-duplicates and renames
-#'     \code{AssessmentKey.x} to \code{AssessmentKey}.
-#'   \item Filters \code{sid} to stocks present in \code{status}, using
-#'     the base (pre-substock) \code{StockKeyLabel}.
-#'   \item Rebuilds \code{StockKeyLabel} including \code{AssessmentComponent}
-#'     (where non-empty) and strips any trailing “Substock” text.
-#'   \item Joins the resulting \code{sid} back onto \code{status} by
-#'     \code{StockKeyLabel}, normalising some column names and dropping
-#'     duplicates.
-#'   \item Creates D3 columns:
-#'     \code{D3C1 = FishingPressure}, \code{D3C2 = StockSize}, and
-#'     \code{GES} as described above.
-#'   \item Cleans \code{StockKeyDescription} by removing any
-#'     parenthesised text.
-#' }
+#' SID metadata is joined by the base stock label. Identical metadata rows
+#' created by assessment-key expansion are collapsed. Both joins require
+#' many-to-one matches to preserve one row per current stock or component.
+#' The link assessment key uses \code{F_AssessmentKey}, with
+#' \code{B_AssessmentKey} supplying a missing F key.
 #'
-#' This helper is designed to produce the annex-style summary table used
-#' for reporting and export from the application.
-#
-#' @importFrom dplyr select distinct rename filter mutate case_when left_join
+#' @return The current snapshot with SID descriptions, species names and
+#'   categories, plus \code{AssessmentKey}, \code{AssessmentComponent} and
+#'   \code{AssessmentYear} from the saved assessment.
+#'
+#' @importFrom dplyr select distinct transmute mutate coalesce na_if left_join
 #' @noRd
-format_annex_table <- function(status, year, sid, sag) {
-        
-        sid <- merge(sag %>% dplyr::select(StockKeyLabel, AssessmentKey, AssessmentComponent), sid, by = "StockKeyLabel")
-              
-        sid <- sid %>%
-                dplyr::distinct() %>%
-                dplyr::rename(AssessmentKey = AssessmentKey.x) %>%
-                dplyr::select(-AssessmentKey.y) %>%
-                dplyr::filter(StockKeyLabel %in% sub("_.*$", "", status$StockKeyLabel))
-        
-        # need this step to make stocks with substocks match between sid and status
-        sid$StockKeyLabel <- ifelse(is.na(sid$AssessmentComponent) |sid$AssessmentComponent == "", sid$StockKeyLabel, paste0(sid$StockKeyLabel, "_", sid$AssessmentComponent))
-        sid$StockKeyLabel <- gsub("\\s*Substock\\b", "", sid$StockKeyLabel, ignore.case = TRUE)
+format_annex_table <- function(current, sid, annual) {
+  stopifnot(!anyDuplicated(current$StockKeyLabel))
 
-        df <- dplyr::left_join(status, sid, by = "StockKeyLabel")
-      
-        df <- dplyr::rename(df,                
-                AssessmentKey = AssessmentKey.y,                
-                FisheriesGuild = FisheriesGuild.x )  %>% 
-                dplyr::select(-c(AssessmentKey.x, FisheriesGuild.y)) %>% 
-                # if AssessmentComponent is "", make it empty NA
-                dplyr::mutate(AssessmentComponent = dplyr::if_else(AssessmentComponent == "", NA_character_, AssessmentComponent))
+  sid_metadata <- sid |>
+    dplyr::select(
+      StockKeyLabel, StockKeyDescription, SpeciesScientificName,
+      SpeciesCommonName, DataCategory, AdviceCategory
+    ) |>
+    dplyr::distinct()
 
-        df <- dplyr::mutate(df,
-                D3C1 = FishingPressure,
-                D3C2 = StockSize,
-                GES = dplyr::case_when(
-                        FishingPressure == "GREEN" & StockSize == "GREEN" ~ "GREEN",
-                        FishingPressure == "RED" | StockSize == "RED" ~ "RED",
-                        FishingPressure == "GREY" | StockSize == "GREY" ~ "GREY",
-                        TRUE ~ "GREY"
-                )
-        )
+  assessment_metadata <- annual |>
+    dplyr::transmute(
+      StockKeyLabel = as.character(StockKeyLabel),
+      AssessmentKey = as.character(AssessmentKey),
+      AssessmentComponent = dplyr::na_if(as.character(AssessmentComponent), ""),
+      AssessmentYear
+    ) |>
+    dplyr::distinct()
 
-        df$StockKeyDescription <- gsub("\\s*\\([^\\)]+\\)", "", df$StockKeyDescription, perl = TRUE)
-
-        return(df)
+  current |>
+    dplyr::mutate(
+      .SIDStockKeyLabel = sub("_.*$", "", StockKeyLabel),
+      AssessmentKey = dplyr::coalesce(
+        dplyr::na_if(as.character(F_AssessmentKey), ""),
+        dplyr::na_if(as.character(B_AssessmentKey), "")
+      )
+    ) |>
+    dplyr::left_join(
+      assessment_metadata,
+      by = c("StockKeyLabel", "AssessmentKey"),
+      relationship = "many-to-one", na_matches = "never"
+    ) |>
+    dplyr::left_join(
+      sid_metadata,
+      by = c(".SIDStockKeyLabel" = "StockKeyLabel"),
+      relationship = "many-to-one", na_matches = "never"
+    ) |>
+    dplyr::mutate(
+      StockKeyDescription = gsub("\\s*\\([^\\)]+\\)", "", StockKeyDescription, perl = TRUE)
+    ) |>
+    dplyr::select(-.SIDStockKeyLabel)
 }
-
 
 #' Format SAG data and attach fisheries guilds
 #'

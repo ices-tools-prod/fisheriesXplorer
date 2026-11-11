@@ -1,3 +1,4 @@
+
 #' Stock status UI module
 #'
 #' This module UI creates the main \emph{Stock status} section of the app.
@@ -259,8 +260,8 @@ mod_stock_status_ui <- function(id) {
 #'   selected ecoregion name (character). Used for labelling, filtering, and
 #'   in file naming tokens.
 #' @param shared A list or environment containing shared data objects, typically
-#'   including \code{SAG}, \code{SID}, and \code{clean_status}, which are used
-#'   by \code{format_annex_table()} for the stock list.
+#'   including \code{SID}, which supplies descriptive stock metadata to
+#'   \code{format_annex_table()}.
 #' @param bookmark_qs A reactive returning a list of bookmark query-string
 #'   parameters (including \code{subtab}) or \code{NULL}. Used to restore the
 #'   selected main tab (\code{"status_summary"}, \code{"trends_by_group"},
@@ -319,15 +320,12 @@ mod_stock_status_ui <- function(id) {
 #'     }
 #'   \item For the \strong{Stock status lookup} tab:
 #'     \itemize{
-#'       \item Builds a processed data frame suitable for a rich table via
-#'         \code{format_annex_table()}, icon paths
-#'         (\code{match_stockcode_to_illustration()}), and status icon
-#'         mapping (\code{icon_mapping()}), pivoted to provide MSY and PA
-#'         columns.
-#'       \item Renders a \code{reactable} table with HTML columns, grouped
-#'         headers, and filters.
+#'       \item Enriches the current regional TAF snapshot with SID metadata
+#'         and saved annual assessment identities via \code{format_annex_table()}.
+#'       \item Renders a \code{reactable} table with stock links, illustrations,
+#'         and reference-point names coloured by \code{FStatus} and \code{BStatus}.
 #'       \item Exposes a ZIP bundle (\code{download_status_table}) with the
-#'         raw annex table CSV and a disclaimer.
+#'         enriched regional data as a CSV and a disclaimer.
 #'     }
 #' }
 #'
@@ -707,18 +705,42 @@ mod_stock_status_server <- function(
     )
     ##################### Stock status lookup tab ######################################################
 
+    stock_table_data <- reactive({
+      req(selected_ecoregion(), is.data.frame(shared$SID))
+      acronym <- get_ecoregion_acronym(selected_ecoregion())
+      current <- readRDS(app_sys(paste0("app/plot_data/current_", acronym, ".rds")))
+      annual <- readRDS(app_sys(paste0("app/plot_data/annual_", acronym, ".rds")))
+      format_annex_table(current = current, sid = shared$SID, annual = annual)
+    })
+
     processed_data_reactable <- reactive({
       req(input$main_tabset == "status_lookup")
-      annex_data <- format_annex_table(shared$clean_status, as.integer(format(Sys.Date(), "%Y")), shared$SID, shared$SAG)
-      
+      annex_data <- stock_table_data()
+
       sk <- selected_stock() %|?% ""
       if (nzchar(sk)) {
-        annex_data <- annex_data %>% dplyr::filter(as.character(AssessmentKey) == sk)
+        annex_data <- annex_data %>% dplyr::filter(
+          as.character(F_AssessmentKey) == sk | as.character(B_AssessmentKey) == sk
+        )
       }
       annex_data %>%
         dplyr::mutate(
           icon = paste0("<img src='", paste0("www/fish/", match_stockcode_to_illustration(StockKeyLabel, .)), "' height=30>"),
-          StockKeyLabel = paste0("<a href='https://ices-taf.shinyapps.io/advicexplorer/?assessmentkey=", AssessmentKey, "&assessmentcomponent=", AssessmentComponent, "' target='_blank'>", StockKeyLabel, "</a>")
+          stock_url = paste0(
+            "https://ices-taf.shinyapps.io/advicexplorer/?assessmentkey=",
+            utils::URLencode(dplyr::coalesce(AssessmentKey, ""), reserved = TRUE),
+            "&assessmentcomponent=",
+            utils::URLencode(dplyr::coalesce(AssessmentComponent, ""), reserved = TRUE)
+          ),
+          StockKeyLabel = dplyr::if_else(
+            !is.na(AssessmentKey) & nzchar(AssessmentKey),
+            paste0(
+              "<a href='", htmltools::htmlEscape(stock_url, attribute = TRUE),
+              "' target='_blank' rel='noopener noreferrer'>",
+              htmltools::htmlEscape(StockKeyLabel), "</a>"
+            ),
+            htmltools::htmlEscape(StockKeyLabel)
+          )
         ) %>%
         dplyr::select(
           "Stock code (_component)" = StockKeyLabel,
@@ -728,27 +750,9 @@ mod_stock_status_server <- function(
           "Common Name" = SpeciesCommonName,
           "Fisheries Guild" = FisheriesGuild,
           "Data Category" = DataCategory,
-          "Assessment Year" = YearOfLastAssessment,
+          "Assessment Year" = AssessmentYear,
           "Advice Category" = AdviceCategory,
-          "Approach" = lineDescription,
-          "Fishing Pressure" = FishingPressure,
-          "Stock Size" = StockSize
-        ) %>%
-        dplyr::mutate(Approach = tolower(Approach)) %>%
-        tidyr::pivot_wider(
-          names_from = Approach,
-          values_from = c(`Fishing Pressure`, `Stock Size`),
-          names_glue = "{Approach}_{.value}"
-        ) %>%
-        dplyr::mutate(
-          `MSY Fishing Pressure` = sapply(`maximum sustainable yield_Fishing Pressure`, icon_mapping),
-          `MSY Stock Size` = sapply(`maximum sustainable yield_Stock Size`, icon_mapping),
-          `PA Fishing Pressure` = sapply(`precautionary approach_Fishing Pressure`, icon_mapping),
-          `PA Stock Size` = sapply(`precautionary approach_Stock Size`, icon_mapping)
-        ) %>%
-        dplyr::select(
-          -`maximum sustainable yield_Fishing Pressure`, -`maximum sustainable yield_Stock Size`,
-          -`precautionary approach_Fishing Pressure`, -`precautionary approach_Stock Size`
+          Fref_name, Bref_name, FStatus, BStatus
         )
     })
 
@@ -765,6 +769,16 @@ mod_stock_status_server <- function(
         ))
       }
 
+      status_colours <- c(GREEN = "#00B26D", RED = "#d93b1c", GREY = "#d3d3d3")
+      status_style <- function(status) {
+        background <- status_colours[status]
+        if (is.na(background)) background <- status_colours["GREY"]
+        list(
+          backgroundColor = unname(background),
+          color = if (isTRUE(status == "RED")) "#FFFFFF" else "#000000"
+        )
+      }
+
       reactable::reactable(
         df,
         filterable = TRUE,
@@ -775,14 +789,18 @@ mod_stock_status_server <- function(
         columns = list(
           "Stock code (_component)" = reactable::colDef(html = TRUE, filterable = TRUE),
           " " = reactable::colDef(html = TRUE, filterable = FALSE, style = list(textAlign = "center")),
-          "MSY Fishing Pressure" = reactable::colDef(html = TRUE, filterable = FALSE, style = list(textAlign = "center")),
-          "MSY Stock Size" = reactable::colDef(html = TRUE, filterable = FALSE, style = list(textAlign = "center")),
-          "PA Fishing Pressure" = reactable::colDef(html = TRUE, filterable = FALSE, style = list(textAlign = "center")),
-          "PA Stock Size" = reactable::colDef(html = TRUE, filterable = FALSE, style = list(textAlign = "center"))
-        ),
-        columnGroups = list(
-          reactable::colGroup(name = "Maximum sustainable yield", columns = c("MSY Fishing Pressure", "MSY Stock Size")),
-          reactable::colGroup(name = "Precautionary approach", columns = c("PA Fishing Pressure", "PA Stock Size"))
+          Fref_name = reactable::colDef(
+            name = "Fishing pressure (Fref)", na = "Unknown",
+            align = "center", minWidth = 150,
+            style = function(value, index) status_style(df$FStatus[[index]])
+          ),
+          Bref_name = reactable::colDef(
+            name = "Stock status (Bref)", na = "Unknown",
+            align = "center", minWidth = 150,
+            style = function(value, index) status_style(df$BStatus[[index]])
+          ),
+          FStatus = reactable::colDef(show = FALSE),
+          BStatus = reactable::colDef(show = FALSE)
         )
       )
     })
@@ -820,24 +838,8 @@ mod_stock_status_server <- function(
         # --- 1) CSV (with acronym + date)
         csv_name <- paste0("status_table_data_", acronym, "_", date_tag, ".csv")
         csv_path <- file.path(td, csv_name)
-        year_int <- as.integer(format(Sys.Date(), "%Y"))
-
-        dat <- tryCatch(
-          format_annex_table(shared$clean_status, year_int, shared$SID, shared$SAG),
-          error = function(e) NULL
-        )
-
-        if (is.null(dat)) {
-          writeLines(
-            c(
-              "Data generation failed in format_annex_table().",
-              "Check inputs: shared$clean_status, shared$SID, shared$SAG."
-            ),
-            con = file.path(td, "DATA_GENERATION_FAILED.txt")
-          )
-        } else {
-          utils::write.csv(dat, csv_path, row.names = FALSE)
-        }
+        dat <- stock_table_data()
+        utils::write.csv(dat, csv_path, row.names = FALSE)
 
         # --- 2) Disclaimer.txt (fixed name; no acronym/date)
         disc_path <- file.path(td, "Disclaimer.txt")
@@ -851,7 +853,7 @@ mod_stock_status_server <- function(
         }
 
         # --- Zip everything
-        files_to_zip <- c(if (file.exists(csv_path)) csv_path, disc_path)
+        files_to_zip <- c(csv_path, disc_path)
         if (requireNamespace("zip", quietly = TRUE) && "zipr" %in% getNamespaceExports("zip")) {
           zip::zipr(zipfile = file, files = files_to_zip, root = td)
         } else {
@@ -893,3 +895,6 @@ mod_stock_status_server <- function(
     
 ## To be copied in the server
 # mod_stock_status_server("stock_status_1")
+
+
+
