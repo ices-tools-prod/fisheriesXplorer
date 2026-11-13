@@ -300,7 +300,7 @@ mod_landings_server <- function(
       if (is.null(tab)) tab <- "landings"
 
       date_text <- switch(tab,
-        "landings" = "October, 2025",
+        "landings" = "October, 2026",
         "discards" = format(Sys.Date(), "%B %d, %Y"),
         ""
       )
@@ -391,7 +391,7 @@ output$landings_layer <- renderPlotly({
     type = input$landings_layer_selector,
     line_count = params$n,
     selected_guild = guild_filter,
-    dataUpdated = "October, 2025",
+    dataUpdated = "October, 2026",
     session = session,
     ecoregion = acronym
   )
