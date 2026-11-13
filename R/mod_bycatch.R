@@ -235,7 +235,10 @@ mod_bycatch_ui <- function(id) {
 #'   \item Retrieves raw bycatch data for the selected ecoregion using
 #'   the BEAM API (assessment year 2026), configured with the
 #'   \code{BYCATCH_API_TOKEN} environment variable, and cleans it using
-#'   \code{clean_bycatch_data()}. Request failures are reported to the user.
+#'   \code{clean_bycatch_data()}. Rows are limited to assessment year 2026,
+#'   Reliability and ADGReliability of \code{"more reliable"}, and either
+#'   Commercial equal to \code{FALSE} or a listed commercial-exception species.
+#'   Request failures are reported to the user.
 #'   \item Creates tab-specific datasets for total bycatch and BPUE.
 #'   \item Updates metier and species filter choices according to the selected
 #'   taxon and available data.

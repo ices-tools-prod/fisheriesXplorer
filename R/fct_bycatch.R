@@ -20,6 +20,7 @@ get_beam_bycatch_ecoregion <- function(ecoregion) {
     jsonlite::fromJSON(rawToChar(response$content)),
     error = function(e) stop("The BEAM bycatch API returned invalid JSON.", call. = FALSE)
   )
+
   mapping <- c(
     bycatch_2024 = "total_bycatch_2024",
     bycatch_lower_CI = "tB_lower",
@@ -28,20 +29,75 @@ get_beam_bycatch_ecoregion <- function(ecoregion) {
     bpuE_lower_CI_Numeric = "lower",
     bpuE_upper_CI_Numeric = "upper"
   )
-  required <- c("ecoregion", "taxon", "metier_L4", "common_name", unname(mapping))
-  if (!is.data.frame(raw) || !all(required %in% names(raw))) {
-    stop("The BEAM bycatch API response is missing required columns.")
+  required <- c(
+    "yearAssessment", "ecoregion", "taxon", "metier_L4", "species",
+    "common_name", "reliability", "commercial", "adgreliability",
+    unname(mapping)
+  )
+  if (!is.data.frame(raw)) {
+    stop("The BEAM bycatch API response is not a data frame.", call. = FALSE)
   }
-  raw <- raw[
+  missing <- setdiff(required, names(raw))
+  if (length(missing) > 0) {
+    stop(
+      "The BEAM bycatch API response is missing required columns: ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  commercial_species_exceptions <- c(
+    "delphinus delphis",
+    "monachus monachus",
+    "phocoena phocoena",
+    "puffinus mauretanicus",
+    "acipenser sturio",
+    "acipenser oxyrinchus",
+    "acipenser naccarii",
+    "acipenser gueldenstaedtii",
+    "acipenser stellatus",
+    "acipenser ruthenus",
+    "carcharodon carcharias",
+    "carcharias taurus",
+    "dipturus batis",
+    "dipturus intermedius",
+    "gymnura altavela",
+    "huso huso",
+    "leucoraja melitensis",
+    "odontaspis ferox",
+    "rhinobatos rhinobatos",
+    "glaucostegus cemiculus",
+    "squatina squatina",
+    "squatina aculeata",
+    "squatina oculata",
+    "caretta caretta",
+    "chelonia mydas",
+    "dermochelys coriacea"
+  )
+
+  commercial_allowed <- (
+    !is.na(raw$commercial) &
+      tolower(trimws(as.character(raw$commercial))) == "false"
+  ) | (
+    !is.na(raw$species) &
+      tolower(trimws(raw$species)) %in% commercial_species_exceptions
+  )
+  keep <- !is.na(raw$yearAssessment) &
+    as.character(raw$yearAssessment) == "2026" &
     !is.na(raw$ecoregion) &
-      tolower(trimws(raw$ecoregion)) == tolower(trimws(ecoregion)),
-    , drop = FALSE
-  ]
+    tolower(trimws(raw$ecoregion)) == tolower(trimws(ecoregion)) &
+    !is.na(raw$reliability) &
+    tolower(trimws(raw$reliability)) == "more reliable" &
+    commercial_allowed &
+    !is.na(raw$adgreliability) &
+    tolower(trimws(raw$adgreliability)) == "more reliable"
+  raw <- raw[keep, , drop = FALSE]
   for (column in names(mapping)) {
     raw[[column]] <- raw[[mapping[[column]]]]
   }
-  raw <- raw %>% filter(reliability == "more reliable")
+
   raw
+  browser()
 }
 
 #' Create an empty bycatch data frame
