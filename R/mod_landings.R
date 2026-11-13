@@ -1,6 +1,3 @@
-
-
-
 landings_about_box <- function() {
   tab_about_box(
     title = "About this module",
@@ -137,10 +134,9 @@ mod_landings_ui <- function(id) {
           bg = "white",
           fg = "black",
 
-          # The about box and plot card share this height.
-          height = "85vh",
-
-          # Space between the about box and the card.
+          # Let the whole layout grow when the about box expands.
+          fill = FALSE,
+          fillable = TRUE,
           gap = "12px",
 
           sidebar = sidebar(
@@ -152,10 +148,13 @@ mod_landings_ui <- function(id) {
             uiOutput(ns("landings_text"))
           ),
 
-          # Main area: introduction first, then the plot card.
           landings_about_box(),
 
           card(
+            # This height belongs to the plot card only.
+            height = "85vh",
+            fill = FALSE,
+
             card_header(
               radioButtons(
                 ns("landings_layer_selector"),
@@ -182,10 +181,13 @@ mod_landings_ui <- function(id) {
               uiOutput(ns("guild_selector_ui")),
 
               bslib::as_fill_carrier(
-  shinycssloaders::withSpinner(
-    plotlyOutput(ns("landings_layer"), height = "100%")
-  )
-)
+                shinycssloaders::withSpinner(
+                  plotlyOutput(
+                    ns("landings_layer"),
+                    height = "100%"
+                  )
+                )
+              )
             )
           )
         )
@@ -202,7 +204,9 @@ mod_landings_ui <- function(id) {
           bg = "white",
           fg = "black",
 
-          height = "85vh",
+          # Let the whole layout grow when the about box expands.
+          fill = FALSE,
+          fillable = TRUE,
           gap = "12px",
 
           sidebar = sidebar(
@@ -217,6 +221,10 @@ mod_landings_ui <- function(id) {
           discards_about_box(),
 
           card(
+            # This height belongs to the plot card only.
+            height = "85vh",
+            fill = FALSE,
+
             card_header(
               "Discard trends",
 

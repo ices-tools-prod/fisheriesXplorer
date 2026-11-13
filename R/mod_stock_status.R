@@ -101,6 +101,9 @@ mod_stock_status_ui <- function(id) {
         "Summary",
         value = "status_summary",
         layout_sidebar(
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
           sidebar = sidebar(
             width = "20vw", bg = "white", fg = "black",
             open = TRUE,
@@ -114,7 +117,7 @@ mod_stock_status_ui <- function(id) {
             height = "85vh", full_screen = TRUE,
             card_header(
               radioButtons(
-                ns("status_summary_selector"), "Show:",
+                ns("status_summary_selector"), "Select summary by:",
                 choices = c("Stocks" = "stock_summary", "Catches" = "ges"),
                 selected = "stock_summary", inline = TRUE
               ),
@@ -150,6 +153,9 @@ mod_stock_status_ui <- function(id) {
         "Trends",
         value = "trends_by_group",
         layout_sidebar(
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
           sidebar = sidebar(
             width = "20vw", bg = "white", fg = "black",
             open = TRUE,
@@ -191,6 +197,9 @@ mod_stock_status_ui <- function(id) {
         "Kobe plot",
         value = "kobe_cld",
         layout_sidebar(
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
           sidebar = sidebar(
             width = "20vw", bg = "white", fg = "black", open = TRUE,
             uiOutput(ns("status_cld_trends"))
@@ -229,6 +238,9 @@ mod_stock_status_ui <- function(id) {
         "Stock list",
         value = "status_lookup", # <-- NEW value
         layout_sidebar(
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
           sidebar = sidebar(
             width = "20vw", 
             bg = "white", 
