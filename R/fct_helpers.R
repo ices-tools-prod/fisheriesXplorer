@@ -960,3 +960,43 @@ get_ecoregion_acronym <- function(ecoregion) {
   # normalize empty results to NA
   if (is.null(acr) || identical(acr, "")) NA_character_ else acr
 }
+
+
+
+tab_about_box <- function(title, ...) {
+  shiny::tags$details(
+    style = "
+      flex: 0 0 auto;
+      width: 100%;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      background-color: #eef4f8;
+      border: 1px solid #d5e2ea;
+      border-radius: 30px;
+      overflow: hidden;
+    ",
+
+    shiny::tags$summary(
+      style = "
+        margin: 0;
+        padding: 8px 14px;
+        line-height: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        background-color: #dceaf2;
+        list-style-position: inside;
+      ",
+      title
+    ),
+
+    shiny::div(
+      style = "
+        padding: 12px 14px;
+        background-color: #eef4f8;
+        line-height: 1.5;
+      ",
+      ...
+    )
+  )
+}

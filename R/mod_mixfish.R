@@ -39,12 +39,10 @@ mixfish_about_box <- function() {
         style = "padding: 12px 16px; background-color: #eef4f8;",
         p(
           style = "margin: 0;",
-          "In mixed fisheries, a fishing gear catches multiple species at the same time. ",
-          "This can result in unwanted bycatch, as vessels often catch species that they are not targeting. ",
-          "Within <ecoregion>, each species has a catch limit (or quota). Fishing must stop when that quota is met. ",
-          "Mixed fisheries can become limited by the species with the most restrictive quota, referred to as a choke species. ",
-          "In this case, the Maximum Sustainable Yield will not be reached for other species, leading to missed fishing opportunities. ",
-          "Mixed fisheries models are used to explore scenarios and estimate how the quota for one species might limit fishing on another across <ecoregion>."
+          "Mixed fisheries use fishing gear that catch multiple species at the same time, which can result in unwanted bycatch.",br(),
+          "Mixed fisheries can become limited by stock(s) with the most restrictive catch limits (i.e. quota), referred to as 'choke species'.",br(),
+          "Mixed fisheries models are used to estimate how the quota for one stock may influence fishing opportunities for others within case study areas and explore options for minimizing overfishing and maximizing yield.",br(),
+          "Stock, métier and fleet definitions are available in the glossary. "
         )
       )
     )

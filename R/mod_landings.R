@@ -1,3 +1,57 @@
+
+
+
+landings_about_box <- function() {
+  tab_about_box(
+    title = "About this module",
+
+    shiny::p(
+      style = "margin: 0;",
+      "Landings data are shown for all reported taxa, including but not limited to those assessed by ICES. ",
+      "Data shown are a combination of historical nominal catches and official nominal catches",
+      shiny::tags$a(
+        href = "https://www.ices.dk/data/dataset-collections/Pages/Fish-catch-and-stock-assessment.aspx",
+        target = "_blank",
+        rel = "noopener noreferrer",
+        "ICES Catch statistics"
+      ), br(),
+      "Landings are reported by ICES areas and divisions and assigned to an ecoregion according to the procedure described in ", 
+      shiny::tags$a(
+        href = "https://doi.org/10.17895/ices.pub.22134020",
+        target = "_blank",
+        rel = "noopener noreferrer",
+        "ICES (2023)."
+      ), br(),
+      "Taxa displayed represent the largest fraction of reported landings in the official nominal catches (i.e. since 2006);",
+      "the remainder are labelled as “other”, with taxa contributions displayed when hovering over the line."
+    )
+  )
+}
+
+discards_about_box <- function() {
+  tab_about_box(
+    title = "About this module",
+
+    shiny::p(
+      style = "margin: 0;",
+      "Discard trends are shown only for stocks assessed by ICES. Discards rates are calculated for each fisheries guild as", 
+      "the sum of all discards divided by the sum of all reported catches (i.e. landings plus discards), ", 
+      "combining all stocks in that guild, and weighted by the proportion of each stock's landings occurring", 
+      "within the ecoregion, based on the RDBES assignment procedure ",
+      shiny::tags$a(
+        href = "https://github.com/ices-taf/fisheriesXplorer_ecoregion_landings_shares_method",
+        target = "_blank",
+        rel = "noopener noreferrer",
+        "TAF repository."
+      ),
+      "Note that not all countries fishing on these stocks have reported data to RDBES.", br(),
+      "Detailed annual information on stocks included or not included in discard rate calculations can be displayed ",
+      "Note that discards are not differentiated between dead discards and live discards; ",
+      "for some fisheries guilds, e.g. shellfish and elasmobranchs, discard survival rates may be high."
+    )
+  )
+}
+
 #' Landings and discards UI module
 #'
 #' This module UI creates the main \emph{Landings} section of the app,
@@ -61,26 +115,51 @@
 #' @export
 mod_landings_ui <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
-    mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
+    mod_flex_header_ui(
+      ns,
+      "ecoregion_label",
+      "current_date"
+    ),
+
     tabsetPanel(
       id = ns("main_tabset"),
+
+      # ------------------------------------------------------------
+      # Landings
+      # ------------------------------------------------------------
       tabPanel(
-        title = "Landings", value = "landings", # <-- add value
+        title = "Landings",
+        value = "landings",
+
         layout_sidebar(
-          bg = "white", fg = "black",
+          bg = "white",
+          fg = "black",
+
+          # The about box and plot card share this height.
+          height = "85vh",
+
+          # Space between the about box and the card.
+          gap = "12px",
+
           sidebar = sidebar(
-            width = "20vw", 
-            bg = "white", 
+            width = "20vw",
+            bg = "white",
             fg = "black",
             open = TRUE,
+
             uiOutput(ns("landings_text"))
           ),
+
+          # Main area: introduction first, then the plot card.
+          landings_about_box(),
+
           card(
-            height = "85vh",
             card_header(
-              radioButtons(ns("landings_layer_selector"), "Select grouping:",
+              radioButtons(
+                ns("landings_layer_selector"),
+                "Select grouping:",
                 inline = TRUE,
                 choices = c(
                   "Main landed species" = "Common name",
@@ -88,6 +167,7 @@ mod_landings_ui <- function(id) {
                   "Country" = "Country"
                 )
               ),
+
               download_icon_label(
                 text = "Download data",
                 outputId = ns("download_landings_data"),
@@ -95,40 +175,66 @@ mod_landings_ui <- function(id) {
                 size = "large"
               )
             ),
+
             card_body(
+              min_height = 0,
+
               uiOutput(ns("guild_selector_ui")),
-              withSpinner(                
-                plotlyOutput(ns("landings_layer"), height = "65vh")
-              )
+
+              bslib::as_fill_carrier(
+  shinycssloaders::withSpinner(
+    plotlyOutput(ns("landings_layer"), height = "100%")
+  )
+)
             )
           )
         )
       ),
+
+      # ------------------------------------------------------------
+      # Discards
+      # ------------------------------------------------------------
       tabPanel(
-        title = "Discards", value = "discards", # <-- add value
+        title = "Discards",
+        value = "discards",
+
         layout_sidebar(
-          bg = "white", fg = "black",
+          bg = "white",
+          fg = "black",
+
+          height = "85vh",
+          gap = "12px",
+
           sidebar = sidebar(
-            width = "20vw", 
-            bg = "white", 
+            width = "20vw",
+            bg = "white",
             fg = "black",
             open = TRUE,
+
             uiOutput(ns("discards_text"))
           ),
+
+          discards_about_box(),
+
           card(
-            height = "85vh",
             card_header(
               "Discard trends",
+
               download_icon_label(
                 text = "Download data",
                 outputId = ns("download_discard_data"),
                 hover_text = "Full annual ecoregion data (.csv in .zip)",
-                size = "large"  
+                size = "large"
               )
             ),
+
             card_body(
-              style = "overflow-y: hidden;",
-              uiOutput(ns("discard_trends_html"), fill = TRUE)
+              min_height = 0,
+
+              uiOutput(
+                ns("discard_trends_html"),
+                fill = TRUE
+              )
             )
           )
         )
