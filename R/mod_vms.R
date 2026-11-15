@@ -1,3 +1,13 @@
+vms_about_box <- function() {
+  tab_about_box(
+    title = "About this module",
+    shiny::p(
+      style = "margin: 0;",
+      ""
+    )
+  )
+}
+
 #' vms UI Function
 #'
 #' @description A shiny Module.
@@ -20,7 +30,11 @@ mod_vms_ui <- function(id) {
   tagList(
     mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
     layout_sidebar(
-      bg = "white", fg = "black",
+      bg = "white", 
+      fg = "black",
+      fill = FALSE,
+      fillable = TRUE,
+      gap = "12px",
       sidebar = sidebar(
         width = "20vw", 
         bg = "white", 
@@ -28,6 +42,8 @@ mod_vms_ui <- function(id) {
         open = TRUE,
         uiOutput(ns("effort_sar_text"))
       ),
+      vms_about_box(),
+      
       fluidRow(
         column(
           6,

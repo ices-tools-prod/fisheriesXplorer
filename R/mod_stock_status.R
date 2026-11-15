@@ -1,4 +1,21 @@
+status_about_box <- function() {
+  tab_about_box(
+    title = "About this module",
 
+    shiny::p(
+      style = "margin: 0;",
+      "Fishing pressure is assessed as fishing mortality (F) or F proxies, relative to the lowest F ",
+      "reference point or proxy reference point (Fref) available in the latest ICES stock assessment. ",
+      "Stock status is assessed using biomass indices (B) or proxies relative to the highest B reference point ",
+      "or proxy reference point (Bref) available in the latest ICES stock assessment. ",
+      "For stocks for which only Blim is defined, Bref is considered unknown. For details ",
+      "and examples related to the definition of Fref and Bref, see [WKBoBFO report]. ",br(),
+      "Status information is provided for ICES assessed stocks fished within the ecoregion, ",
+      "including stocks that are also fished in other ecoregions. All data shown are based on the ",
+      "latest ICES assessments."
+    )
+  )
+}
 #' Stock status UI module
 #'
 #' This module UI creates the main \emph{Stock status} section of the app.
@@ -84,16 +101,23 @@ mod_stock_status_ui <- function(id) {
         "Summary",
         value = "status_summary",
         layout_sidebar(
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
           sidebar = sidebar(
             width = "20vw", bg = "white", fg = "black",
             open = TRUE,
             uiOutput(ns("status_text_summary"))
           ),
+
+          # Main area: introduction first, then the plot card.
+          status_about_box(),
+
           card(
             height = "85vh", full_screen = TRUE,
             card_header(
               radioButtons(
-                ns("status_summary_selector"), "Show:",
+                ns("status_summary_selector"), "Select summary by:",
                 choices = c("Stocks" = "stock_summary", "Catches" = "ges"),
                 selected = "stock_summary", inline = TRUE
               ),
@@ -129,13 +153,17 @@ mod_stock_status_ui <- function(id) {
         "Trends",
         value = "trends_by_group",
         layout_sidebar(
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
           sidebar = sidebar(
             width = "20vw", bg = "white", fg = "black",
             open = TRUE,
             uiOutput(ns("status_text_trends"))
           ),
-          column(
-            12,
+          # column(
+            # 12,
+            status_about_box(),
             card(
               height = "100vh", full_screen = TRUE,
               card_header(
@@ -162,17 +190,21 @@ mod_stock_status_ui <- function(id) {
                 uiOutput(ns("status_trends"), fill = TRUE)
               )
             )
-          )
+          # )
         )
       ),
       nav_panel(
         "Kobe plot",
         value = "kobe_cld",
         layout_sidebar(
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
           sidebar = sidebar(
             width = "20vw", bg = "white", fg = "black", open = TRUE,
             uiOutput(ns("status_cld_trends"))
           ),
+          status_about_box(),
           card(
             height = "85vh", full_screen = TRUE,
             card_header(
@@ -206,6 +238,9 @@ mod_stock_status_ui <- function(id) {
         "Stock list",
         value = "status_lookup", # <-- NEW value
         layout_sidebar(
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
           sidebar = sidebar(
             width = "20vw", 
             bg = "white", 
@@ -213,6 +248,7 @@ mod_stock_status_ui <- function(id) {
             open = FALSE,
             uiOutput(ns("status_text4"))
           ),
+          status_about_box(),
           card(
             card_header(
               "Stock status table",
