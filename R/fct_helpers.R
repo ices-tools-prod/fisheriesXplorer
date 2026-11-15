@@ -965,6 +965,7 @@ get_ecoregion_acronym <- function(ecoregion) {
 
 tab_about_box <- function(title, ...) {
   shiny::tags$details(
+    open = "open",
     style = "
       flex: 0 0 auto;
       width: 100%;
