@@ -143,7 +143,7 @@ mod_landings_ui <- function(id) {
             width = "20vw",
             bg = "white",
             fg = "black",
-            open = TRUE,
+            open = FALSE,
 
             uiOutput(ns("landings_text"))
           ),
@@ -213,7 +213,7 @@ mod_landings_ui <- function(id) {
             width = "20vw",
             bg = "white",
             fg = "black",
-            open = TRUE,
+            open = FALSE,
 
             uiOutput(ns("discards_text"))
           ),

@@ -78,7 +78,7 @@ mod_bycatch_ui <- function(id) {
             width = "20vw",
             bg = "white",
             fg = "black",
-            open = TRUE,
+            open = FALSE,
             uiOutput(ns("total_bycatch_text"))
           ),
           # column(
@@ -160,7 +160,7 @@ mod_bycatch_ui <- function(id) {
             width = "20vw",
             bg = "white",
             fg = "black",
-            open = TRUE,
+            open = FALSE,
             uiOutput(ns("bpue_text_summary"))
           ),
           # column(
