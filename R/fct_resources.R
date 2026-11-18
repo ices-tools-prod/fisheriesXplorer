@@ -178,7 +178,8 @@ make_disclaimer_block <- function() {
         tags$li("Exclusions to unrestricted public access (relevant to fisheriesXplorer) include:"),
         tags$ul(
           tags$li("Commercial catch data from RDB-FishFrame and InterCatch"),
-          tags$li("VMS and Logbook data")
+          tags$li("VMS and Logbook data"),
+          tags$li("Regional DataBase and Estimation System (RDBES)")
         )
       ),
       p(
