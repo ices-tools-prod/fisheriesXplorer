@@ -1437,7 +1437,7 @@ plot_effortFltStk_plotly <- function(
   xlab = "Stock", ylab = "Effort (Thousands KW days)",
   linewidthDefault = 0.5, linewidthLimitation = 4,
   ncol = 3, rowHeight = 200, source_note = NULL,
-  highlight = TRUE, limitationMarkerSize = 18) {
+  highlight = TRUE, limitationMarkerSize = 13) {
 
   # Build stock colour mapping, ordered by refTable
   stkFill <- data.frame(stock = unique(data$stock))
@@ -1488,9 +1488,9 @@ plot_effortFltStk_plotly <- function(
   )
 
   limitation_symbols <- c(
-    most = "star",
-    least = "diamond"
-  )
+  most = "x",
+  least = "cross"
+)
 
   plot_list <- list()
 
