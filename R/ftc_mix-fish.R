@@ -1189,138 +1189,440 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
 #   return(plotly::ggplotly(p))
 # }
 
-################################################################################
+################################################################################ original version below
+
+# plot_effortFltStk_plotly <- function(
+#   data, refTable,
+#   xlab = "Stock", ylab = "Effort (Thousands KW days)",
+#   linewidthDefault = 0.5, linewidthLimitation = 2,
+#   ncol = 3, rowHeight = 200, source_note = NULL) {
+
+#   # Build stock color mapping (keep order from refTable)
+#   stkFill <- data.frame(stock = unique(data$stock))
+#   stkFill <- merge(x = stkFill, y = refTable, all.x = TRUE)
+#   stkFill <- stkFill[order(stkFill$order), ]
+#   stkColors <- stkFill$col
+#   names(stkColors) <- stkFill$stock
+
+#   # Convert stocks to factors to maintain order everywhere
+#   stocks <- stkFill$stock
+#   data$stock <- factor(as.character(data$stock), levels = stocks)
+
+#   # Get unique fleets (keep input order)
+#   fleets <- unique(data$fleet)
+
+#   # Calculate dynamic height
+#   # subplots <- list()
+#   unique_fleets <- unique(data$fleet)
+#   n_fleets <- length(unique_fleets)
+#   n_cols <- min(4, n_fleets)
+#   n_rows <- ceiling(length(fleets) / ncol)
+#   fig_height <- rowHeight * n_rows
+
+#   # Legend tracking
+#   legend_shown_stocks <- setNames(rep(FALSE, length(stocks)), stocks)
+#   legend_shown_lim <- list(most = FALSE, least = FALSE)
+#   legend_shown_sq <- FALSE
+
+#   plot_list <- list()
+
+#   for (i in seq_along(fleets)) {
+#     fleet <- fleets[i]
+#     fleet_data <- data[data$fleet == fleet, ]
+
+#     p <- plotly::plot_ly()
+
+#     # Bars: one trace per stock
+#     for (stock in stocks) {
+#       stock_data <- fleet_data[fleet_data$stock == stock, , drop = FALSE]
+#       if (nrow(stock_data) == 0) next
+
+#       # Show legend for each stock only once across all fleets
+#       show_legend_stock <- !legend_shown_stocks[[stock]]
+#       if (show_legend_stock) legend_shown_stocks[[stock]] <- TRUE
+
+#       p <- p %>% plotly::add_bars(
+#         data = stock_data,
+#         x = ~stock,
+#         y = ~quotaEffort,
+#         name = stock,
+#         width = 1,
+#         legendgroup = paste0("stock_", stock),
+#         marker = list(color = stkColors[stock], line = list(width = 0)),
+#         showlegend = show_legend_stock,
+#         hovertemplate = paste0(
+#         "<b>Stock:</b> ", stock, "<br>",
+#         "<b>Effort:</b> %{y:.2f}<br>",
+#         "<b>Fleet:</b> ", fleet, "<extra></extra>"
+#     )
+#       )
+#     }
+
+#     # Limitation outlines: only for "most" and "least"
+# for (stock in stocks) {
+#   stock_data <- fleet_data[fleet_data$stock == stock, , drop = FALSE]
+#   if (nrow(stock_data) == 0) next
+#   if (all(is.na(stock_data$Limitation))) next
+
+#   lim_val <- stock_data$Limitation[1]
+#   if (is.na(lim_val) || lim_val == "intermediate") next   # <-- skip intermediate
+
+#   limitation_color <- ifelse(lim_val == "most", "red", "green")
+#   lim_name <- ifelse(lim_val == "most", "most (*)", "least")
+
+#   show_legend_lim <- FALSE
+#   if (lim_val == "most" && !legend_shown_lim$most) {
+#     show_legend_lim <- TRUE; legend_shown_lim$most <- TRUE
+#   } else if (lim_val == "least" && !legend_shown_lim$least) {
+#     show_legend_lim <- TRUE; legend_shown_lim$least <- TRUE
+#   }
+
+#   p <- p %>% plotly::add_bars(
+#     data = stock_data,
+#     x = ~stock,
+#     y = ~quotaEffort,
+#     name = lim_name,
+#     width = 1,
+#     legendgroup = paste0("lim_", lim_val),
+#     marker = list(
+#       color = "rgba(0,0,0,0)",
+#       line = list(color = limitation_color, width = linewidthLimitation)
+#     ),
+#     showlegend = show_legend_lim,
+#     hovertemplate = paste0(
+#       "<b>Stock:</b> ", stock, "<br>",
+#       "<b>Effort:</b> %{y:.2f}<br>",
+#       "<b>Limitation:</b> ", lim_val, "<br>",
+#       "<b>Fleet:</b> ", fleet, "<extra></extra>"
+#     )
+#   )
+
+#   if (lim_val == "most") {
+#     y_pos <- max(stock_data$quotaEffort, na.rm = TRUE)
+#     p <- p %>% plotly::add_annotations(
+#       x = stock,
+#       y = y_pos,
+#       text = "*",
+#       color = "red",
+#       showarrow = FALSE,
+#       font = list(size = 14),
+#       yshift = 10
+#     )
+#   }
+# }
+
+#     # Status quo line
+#     if (nrow(fleet_data) > 0 && !is.na(fleet_data$sqEffort[1])) {
+#       show_legend_sq <- !legend_shown_sq
+#       if (show_legend_sq) legend_shown_sq <- TRUE
+
+#       line_df <- data.frame(stock = factor(stocks, levels = stocks),
+#                             sq = rep(fleet_data$sqEffort[1], length(stocks)),
+#                             stringsAsFactors = FALSE)
+
+#       p <- p %>% plotly::add_lines(
+#         data = line_df,
+#         x = ~stock,
+#         y = ~sq,
+#         name = "Status quo effort",
+#         legendgroup = "sq",
+#         line = list(dash = "dash", color = "black"),
+#         showlegend = show_legend_sq,
+#         hovertemplate = paste0("Status quo effort: ", fleet_data$sqEffort[1],
+#                                "<br>Fleet: ", fleet, "<extra></extra>")
+#       )
+#     }
+
+#     # Compute axis titles only for bottom / left plots
+#     row_index <- ceiling(i / ncol)
+#     show_x_title <- if (row_index == n_rows) xlab else ""
+#     show_y_title <- if (((i - 1) %% ncol) == 0) ylab else ""
+
+#     p <- p %>% plotly::layout(
+#       xaxis = list(
+#         title = show_x_title,
+#         tickangle = 45,
+#         categoryorder = "array",
+#         categoryarray = stocks,
+#         type = "category"
+#       ),
+#       yaxis = list(
+#         title = show_y_title,
+#         type = "linear"
+#       ),
+#       barmode = "overlay"
+#     )
+
+#     # Fleet title annotation
+#     p <- p %>% plotly::add_annotations(
+#       x = 0.5, 
+#       y = 1.05, 
+#       xref = "paper", 
+#       yref = "paper",
+#       text = fleet, 
+#       xanchor = "center",
+#       yanchor = "bottom",
+#       showarrow = FALSE, 
+#       font = list(size = 16)
+#       # yshift = 10
+#     )
+
+    
+
+#     plot_list[[i]] <- p
+#   }
+
+#   # Combine subplots
+#   fig <- plotly::subplot(
+#     plot_list, 
+#     nrows = n_rows,  
+#     shareX = TRUE, 
+#     shareY = FALSE,
+#     titleX = FALSE, 
+#     titleY = FALSE
+#   )
+    
+#   fig <- fig %>% plotly::layout( 
+#     height = fig_height,   
+#     margin = list(t = 120, b = 120, r = 90),
+#     legend = list(
+#       orientation = "h",
+#       x = 0.5, y = 1.05,                # center above the plot
+#       xanchor = "center", 
+#       yanchor = "bottom",
+#       tracegroupgap = 30
+#     ),
+#     barmode = "overlay",
+#     xaxis = list(categoryorder = "array", categoryarray = stocks, tickangle = 45),
+#     annotations = list(
+#       list(
+#         text = ylab,
+#         x = -0.05, y = 0.5,
+#         xref = "paper", yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "center",
+#         yanchor = "middle",
+#         textangle = -90,   # vertical orientation
+#         font = list(size = 16) # adjust font size
+#       ),
+#       list(
+#         text = xlab,
+#         x = .5, y = -0.8,
+#         xref = "paper", yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "middle",
+#         yanchor = "center",
+#         # textangle = -90,   # vertical orientation
+#         font = list(size = 16) # adjust font size
+#       ),
+#       list(
+#         text = source_note,
+#         x = 1, y = -0.9,
+#         xref = "paper", yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "right",
+#         yanchor = "top",
+#         align = "right",
+#         font = list(size = 10, color = "#707070")
+#       )
+#     )
+#   )
+
+#   return(fig)
+# }
+
 
 plot_effortFltStk_plotly <- function(
   data, refTable,
   xlab = "Stock", ylab = "Effort (Thousands KW days)",
-  linewidthDefault = 0.5, linewidthLimitation = 2,
-  ncol = 3, rowHeight = 200, source_note = NULL) {
+  linewidthDefault = 0.5, linewidthLimitation = 4,
+  ncol = 3, rowHeight = 200, source_note = NULL,
+  highlight = TRUE) {
 
-  # Build stock color mapping (keep order from refTable)
+  # Build stock colour mapping, ordered by refTable
   stkFill <- data.frame(stock = unique(data$stock))
   stkFill <- merge(x = stkFill, y = refTable, all.x = TRUE)
   stkFill <- stkFill[order(stkFill$order), ]
+
   stkColors <- stkFill$col
   names(stkColors) <- stkFill$stock
 
-  # Convert stocks to factors to maintain order everywhere
-  stocks <- stkFill$stock
+  # Maintain the same stock order across all panels
+  stocks <- as.character(stkFill$stock)
   data$stock <- factor(as.character(data$stock), levels = stocks)
 
-  # Get unique fleets (keep input order)
+  # Assign each stock a consistent grey shade across fleet panels
+  stkGreys <- stats::setNames(
+    grDevices::gray.colors(
+      n = length(stocks),
+      start = 0.65,
+      end = 0.90
+    ),
+    stocks
+  )
+
+  # Keep fleets in input order
   fleets <- unique(data$fleet)
 
   # Calculate dynamic height
-  # subplots <- list()
-  unique_fleets <- unique(data$fleet)
-  n_fleets <- length(unique_fleets)
-  n_cols <- min(4, n_fleets)
   n_rows <- ceiling(length(fleets) / ncol)
   fig_height <- rowHeight * n_rows
 
-  # Legend tracking
-  legend_shown_stocks <- setNames(rep(FALSE, length(stocks)), stocks)
+  # Track legend entries across panels
+  legend_shown_stocks <- stats::setNames(
+    rep(FALSE, length(stocks)),
+    stocks
+  )
+
   legend_shown_lim <- list(most = FALSE, least = FALSE)
   legend_shown_sq <- FALSE
 
   plot_list <- list()
 
   for (i in seq_along(fleets)) {
+
     fleet <- fleets[i]
-    fleet_data <- data[data$fleet == fleet, ]
+    fleet_data <- data[data$fleet == fleet, , drop = FALSE]
 
     p <- plotly::plot_ly()
 
     # Bars: one trace per stock
     for (stock in stocks) {
-      stock_data <- fleet_data[fleet_data$stock == stock, , drop = FALSE]
+
+      stock_data <- fleet_data[
+        fleet_data$stock == stock,
+        ,
+        drop = FALSE
+      ]
+
       if (nrow(stock_data) == 0) next
 
-      # Show legend for each stock only once across all fleets
-      show_legend_stock <- !legend_shown_stocks[[stock]]
-      if (show_legend_stock) legend_shown_stocks[[stock]] <- TRUE
+      # As in the original function, each fleet-stock combination
+      # is assumed to have one consistent limitation status
+      lim_val <- as.character(stock_data$Limitation[1])
+      is_limiting <- lim_val %in% c("most", "least")
 
-      p <- p %>% plotly::add_bars(
+      # Highlight mode keeps original colours only for most/least
+      bar_colour <- if (highlight && !is_limiting) {
+        unname(stkGreys[stock])
+      } else {
+        unname(stkColors[stock])
+      }
+
+      # Stock legend entries are shown only in full-colour mode
+      show_legend_stock <- (
+        !highlight && !legend_shown_stocks[[stock]]
+      )
+
+      if (show_legend_stock) {
+        legend_shown_stocks[[stock]] <- TRUE
+      }
+
+      p <- plotly::add_bars(
+        p,
         data = stock_data,
         x = ~stock,
         y = ~quotaEffort,
         name = stock,
         width = 1,
         legendgroup = paste0("stock_", stock),
-        marker = list(color = stkColors[stock], line = list(width = 0)),
+        marker = list(
+          color = bar_colour,
+          line = list(width = 0)
+        ),
         showlegend = show_legend_stock,
         hovertemplate = paste0(
-        "<b>Stock:</b> ", stock, "<br>",
-        "<b>Effort:</b> %{y:.2f}<br>",
-        "<b>Fleet:</b> ", fleet, "<extra></extra>"
-    )
+          "<b>Stock:</b> ", stock, "<br>",
+          "<b>Effort:</b> %{y:.2f}<br>",
+          "<b>Fleet:</b> ", fleet,
+          "<extra></extra>"
+        )
       )
     }
 
-    # Limitation outlines: only for "most" and "least"
-for (stock in stocks) {
-  stock_data <- fleet_data[fleet_data$stock == stock, , drop = FALSE]
-  if (nrow(stock_data) == 0) next
-  if (all(is.na(stock_data$Limitation))) next
+    # Thick limitation outlines: only for most and least
+    for (stock in stocks) {
 
-  lim_val <- stock_data$Limitation[1]
-  if (is.na(lim_val) || lim_val == "intermediate") next   # <-- skip intermediate
+      stock_data <- fleet_data[
+        fleet_data$stock == stock,
+        ,
+        drop = FALSE
+      ]
 
-  limitation_color <- ifelse(lim_val == "most", "red", "green")
-  lim_name <- ifelse(lim_val == "most", "most (*)", "least")
+      if (nrow(stock_data) == 0) next
 
-  show_legend_lim <- FALSE
-  if (lim_val == "most" && !legend_shown_lim$most) {
-    show_legend_lim <- TRUE; legend_shown_lim$most <- TRUE
-  } else if (lim_val == "least" && !legend_shown_lim$least) {
-    show_legend_lim <- TRUE; legend_shown_lim$least <- TRUE
-  }
+      lim_val <- as.character(stock_data$Limitation[1])
 
-  p <- p %>% plotly::add_bars(
-    data = stock_data,
-    x = ~stock,
-    y = ~quotaEffort,
-    name = lim_name,
-    width = 1,
-    legendgroup = paste0("lim_", lim_val),
-    marker = list(
-      color = "rgba(0,0,0,0)",
-      line = list(color = limitation_color, width = linewidthLimitation)
-    ),
-    showlegend = show_legend_lim,
-    hovertemplate = paste0(
-      "<b>Stock:</b> ", stock, "<br>",
-      "<b>Effort:</b> %{y:.2f}<br>",
-      "<b>Limitation:</b> ", lim_val, "<br>",
-      "<b>Fleet:</b> ", fleet, "<extra></extra>"
-    )
-  )
+      if (!(lim_val %in% c("most", "least"))) next
 
-  if (lim_val == "most") {
-    y_pos <- max(stock_data$quotaEffort, na.rm = TRUE)
-    p <- p %>% plotly::add_annotations(
-      x = stock,
-      y = y_pos,
-      text = "*",
-      color = "red",
-      showarrow = FALSE,
-      font = list(size = 14),
-      yshift = 10
-    )
-  }
-}
+      limitation_color <- if (lim_val == "most") "red" else "green"
+      lim_name <- if (lim_val == "most") "most (*)" else "least"
+
+      show_legend_lim <- !legend_shown_lim[[lim_val]]
+
+      if (show_legend_lim) {
+        legend_shown_lim[[lim_val]] <- TRUE
+      }
+
+      p <- plotly::add_bars(
+        p,
+        data = stock_data,
+        x = ~stock,
+        y = ~quotaEffort,
+        name = lim_name,
+        width = 1,
+        legendgroup = paste0("lim_", lim_val),
+        marker = list(
+          color = "rgba(0,0,0,0)",
+          line = list(
+            color = limitation_color,
+            width = linewidthLimitation
+          )
+        ),
+        showlegend = show_legend_lim,
+        hovertemplate = paste0(
+          "<b>Stock:</b> ", stock, "<br>",
+          "<b>Effort:</b> %{y:.2f}<br>",
+          "<b>Limitation:</b> ", lim_val, "<br>",
+          "<b>Fleet:</b> ", fleet,
+          "<extra></extra>"
+        )
+      )
+
+      # Existing asterisk for the most limiting stock
+      if (lim_val == "most") {
+
+        y_pos <- max(stock_data$quotaEffort, na.rm = TRUE)
+
+        p <- plotly::add_annotations(
+          p,
+          x = stock,
+          y = y_pos,
+          text = "*",
+          showarrow = FALSE,
+          font = list(size = 14, color = "red"),
+          yshift = 10
+        )
+      }
+    }
 
     # Status quo line
     if (nrow(fleet_data) > 0 && !is.na(fleet_data$sqEffort[1])) {
+
       show_legend_sq <- !legend_shown_sq
-      if (show_legend_sq) legend_shown_sq <- TRUE
 
-      line_df <- data.frame(stock = factor(stocks, levels = stocks),
-                            sq = rep(fleet_data$sqEffort[1], length(stocks)),
-                            stringsAsFactors = FALSE)
+      if (show_legend_sq) {
+        legend_shown_sq <- TRUE
+      }
 
-      p <- p %>% plotly::add_lines(
+      line_df <- data.frame(
+        stock = factor(stocks, levels = stocks),
+        sq = rep(fleet_data$sqEffort[1], length(stocks)),
+        stringsAsFactors = FALSE
+      )
+
+      p <- plotly::add_lines(
+        p,
         data = line_df,
         x = ~stock,
         y = ~sq,
@@ -1328,17 +1630,21 @@ for (stock in stocks) {
         legendgroup = "sq",
         line = list(dash = "dash", color = "black"),
         showlegend = show_legend_sq,
-        hovertemplate = paste0("Status quo effort: ", fleet_data$sqEffort[1],
-                               "<br>Fleet: ", fleet, "<extra></extra>")
+        hovertemplate = paste0(
+          "Status quo effort: ", fleet_data$sqEffort[1],
+          "<br>Fleet: ", fleet,
+          "<extra></extra>"
+        )
       )
     }
 
-    # Compute axis titles only for bottom / left plots
+    # Compute axis titles for bottom / left plots
     row_index <- ceiling(i / ncol)
     show_x_title <- if (row_index == n_rows) xlab else ""
     show_y_title <- if (((i - 1) %% ncol) == 0) ylab else ""
 
-    p <- p %>% plotly::layout(
+    p <- plotly::layout(
+      p,
       xaxis = list(
         title = show_x_title,
         tickangle = 45,
@@ -1353,72 +1659,81 @@ for (stock in stocks) {
       barmode = "overlay"
     )
 
-    # Fleet title annotation
-    p <- p %>% plotly::add_annotations(
-      x = 0.5, 
-      y = 1.05, 
-      xref = "paper", 
+    # Fleet title
+    p <- plotly::add_annotations(
+      p,
+      x = 0.5,
+      y = 1.05,
+      xref = "paper",
       yref = "paper",
-      text = fleet, 
+      text = fleet,
       xanchor = "center",
       yanchor = "bottom",
-      showarrow = FALSE, 
+      showarrow = FALSE,
       font = list(size = 16)
-      # yshift = 10
     )
-
-    
 
     plot_list[[i]] <- p
   }
 
-  # Combine subplots
+  # Combine fleet panels
   fig <- plotly::subplot(
-    plot_list, 
-    nrows = n_rows,  
-    shareX = TRUE, 
+    plot_list,
+    nrows = n_rows,
+    shareX = TRUE,
     shareY = FALSE,
-    titleX = FALSE, 
+    titleX = FALSE,
     titleY = FALSE
   )
-    
-  fig <- fig %>% plotly::layout( 
-    height = fig_height,   
+
+  fig <- plotly::layout(
+    fig,
+    height = fig_height,
     margin = list(t = 120, b = 120, r = 90),
     legend = list(
       orientation = "h",
-      x = 0.5, y = 1.05,                # center above the plot
-      xanchor = "center", 
+      x = 0.5,
+      y = 1.05,
+      xanchor = "center",
       yanchor = "bottom",
       tracegroupgap = 30
     ),
     barmode = "overlay",
-    xaxis = list(categoryorder = "array", categoryarray = stocks, tickangle = 45),
+    xaxis = list(
+      categoryorder = "array",
+      categoryarray = stocks,
+      tickangle = 45
+    ),
     annotations = list(
       list(
         text = ylab,
-        x = -0.05, y = 0.5,
-        xref = "paper", yref = "paper",
+        x = -0.05,
+        y = 0.5,
+        xref = "paper",
+        yref = "paper",
         showarrow = FALSE,
         xanchor = "center",
         yanchor = "middle",
-        textangle = -90,   # vertical orientation
-        font = list(size = 16) # adjust font size
+        textangle = -90,
+        font = list(size = 16)
       ),
       list(
         text = xlab,
-        x = .5, y = -0.8,
-        xref = "paper", yref = "paper",
+        x = 0.5,
+        y = -0.8,
+        xref = "paper",
+        yref = "paper",
         showarrow = FALSE,
-        xanchor = "middle",
-        yanchor = "center",
-        # textangle = -90,   # vertical orientation
-        font = list(size = 16) # adjust font size
+        xanchor = "center",
+        yanchor = "middle",
+        font = list(size = 16)
       ),
       list(
         text = source_note,
-        x = 1, y = -0.9,
-        xref = "paper", yref = "paper",
+        x = 1,
+        y = -0.9,
+        xref = "paper",
+        yref = "paper",
         showarrow = FALSE,
         xanchor = "right",
         yanchor = "top",
@@ -1430,9 +1745,6 @@ for (stock in stocks) {
 
   return(fig)
 }
-
-
-
 
 
 #############################################################################
