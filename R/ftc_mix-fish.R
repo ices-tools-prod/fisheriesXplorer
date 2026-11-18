@@ -1437,7 +1437,7 @@ plot_effortFltStk_plotly <- function(
   xlab = "Stock", ylab = "Effort (Thousands KW days)",
   linewidthDefault = 0.5, linewidthLimitation = 4,
   ncol = 3, rowHeight = 200, source_note = NULL,
-  highlight = TRUE) {
+  highlight = TRUE, limitationMarkerSize = 18) {
 
   # Build stock colour mapping, ordered by refTable
   stkFill <- data.frame(stock = unique(data$stock))
@@ -1476,6 +1476,21 @@ plot_effortFltStk_plotly <- function(
 
   legend_shown_lim <- list(most = FALSE, least = FALSE)
   legend_shown_sq <- FALSE
+
+  limitation_names <- c(
+    most = "Most limiting stock",
+    least = "Least limiting stock"
+  )
+
+  limitation_colours <- c(
+    most = "red",
+    least = "green"
+  )
+
+  limitation_symbols <- c(
+    most = "star",
+    least = "diamond"
+  )
 
   plot_list <- list()
 
@@ -1555,14 +1570,8 @@ plot_effortFltStk_plotly <- function(
 
       if (!(lim_val %in% c("most", "least"))) next
 
-      limitation_color <- if (lim_val == "most") "red" else "green"
-      lim_name <- if (lim_val == "most") "most (*)" else "least"
-
-      show_legend_lim <- !legend_shown_lim[[lim_val]]
-
-      if (show_legend_lim) {
-        legend_shown_lim[[lim_val]] <- TRUE
-      }
+      limitation_color <- unname(limitation_colours[lim_val])
+      lim_name <- unname(limitation_names[lim_val])
 
       p <- plotly::add_bars(
         p,
@@ -1579,7 +1588,10 @@ plot_effortFltStk_plotly <- function(
             width = linewidthLimitation
           )
         ),
-        showlegend = show_legend_lim,
+
+        # Marker traces provide the limitation legend entries
+        showlegend = FALSE,
+
         hovertemplate = paste0(
           "<b>Stock:</b> ", stock, "<br>",
           "<b>Effort:</b> %{y:.2f}<br>",
@@ -1588,26 +1600,11 @@ plot_effortFltStk_plotly <- function(
           "<extra></extra>"
         )
       )
-
-      # Existing asterisk for the most limiting stock
-      if (lim_val == "most") {
-
-        y_pos <- max(stock_data$quotaEffort, na.rm = TRUE)
-
-        p <- plotly::add_annotations(
-          p,
-          x = stock,
-          y = y_pos,
-          text = "*",
-          showarrow = FALSE,
-          font = list(size = 14, color = "red"),
-          yshift = 10
-        )
-      }
     }
 
     # Status quo line
-    if (nrow(fleet_data) > 0 && !is.na(fleet_data$sqEffort[1])) {
+    if (nrow(fleet_data) > 0 &&
+        is.finite(fleet_data$sqEffort[1])) {
 
       show_legend_sq <- !legend_shown_sq
 
@@ -1628,7 +1625,11 @@ plot_effortFltStk_plotly <- function(
         y = ~sq,
         name = "Status quo effort",
         legendgroup = "sq",
-        line = list(dash = "dash", color = "black"),
+        legendrank = 3,
+        line = list(
+          dash = "dash",
+          color = "black"
+        ),
         showlegend = show_legend_sq,
         hovertemplate = paste0(
           "Status quo effort: ", fleet_data$sqEffort[1],
@@ -1638,6 +1639,93 @@ plot_effortFltStk_plotly <- function(
       )
     }
 
+    # Hoverable limitation markers, drawn after bars and status quo
+    for (stock in stocks) {
+
+      stock_data <- fleet_data[
+        fleet_data$stock == stock,
+        ,
+        drop = FALSE
+      ]
+
+      if (nrow(stock_data) == 0) next
+
+      lim_val <- as.character(stock_data$Limitation[1])
+
+      if (!(lim_val %in% c("most", "least"))) next
+
+      # Keep genuine zero values; exclude missing/infinite effort
+      marker_data <- stock_data[
+        is.finite(stock_data$quotaEffort),
+        ,
+        drop = FALSE
+      ]
+
+      if (nrow(marker_data) == 0) next
+
+      show_legend_lim <- !legend_shown_lim[[lim_val]]
+
+      if (show_legend_lim) {
+        legend_shown_lim[[lim_val]] <- TRUE
+      }
+
+      p <- plotly::add_markers(
+        p,
+        data = marker_data,
+        x = ~stock,
+        y = ~quotaEffort,
+        inherit = FALSE,
+
+        name = unname(limitation_names[lim_val]),
+        legendgroup = paste0("lim_", lim_val),
+        legendrank = if (lim_val == "most") 1 else 2,
+        showlegend = show_legend_lim,
+
+        cliponaxis = FALSE,
+        hoveron = "points",
+
+        marker = list(
+          symbol = unname(limitation_symbols[lim_val]),
+          size = limitationMarkerSize,
+          color = unname(limitation_colours[lim_val]),
+          opacity = 1,
+          line = list(
+            color = "white",
+            width = 1.5
+          )
+        ),
+
+        hovertemplate = paste0(
+          "<b>Stock:</b> ", stock, "<br>",
+          "<b>Effort:</b> %{y:.2f}<br>",
+          "<b>Limitation:</b> ", lim_val, "<br>",
+          "<b>Fleet:</b> ", fleet,
+          "<extra></extra>"
+        )
+      )
+    }
+
+    # Pad the y-axis so zero-effort markers sit inside the panel.
+    # Both bar heights and marker positions retain their actual values.
+    effort_values <- c(
+      0,
+      fleet_data$quotaEffort,
+      fleet_data$sqEffort[1]
+    )
+
+    effort_values <- effort_values[is.finite(effort_values)]
+
+    y_limits <- range(effort_values)
+    y_span <- diff(y_limits)
+
+    # Avoid a degenerate range when all available effort values are zero
+    if (y_span == 0) y_span <- 1
+
+    y_range <- c(
+      y_limits[1] - 0.10 * y_span,
+      y_limits[2] + 0.15 * y_span
+    )
+
     # Compute axis titles for bottom / left plots
     row_index <- ceiling(i / ncol)
     show_x_title <- if (row_index == n_rows) xlab else ""
@@ -1645,17 +1733,26 @@ plot_effortFltStk_plotly <- function(
 
     p <- plotly::layout(
       p,
+
       xaxis = list(
         title = show_x_title,
         tickangle = 45,
         categoryorder = "array",
         categoryarray = stocks,
-        type = "category"
+        type = "category",
+        layer = "below traces"
       ),
+
       yaxis = list(
         title = show_y_title,
-        type = "linear"
+        type = "linear",
+        range = y_range,
+        zeroline = TRUE,
+        zerolinecolor = "#B0B0B0",
+        zerolinewidth = 1,
+        layer = "below traces"
       ),
+
       barmode = "overlay"
     )
 
@@ -1688,8 +1785,15 @@ plot_effortFltStk_plotly <- function(
 
   fig <- plotly::layout(
     fig,
+
     height = fig_height,
-    margin = list(t = 120, b = 120, r = 90),
+
+    margin = list(
+      t = 120,
+      b = 120,
+      r = 90
+    ),
+
     legend = list(
       orientation = "h",
       x = 0.5,
@@ -1698,12 +1802,17 @@ plot_effortFltStk_plotly <- function(
       yanchor = "bottom",
       tracegroupgap = 30
     ),
+
     barmode = "overlay",
+    hovermode = "closest",
+
     xaxis = list(
       categoryorder = "array",
       categoryarray = stocks,
-      tickangle = 45
+      tickangle = 45,
+      layer = "below traces"
     ),
+
     annotations = list(
       list(
         text = ylab,
@@ -1717,6 +1826,7 @@ plot_effortFltStk_plotly <- function(
         textangle = -90,
         font = list(size = 16)
       ),
+
       list(
         text = xlab,
         x = 0.5,
@@ -1728,6 +1838,7 @@ plot_effortFltStk_plotly <- function(
         yanchor = "middle",
         font = list(size = 16)
       ),
+
       list(
         text = source_note,
         x = 1,
@@ -1738,7 +1849,10 @@ plot_effortFltStk_plotly <- function(
         xanchor = "right",
         yanchor = "top",
         align = "right",
-        font = list(size = 10, color = "#707070")
+        font = list(
+          size = 10,
+          color = "#707070"
+        )
       )
     )
   )
