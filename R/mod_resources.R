@@ -46,39 +46,37 @@ mod_resources_ui <- function(id) {
 
     # --- Contact & Feedback
     # --- Contact & Feedback
-bslib::nav_panel(
-  tagList(icon("envelope"), "Contact & Feedback"),
-  div(
-    class = "resources-page",
-    h3(HTML("<b>Contact & Feedback</b>")),
-    p("We’d love to hear from you. For questions, bug reports, or suggestions:"),
-    tags$ul(
-      tags$li(HTML("Email: <a href='mailto:luca.lamoni@ices.dk'>luca.lamoni@ices.dk</a>"))
-    ),
-    p("Or fill out the form below:"),
-    div(
-      class = "msform-embed",
-      tags$iframe(
-        src = "https://forms.office.com/e/vF0shUzLRk?embed=true",
-        width = "640px", height = "480px", frameborder = "0",
-        marginwidth = "0", marginheight = "0",
-        style = "border: none; max-width:100%; max-height:100vh",
-        loading = "lazy", allowfullscreen = NA, webkitallowfullscreen = NA,
-        mozallowfullscreen = NA, msallowfullscreen = NA
+    bslib::nav_panel(
+      tagList(icon("envelope"), "Contact & Feedback"),
+      div(
+        class = "resources-page",
+        h3(HTML("<b>Contact & Feedback</b>")),
+        p("We’d love to hear from you. For questions, bug reports, or suggestions:"),
+        tags$ul(
+          tags$li(HTML("Email: <a href='mailto:luca.lamoni@ices.dk'>luca.lamoni@ices.dk</a>"))
+        ),
+        p("Or fill out the form below:"),
+        div(
+          class = "msform-embed",
+          tags$iframe(
+            src = "https://forms.office.com/e/vF0shUzLRk?embed=true",
+            width = "640px", height = "480px", frameborder = "0",
+            marginwidth = "0", marginheight = "0",
+            style = "border: none; max-width:100%; max-height:100vh",
+            loading = "lazy", allowfullscreen = NA, webkitallowfullscreen = NA,
+            mozallowfullscreen = NA, msallowfullscreen = NA
+          )
+        ),
+        p(
+          em("Having trouble submitting inside the app? "),
+          a(
+            "Open the form in a new tab.",
+            href = "https://forms.office.com/e/vF0shUzLRk",
+            target = "_blank", rel = "noopener"
+          )
+        )
       )
     ),
-    p(
-      em("Having trouble submitting inside the app? "),
-      a(
-        "Open the form in a new tab.",
-        href = "https://forms.office.com/e/vF0shUzLRk",
-        target = "_blank", rel = "noopener"
-      )
-    )
-  )
-),
-
-
     bslib::nav_panel(
       tagList(icon("database"), "Data Sources"),
       div(
@@ -121,7 +119,16 @@ bslib::nav_panel(
           # 3) Stock Assessment Graphs (SAG)
           resource_card(
             title = "Stock Assessment Graphs (SAG)",
-            description = "Assessment outputs and status indicators (e.g., F/FMSY, SSB/MSY Btrigger) shown in status and trends views.",
+            description = tagList(
+              "Assessment outputs and status indicators (e.g., F/Fref, SSB/Bref) shown in the Status module derived following the methodology outlined ",
+              tags$a(
+                "here",
+                href = "https://github.com/ices-taf/fisheriesXplorer_statusFref-Bref_method",
+                target = "_blank",
+                rel = "noopener"
+              ),
+              "."
+            ),
             dataset_url = "https://www.ices.dk/data/assessment-tools/Pages/stock-assessment-graphs.aspx",
             metadata_url = "https://gis.ices.dk/geonetwork/srv/api/records/f5992b7d-b9da-40d4-81b9-d6db9e87e759?language=all",
             services = list("APIs" = "https://sag.ices.dk/sag_api/docs/swagger/index.html"),
@@ -131,7 +138,16 @@ bslib::nav_panel(
           # 4) Landings / Catch series
           resource_card(
             title = "Historical and Nominal catches",
-            description = "Compiled landings (and related series) used in the Landings results.",
+            description = tagList(
+              "Compiled landings (and related series) used in the Landings module derived following the methodology outlined ",
+              tags$a(
+                "here",
+                href = "https://github.com/ices-taf/fisheriesXplorer_landings_trends",
+                target = "_blank",
+                rel = "noopener"
+              ),
+              "."
+            ),
             dataset_url = "https://www.ices.dk/data/dataset-collections/Pages/Fish-catch-and-stock-assessment.aspx",
             metadata_url = "https://gis.ices.dk/geonetwork/srv/api/records/7d242743-1069-417b-81e3-57f25c791a26",
             notes = "See dataset page for data access and conditions."
@@ -157,14 +173,33 @@ bslib::nav_panel(
             notes = "See dataset page for data access and conditions."
           ),
 
-          # 7) Application source code (not a dataset, but important for reuse)
+          # 7) RDBES
+          resource_card(
+            title = "Regional DataBase and Estimation System (RDBES)",
+            description = tagList(
+              "Data from RDBES is used to estimate catches within ecoregions following the methodology outlined ",
+              tags$a(
+                "here",
+                href = "https://github.com/ices-taf/fisheriesXplorer_ecoregion_landings_shares_method",
+                target = "_blank",
+                rel = "noopener"
+              ),
+              "."
+            ),
+            dataset_url = "https://rdbes.ices.dk/",
+            metadata_url = "https://gis.ices.dk/geonetwork/srv/eng/catalog.search#/metadata/f911ad9c-c2dd-452c-87ba-ad63762a0ebf",
+            services = list(Rpackage = "https://ices-tools-prod.r-universe.dev/icesRDBES"),
+            notes = "See dataset page for data access and conditions."
+          ),
+
+          # 8) Application source code (not a dataset, but important for reuse)
           resource_card(
             title = "Application source code",
             description = "Code for this application (versioning, issues, reproducibility).",
             services = list("GitHub" = "https://github.com/ices-tools-dev/fisheriesXplorer"),
             notes = "This application is open source under the MIT license. See the repository for code, issues, and contribution guidelines."
           ),
-          # 8) Connected applications (e.g., adviceXplorer)
+          # 9) Connected applications (e.g., adviceXplorer)
           resource_card(
             title = "Connected applications",
             description = "This app integrates with other ICES tools for data or embedded components.",
@@ -209,11 +244,11 @@ bslib::nav_panel(
     ),
     bslib::nav_panel(
       tagList(icon("quote-right"), "Citation"),
-      div(class = "cite-card",
+      div(
+        class = "cite-card",
         div(class = "cite-title", h3(HTML("<b>How to cite this application</b>"))),
         p("Please cite the application to support reproducibility:"),
         div(class = "codeblock", app_cite$text),
-
         tags$details(
           tags$summary("BibTeX"),
           div(class = "codeblock", app_cite$bibtex)
@@ -222,8 +257,8 @@ bslib::nav_panel(
           tags$summary("CSL-JSON"),
           div(class = "codeblock", jsonlite::toJSON(app_cite$csl, auto_unbox = TRUE, pretty = TRUE))
         ),
-
-        div(class = "cite-actions",
+        div(
+          class = "cite-actions",
           downloadButton(ns("dl_citations_txt"), "Download TXT"),
           downloadButton(ns("dl_citations_bib"), "Download BibTeX"),
           downloadButton(ns("dl_citations_csl"), "Download CSL-JSON")
@@ -234,14 +269,16 @@ bslib::nav_panel(
           type = "application/ld+json",
           HTML(jsonlite::toJSON(
             list(
-              "@context"="https://schema.org",
-              "@type"="SoftwareApplication",
-              "name"="fisheriesXplorer",
-              "applicationCategory"="DataVisualization",
-              "url"="https://ices-tools-dev.shinyapps.io/fisheriesXplorer/",
-              "publisher"=list("@type"="Organization","name"="ICES"),
-              "license"="https://creativecommons.org/licenses/by/4.0/"
-            ), auto_unbox = TRUE, pretty = TRUE))
+              "@context" = "https://schema.org",
+              "@type" = "SoftwareApplication",
+              "name" = "fisheriesXplorer",
+              "applicationCategory" = "DataVisualization",
+              "url" = "https://ices-tools-dev.shinyapps.io/fisheriesXplorer/",
+              "publisher" = list("@type" = "Organization", "name" = "ICES"),
+              "license" = "https://creativecommons.org/licenses/by/4.0/"
+            ),
+            auto_unbox = TRUE, pretty = TRUE
+          ))
         )
       )
     )
