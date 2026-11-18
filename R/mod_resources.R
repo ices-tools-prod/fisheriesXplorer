@@ -53,7 +53,7 @@ mod_resources_ui <- function(id) {
         h3(HTML("<b>Contact & Feedback</b>")),
         p("We’d love to hear from you. For questions, bug reports, or suggestions:"),
         tags$ul(
-          tags$li(HTML("Email: <a href='mailto:luca.lamoni@ices.dk'>luca.lamoni@ices.dk</a>"))
+          tags$li(HTML("Email: <a href='mailto:advice@ices.dk'>advice@ices.dk</a>"))
         ),
         p("Or fill out the form below:"),
         div(
@@ -165,8 +165,8 @@ mod_resources_ui <- function(id) {
 
           # 6) Bycatch Data
           resource_card(
-            title = "Bycatch dataset",
-            description = "Results from ICES advice on bycatch of protected, endangered and threatened species.",
+            title = "Bycatch Advice dataset",
+            description = "Results from ICES advice on bycatch of protected, endangered and threatened species.", # nolint
             dataset_url = "https://www.ices.dk/data/data-portals/Pages/Bycatch.aspx",
             metadata_url = "https://gis.ices.dk/geonetwork/srv/api/records/f11f65af-904f-49d7-90c4-8ce8156b375b?language=all",
             services = list(APIs = "https://bycatch.ices.dk/webservices"),
@@ -188,7 +188,17 @@ mod_resources_ui <- function(id) {
             ),
             dataset_url = "https://rdbes.ices.dk/",
             metadata_url = "https://gis.ices.dk/geonetwork/srv/eng/catalog.search#/metadata/f911ad9c-c2dd-452c-87ba-ad63762a0ebf",
-            services = list(Rpackage = "https://ices-tools-prod.r-universe.dev/icesRDBES"),
+            services = list(Rpackage = "https://github.com/ices-tools-prod/icesRDBES"),
+            notes = "See dataset page for data access and conditions."
+          ),
+
+          # 8) Mixfish data
+          resource_card(
+            title = "Mixed-fisheries considerations dataset",
+            description = "Results from ICES Advice on mixed-fisheries considerations.",
+            dataset_url = "https://www.ices.dk/advice/Fisheries-overviews/Pages/fisheries-overviews.aspx",
+            metadata_url = "",
+            services = list(Rpackage = "https://github.com/ices-tools-dev/mixfishtools"),
             notes = "See dataset page for data access and conditions."
           ),
 
@@ -219,23 +229,6 @@ mod_resources_ui <- function(id) {
             tags$li(HTML("<b>Reusable</b>: citation text, version/build info, and licensing notes."))
           )
         )
-      ),
-
-      # Optional JSON-LD (kept from your version)
-      tags$script(
-        type = "application/ld+json",
-        HTML(jsonlite::toJSON(
-          list(
-            "@context" = "https://schema.org", "@type" = "Dataset",
-            "name" = "ICES Fish catch and stock assessment dataset",
-            "url" = "https://www.ices.dk/data/dataset-collections/Pages/Fish-catch-and-stock-assessment.aspx",
-            "identifier" = "https://gis.ices.dk/geonetwork/srv/api/records/7d242743-1069-417b-81e3-57f25c791a26",
-            "publisher" = list("@type" = "Organization", "name" = "ICES"),
-            "license" = "See dataset page",
-            "isAccessibleForFree" = TRUE
-          ),
-          auto_unbox = TRUE, pretty = TRUE
-        ))
       )
     ),
     bslib::nav_panel(
@@ -263,8 +256,6 @@ mod_resources_ui <- function(id) {
           downloadButton(ns("dl_citations_bib"), "Download BibTeX"),
           downloadButton(ns("dl_citations_csl"), "Download CSL-JSON")
         ),
-
-        # Optional: machine-readable JSON-LD for the app
         tags$script(
           type = "application/ld+json",
           HTML(jsonlite::toJSON(
@@ -272,12 +263,18 @@ mod_resources_ui <- function(id) {
               "@context" = "https://schema.org",
               "@type" = "SoftwareApplication",
               "name" = "fisheriesXplorer",
-              "applicationCategory" = "DataVisualization",
-              "url" = "https://ices-tools-dev.shinyapps.io/fisheriesXplorer/",
-              "publisher" = list("@type" = "Organization", "name" = "ICES"),
-              "license" = "https://creativecommons.org/licenses/by/4.0/"
+              "description" = "An ICES application for exploring fisheries data, fishing activities, and stock status.",
+              "applicationCategory" = "ScientificApplication",
+              "url" = "https://ices-taf.shinyapps.io/fisheriesXplorer/",
+              "codeRepository" = "https://github.com/ices-tools-prod/fisheriesXplorer",
+              "publisher" = list(
+                "@type" = "Organization",
+                "name" = "International Council for the Exploration of the Sea (ICES)"
+              ),
+              "license" = "https://opensource.org/licenses/MIT"
             ),
-            auto_unbox = TRUE, pretty = TRUE
+            auto_unbox = TRUE,
+            pretty = TRUE
           ))
         )
       )
