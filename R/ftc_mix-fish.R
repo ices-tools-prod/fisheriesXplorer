@@ -492,660 +492,1059 @@ plot_catchScenStk_int <- function(data, adv, #ofwhich = FALSE,
 #   fig
 # }
 
-plot_catchScenStk_plotly <- function(data, adv, refTable, 
-                                     ofwhich = FALSE, 
-                                     xlab = "Scenarios", 
-                                     ylab = "Catch (tonnes)", 
-                                     title = NULL,
-                                     source_note = NULL,
-                                     min_height = 600,
-                                     row_height = 300) { 
+# plot_catchScenStk_plotly <- function(data, adv, refTable, 
+#                                      ofwhich = FALSE, 
+#                                      xlab = "Scenarios", 
+#                                      ylab = "Catch (tonnes)", 
+#                                      title = NULL,
+#                                      source_note = NULL,
+#                                      min_height = 600,
+#                                      row_height = 300) { 
   
-  stopifnot(all(c("stock", "scenario", "catch") %in% names(data))) 
-  stopifnot(all(c("stock", "advice") %in% names(adv))) 
+#   stopifnot(all(c("stock", "scenario", "catch") %in% names(data))) 
+#   stopifnot(all(c("stock", "advice") %in% names(adv))) 
   
-  if (!"upper" %in% names(adv)) adv$upper <- adv$advice 
-  if (!"lower" %in% names(adv)) adv$lower <- adv$advice 
+#   if (!"upper" %in% names(adv)) adv$upper <- adv$advice 
+#   if (!"lower" %in% names(adv)) adv$lower <- adv$advice 
   
-  data <- dplyr::filter(data, stock %in% adv$stock) 
+#   data <- dplyr::filter(data, stock %in% adv$stock) 
   
-  unique_stocks <- unique(data$stock) 
-  n_stocks <- length(unique_stocks) 
-  if (n_stocks == 0) stop("No stock data available to plot.") 
-  n_cols <- min(3, n_stocks) 
-  n_rows <- ceiling(n_stocks / n_cols) 
-  fig_height <- max(min_height, n_rows * row_height) 
+#   unique_stocks <- unique(data$stock) 
+#   n_stocks <- length(unique_stocks) 
+#   if (n_stocks == 0) stop("No stock data available to plot.") 
+#   n_cols <- min(3, n_stocks) 
+#   n_rows <- ceiling(n_stocks / n_cols) 
+#   fig_height <- max(min_height, n_rows * row_height) 
   
-  # Global scenario order + numeric x index.
-  # Known scenarios come first in this fixed order; any others are appended alphabetically.
-  data_scenarios <- as.character(unique(data$scenario))
-  priority_order <- c("min", "max", "sq_E", "min_exzero", "min_range")
-  known <- intersect(priority_order, data_scenarios)
-  other <- sort(setdiff(data_scenarios, priority_order))
-  global_x <- c(known, other)
+#   # Global scenario order + numeric x index.
+#   # Known scenarios come first in this fixed order; any others are appended alphabetically.
+#   data_scenarios <- as.character(unique(data$scenario))
+#   priority_order <- c("min", "max", "sq_E", "min_exzero", "min_range")
+#   known <- intersect(priority_order, data_scenarios)
+#   other <- sort(setdiff(data_scenarios, priority_order))
+#   global_x <- c(known, other)
 
-  idx_map  <- setNames(seq_along(global_x), global_x) 
-  n_cat    <- length(global_x) 
+#   idx_map  <- setNames(seq_along(global_x), global_x) 
+#   n_cat    <- length(global_x) 
   
-  show_once <- function(stock, first_stock) {
-    identical(stock, first_stock)
+#   show_once <- function(stock, first_stock) {
+#     identical(stock, first_stock)
+#   }
+  
+#   first_stock <- unique_stocks[1] 
+  
+#   subplots <- vector("list", length(unique_stocks)) 
+  
+#   for (i in seq_along(unique_stocks)) { 
+    
+#     fishstock <- unique_stocks[i] 
+    
+#     stock_data <- dplyr::filter(
+#       data,
+#       stock == fishstock
+#     )
+    
+#     stock_adv <- dplyr::filter(
+#       adv,
+#       stock == fishstock
+#     )[1, , drop = FALSE]
+    
+    
+#     # Numeric positions for bars
+#     stock_data$idx <- as.integer(
+#       idx_map[as.character(stock_data$scenario)]
+#     )
+    
+    
+#     # Bar colour
+#     bar_color <- "#707070"
+    
+    
+#     # Thresholds
+#     y_advice <- as.numeric(stock_adv$advice) 
+#     y_upper  <- as.numeric(stock_adv$upper) 
+#     y_lower  <- as.numeric(stock_adv$lower) 
+    
+#     # KEEP ORIGINAL LOGIC
+#     y_lo <- min(y_advice, y_upper, na.rm = TRUE) 
+#     y_hi <- max(y_advice, y_upper, na.rm = TRUE) 
+    
+#     max_y <- max(
+#       c(
+#         stock_data$catch,
+#         y_upper,
+#         y_advice,
+#         y_lower
+#       ),
+#       na.rm = TRUE
+#     ) * 1.1
+    
+    
+#     # X coordinates
+#     x_left  <- 0.5
+#     x_right <- n_cat + 0.5
+    
+#     x_zone <- c(
+#       x_left,
+#       seq_len(n_cat),
+#       x_right
+#     )
+    
+    
+#     # ============================================================
+#     # VISIBLE BACKGROUND ZONES
+#     #
+#     # These are shapes, always below the bars.
+#     # ============================================================
+    
+#     zone_shapes <- list(
+      
+#       # Green
+#       list(
+#         type = "rect",
+#         xref = "x",
+#         yref = "y",
+#         x0 = x_left,
+#         x1 = x_right,
+#         y0 = 0,
+#         y1 = y_lo,
+#         fillcolor = "rgba(0,128,0,0.15)",
+#         line = list(width = 0),
+#         layer = "below"
+#       ),
+      
+#       # Yellow
+#       list(
+#         type = "rect",
+#         xref = "x",
+#         yref = "y",
+#         x0 = x_left,
+#         x1 = x_right,
+#         y0 = y_lo,
+#         y1 = y_hi,
+#         fillcolor = "rgba(255,215,0,0.15)",
+#         line = list(width = 0),
+#         layer = "below"
+#       ),
+      
+#       # Red
+#       list(
+#         type = "rect",
+#         xref = "x",
+#         yref = "y",
+#         x0 = x_left,
+#         x1 = x_right,
+#         y0 = y_hi,
+#         y1 = max_y,
+#         fillcolor = "rgba(255,0,0,0.15)",
+#         line = list(width = 0),
+#         layer = "below"
+#       )
+#     )
+    
+    
+#     p <- plotly::plot_ly()
+    
+    
+#     # ============================================================
+#     # HOVER POLYGONS
+#     #
+#     # Important:
+#     #   hoverinfo = "text"
+#     #
+#     # rather than hovertemplate.
+#     #
+#     # This prevents Plotly from showing "trace xx".
+#     # ============================================================
+    
+#     # Green hover area
+#     p <- p %>%
+#       plotly::add_trace(
+#         x = c(
+#           x_left,
+#           x_right,
+#           x_right,
+#           x_left,
+#           x_left
+#         ),
+#         y = c(
+#           0,
+#           0,
+#           y_lo,
+#           y_lo,
+#           0
+#         ),
+#         type = "scatter",
+#         mode = "lines",
+#         fill = "toself",
+        
+#         fillcolor = "rgba(0,0,0,0.001)",
+        
+#         line = list(
+#           width = 0,
+#           color = "rgba(0,0,0,0)"
+#         ),
+        
+#         hoveron = "fills",
+#         hoverinfo = "text",
+#         text = "Below advice",
+        
+#         name = "",
+#         showlegend = FALSE
+#       )
+    
+    
+#     # Yellow hover area
+#     p <- p %>%
+#       plotly::add_trace(
+#         x = c(
+#           x_left,
+#           x_right,
+#           x_right,
+#           x_left,
+#           x_left
+#         ),
+#         y = c(
+#           y_lo,
+#           y_lo,
+#           y_hi,
+#           y_hi,
+#           y_lo
+#         ),
+#         type = "scatter",
+#         mode = "lines",
+#         fill = "toself",
+        
+#         fillcolor = "rgba(0,0,0,0.001)",
+        
+#         line = list(
+#           width = 0,
+#           color = "rgba(0,0,0,0)"
+#         ),
+        
+#         hoveron = "fills",
+#         hoverinfo = "text",
+#         text = "Within advice range",
+        
+#         name = "",
+#         showlegend = FALSE
+#       )
+    
+    
+#     # Red hover area
+#     p <- p %>%
+#       plotly::add_trace(
+#         x = c(
+#           x_left,
+#           x_right,
+#           x_right,
+#           x_left,
+#           x_left
+#         ),
+#         y = c(
+#           y_hi,
+#           y_hi,
+#           max_y,
+#           max_y,
+#           y_hi
+#         ),
+#         type = "scatter",
+#         mode = "lines",
+#         fill = "toself",
+        
+#         fillcolor = "rgba(0,0,0,0.001)",
+        
+#         line = list(
+#           width = 0,
+#           color = "rgba(0,0,0,0)"
+#         ),
+        
+#         hoveron = "fills",
+#         hoverinfo = "text",
+#         text = "Above advice",
+        
+#         name = "",
+#         showlegend = FALSE
+#       )
+    
+    
+#     # ============================================================
+#     # COLOURED LEGEND ITEMS
+#     #
+#     # Use visible = "legendonly".
+#     #
+#     # Unlike NA coordinates, these traces are explicitly retained
+#     # by Plotly for the legend.
+#     # ============================================================
+    
+#     if (show_once(fishstock, first_stock)) {
+      
+#       # Green legend square
+#       p <- p %>%
+#         plotly::add_trace(
+#           x = 1,
+#           y = 0,
+#           type = "scatter",
+#           mode = "markers",
+          
+#           marker = list(
+#             symbol = "square",
+#             size = 16,
+#             color = "rgba(0,128,0,0.45)"
+#           ),
+          
+#           name = "Below advice",
+#           legendgroup = "zone_green",
+          
+#           visible = "legendonly",
+#           showlegend = TRUE,
+          
+#           hoverinfo = "skip"
+#         )
+      
+      
+#       # Yellow legend square
+#       p <- p %>%
+#         plotly::add_trace(
+#           x = 1,
+#           y = 0,
+#           type = "scatter",
+#           mode = "markers",
+          
+#           marker = list(
+#             symbol = "square",
+#             size = 16,
+#             color = "rgba(255,215,0,0.55)"
+#           ),
+          
+#           name = "Within advice range",
+#           legendgroup = "zone_yellow",
+          
+#           visible = "legendonly",
+#           showlegend = TRUE,
+          
+#           hoverinfo = "skip"
+#         )
+      
+      
+#       # Red legend square
+#       p <- p %>%
+#         plotly::add_trace(
+#           x = 1,
+#           y = 0,
+#           type = "scatter",
+#           mode = "markers",
+          
+#           marker = list(
+#             symbol = "square",
+#             size = 16,
+#             color = "rgba(255,0,0,0.45)"
+#           ),
+          
+#           name = "Above advice",
+#           legendgroup = "zone_red",
+          
+#           visible = "legendonly",
+#           showlegend = TRUE,
+          
+#           hoverinfo = "skip"
+#         )
+#     }
+    
+    
+#     # ============================================================
+#     # HORIZONTAL LINES
+#     # ============================================================
+    
+#     p <- p %>% 
+      
+#       plotly::add_trace( 
+#         x = x_zone,
+#         y = rep(y_advice, length(x_zone)), 
+        
+#         type = "scatter",
+#         mode = "lines", 
+        
+#         line = list(
+#           color = "#6e6e6e",
+#           width = 2,
+#           dash = "solid"
+#         ), 
+        
+#         name = "Advice", 
+#         legendgroup = "line_advice", 
+        
+#         showlegend = show_once(
+#           fishstock,
+#           first_stock
+#         ),
+        
+#         hovertemplate =
+#           "Advice (tonnes): %{y:.0f}<extra></extra>" 
+#       ) %>% 
+      
+      
+#       plotly::add_trace( 
+#         x = x_zone,
+#         y = rep(y_upper, length(x_zone)), 
+        
+#         type = "scatter",
+#         mode = "lines", 
+        
+#         line = list(
+#           color = "#6e6e6e",
+#           width = 2,
+#           dash = "dash"
+#         ), 
+        
+#         name = "F<sub>MSY upper</sub>", 
+#         legendgroup = "line_upper", 
+        
+#         showlegend = show_once(
+#           fishstock,
+#           first_stock
+#         ),
+        
+#         hovertemplate =
+#           "Upper limit (tonnes): %{y:.0f}<extra></extra>" 
+#       ) %>% 
+      
+      
+#       plotly::add_trace( 
+#         x = x_zone,
+#         y = rep(y_lower, length(x_zone)), 
+        
+#         type = "scatter",
+#         mode = "lines", 
+        
+#         line = list(
+#           color = "#6e6e6e",
+#           width = 2,
+#           dash = "dot"
+#         ), 
+        
+#         name = "F<sub>MSY lower</sub>", 
+#         legendgroup = "line_lower", 
+        
+#         showlegend = show_once(
+#           fishstock,
+#           first_stock
+#         ),
+        
+#         hovertemplate =
+#           "Lower limit (tonnes): %{y:.0f}<extra></extra>" 
+#       )
+    
+    
+#     # ============================================================
+#     # BARS
+#     #
+#     # Background shapes are underneath, so bar colour remains
+#     # uniformly grey.
+#     # ============================================================
+    
+#     p <- p %>% 
+#       plotly::add_trace( 
+        
+#         data = stock_data, 
+        
+#         x = ~idx,
+#         y = ~catch, 
+        
+#         type = "bar", 
+        
+#         marker = list(
+#           color = bar_color
+#         ),
+        
+#         opacity = 1,
+        
+#         name = "Catch bars", 
+#         legendgroup = "bars", 
+        
+#         showlegend = FALSE,
+        
+#         hovertemplate = paste0( 
+#           "Stock: ", fishstock, "<br>", 
+#           "Scenario: %{customdata}<br>", 
+#           "Catches (tonnes): %{y:.0f}",
+#           "<extra></extra>" 
+#         ),
+        
+#         customdata = stock_data$scenario 
+#       )
+    
+    
+#     # ============================================================
+#     # PANEL LAYOUT
+#     # ============================================================
+    
+#     p <- p %>% 
+#       plotly::layout(
+        
+#         shapes = zone_shapes,
+        
+#         xaxis = list( 
+#           title = "", 
+#           tickangle = 45, 
+#           tickmode = "array", 
+#           tickvals = seq_len(n_cat), 
+#           ticktext = global_x, 
+#           tickfont = list(size = 12), 
+#           range = c(
+#             0.5,
+#             n_cat + 0.5
+#           )
+#         ),
+        
+#         yaxis = list(
+#           title = "",
+#           range = c(
+#             0,
+#             max_y
+#           )
+#         ),
+        
+#         bargap = 0.2,
+        
+#         annotations = list(
+#           list( 
+#             x = 0.5,
+#             y = 1.02,
+            
+#             text = paste0(fishstock), 
+            
+#             xref = "paper",
+#             yref = "paper", 
+            
+#             xanchor = "center",
+#             yanchor = "bottom", 
+            
+#             showarrow = FALSE 
+#           )
+#         )
+#       )
+    
+    
+#     subplots[[i]] <- p 
+#   }
+  
+  
+#   # ==============================================================
+#   # COMBINE STOCK PANELS
+#   # ==============================================================
+  
+#   fig <- plotly::subplot( 
+    
+#     subplots, 
+    
+#     nrows = n_rows,
+    
+#     shareX = TRUE,
+#     shareY = FALSE, 
+    
+#     titleY = FALSE,
+#     titleX = FALSE,
+    
+#     margin = 0.05 
+    
+#   ) %>% 
+    
+#     plotly::layout( 
+      
+#       height = fig_height,
+      
+#       barmode = "group", 
+      
+#       showlegend = TRUE,
+      
+#       legend = list( 
+#         orientation = "h", 
+        
+#         x = 0.5,
+#         y = 1.04,
+#         yref = "paper",
+        
+#         xanchor = "center",
+#         yanchor = "bottom"
+#       ),
+      
+#       margin = list(
+#         l = 80,
+#         b = 170,
+#         t = 160,
+#         r = 20
+#       ),
+      
+#       title = list(
+#         text = title,
+#         x = 0.5,
+#         y = 1.4,
+#         yref = "paper",
+#         xanchor = "center",
+#         yanchor = "bottom"
+#       ),
+      
+#       annotations = list( 
+        
+#         list( 
+#           text = ylab, 
+          
+#           x = -0.05,
+#           y = 0.5, 
+          
+#           xref = "paper",
+#           yref = "paper", 
+          
+#           showarrow = FALSE, 
+          
+#           xanchor = "center",
+#           yanchor = "middle", 
+          
+#           textangle = -90,
+          
+#           font = list(size = 16)
+#         ),
+        
+#         list( 
+#           text = xlab, 
+          
+#           x = 0.5,
+#           y = -0.12, 
+          
+#           xref = "paper",
+#           yref = "paper", 
+          
+#           showarrow = FALSE, 
+          
+#           xanchor = "middle",
+#           yanchor = "top", 
+          
+#           font = list(size = 16)
+#         ),
+        
+#         list(
+#           text = source_note,
+          
+#           x = 1,
+#           y = -0.1,
+          
+#           xref = "paper",
+#           yref = "paper",
+          
+#           showarrow = FALSE,
+          
+#           xanchor = "right",
+#           yanchor = "top",
+#           align = "right",
+          
+#           font = list(size = 10, color = "#707070")
+#         )
+#       )
+#     )
+  
+#   fig 
+# }
+
+##new verision compact 
+# Catch scenarios by stock: one directly assembled Plotly figure.
+plot_catchScenStk_plotly <- function(
+    data, adv, refTable,
+    ofwhich = FALSE,
+    xlab = "Scenarios",
+    ylab = "Catch (tonnes)",
+    title = NULL,
+    source_note = NULL,
+    min_height = 400,
+    row_height = 200) {
+
+  
+
+  stopifnot(all(c("stock", "scenario", "catch") %in% names(data)))
+  stopifnot(all(c("stock", "advice") %in% names(adv)))
+  if (length(min_height) != 1L || !is.finite(min_height) || min_height <= 0) {
+    stop("min_height must be a positive number.", call. = FALSE)
   }
-  
-  first_stock <- unique_stocks[1] 
-  
-  subplots <- vector("list", length(unique_stocks)) 
-  
-  for (i in seq_along(unique_stocks)) { 
-    
-    fishstock <- unique_stocks[i] 
-    
-    stock_data <- dplyr::filter(
-      data,
-      stock == fishstock
+  if (length(row_height) != 1L || !is.finite(row_height) || row_height <= 0) {
+    stop("row_height must be a positive number.", call. = FALSE)
+  }
+
+  # refTable and ofwhich are retained for compatibility with existing calls.
+  # As in the supplied function, neither changes the current plot.
+  data <- as.data.frame(data)
+  adv <- as.data.frame(adv)
+  data$stock <- as.character(data$stock)
+  data$scenario <- as.character(data$scenario)
+  adv$stock <- as.character(adv$stock)
+
+  if (!"upper" %in% names(adv)) adv$upper <- adv$advice
+  if (!"lower" %in% names(adv)) adv$lower <- adv$advice
+
+  data <- data[data$stock %in% adv$stock, , drop = FALSE]
+  stocks <- unique(data$stock)
+  n_stocks <- length(stocks)
+  if (n_stocks == 0L) stop("No stock data available to plot.", call. = FALSE)
+  if (anyNA(stocks)) stop("Stock identifiers must not be missing.", call. = FALSE)
+  if (!is.numeric(data$catch)) stop("data$catch must be numeric.", call. = FALSE)
+
+  # Preserve the original scenario order, followed by other names alphabetically.
+  data_scenarios <- unique(data$scenario)
+  priority_order <- c("min", "max", "sq_E", "min_exzero", "min_range")
+  global_x <- c(
+    intersect(priority_order, data_scenarios),
+    sort(setdiff(data_scenarios, priority_order))
+  )
+  n_cat <- length(global_x)
+  if (n_cat == 0L) stop("No scenario names available to plot.", call. = FALSE)
+  data$idx <- match(data$scenario, global_x)
+
+  # Keep the previous grid packing, including 2 x 2 for four stocks.
+  n_rows <- ceiling(n_stocks / min(3L, n_stocks))
+  n_cols <- ceiling(n_stocks / n_rows)
+
+  # Fixed gaps: 36 pixels between rows; 4% of drawing width between columns.
+  # row_height now reserves drawing space for each panel, excluding margins.
+  top_margin <- 160
+  bottom_margin <- 170
+  vertical_gap <- 36
+  horizontal_gap <- 0.04
+  fig_height <- max(
+    min_height,
+    top_margin + bottom_margin +
+      n_rows * row_height + (n_rows - 1L) * vertical_gap
+  )
+  inner_height <- fig_height - top_margin - bottom_margin
+  panel_height <- (inner_height - (n_rows - 1L) * vertical_gap) / n_rows
+  panel_width <- (1 - (n_cols - 1L) * horizontal_gap) / n_cols
+
+  x_domains <- lapply(seq_len(n_cols), function(column) {
+    domain_left <- (column - 1L) * (panel_width + horizontal_gap)
+    pmax(0, pmin(1, c(domain_left, domain_left + panel_width)))
+  })
+
+  stock_rows <- split(
+    seq_len(nrow(data)),
+    factor(data$stock, levels = stocks),
+    drop = TRUE
+  )
+  advice_rows <- match(stocks, adv$stock)
+
+  axis_ref <- function(axis, index) {
+    paste0(axis, if (index == 1L) "" else as.character(index))
+  }
+  axis_name <- function(axis, index) {
+    paste0(axis, "axis", if (index == 1L) "" else as.character(index))
+  }
+
+  # Ordinary Plotly figure data: no deprecated layout(height = ...) call.
+  figure_layout <- list(
+    height = fig_height,
+    barmode = "group",
+    bargap = 0.2,
+    showlegend = TRUE,
+    margin = list(l = 80, b = bottom_margin, t = top_margin, r = 20),
+    legend = list(
+      orientation = "h",
+      x = 0.5,
+      y = 1 + 45 / inner_height,
+      yref = "paper",
+      xanchor = "center",
+      yanchor = "bottom"
     )
-    
-    stock_adv <- dplyr::filter(
-      adv,
-      stock == fishstock
-    )[1, , drop = FALSE]
-    
-    
-    # Numeric positions for bars
-    stock_data$idx <- as.integer(
-      idx_map[as.character(stock_data$scenario)]
+  )
+
+  if (!is.null(title)) {
+    figure_layout$title <- list(
+      text = title,
+      x = 0.5,
+      xref = "container",
+      xanchor = "center",
+      y = 1,
+      yref = "container",
+      yanchor = "top",
+      pad = list(t = 20)
     )
-    
-    
-    # Bar colour
-    bar_color <- "#707070"
-    
-    
-    # Thresholds
-    y_advice <- as.numeric(stock_adv$advice) 
-    y_upper  <- as.numeric(stock_adv$upper) 
-    y_lower  <- as.numeric(stock_adv$lower) 
-    
-    # KEEP ORIGINAL LOGIC
-    y_lo <- min(y_advice, y_upper, na.rm = TRUE) 
-    y_hi <- max(y_advice, y_upper, na.rm = TRUE) 
-    
-    max_y <- max(
-      c(
-        stock_data$catch,
-        y_upper,
-        y_advice,
-        y_lower
-      ),
-      na.rm = TRUE
-    ) * 1.1
-    
-    
-    # X coordinates
-    x_left  <- 0.5
-    x_right <- n_cat + 0.5
-    
-    x_zone <- c(
-      x_left,
-      seq_len(n_cat),
-      x_right
+  }
+
+  # One shared scenario axis per column, at its lowest occupied panel.
+  for (column in seq_len(n_cols)) {
+    bottom_panel <- max(seq.int(column, n_stocks, by = n_cols))
+    figure_layout[[axis_name("x", column)]] <- list(
+      domain = x_domains[[column]],
+      anchor = axis_ref("y", bottom_panel),
+      type = "linear",
+      title = list(text = ""),
+      tickangle = 45,
+      tickmode = "array",
+      tickvals = seq_len(n_cat),
+      ticktext = global_x,
+      tickfont = list(size = 12),
+      range = c(0.5, n_cat + 0.5),
+      automargin = TRUE
     )
-    
-    
-    # ============================================================
-    # VISIBLE BACKGROUND ZONES
-    #
-    # These are shapes, always below the bars.
-    # ============================================================
-    
-    zone_shapes <- list(
-      
-      # Green
-      list(
-        type = "rect",
-        xref = "x",
-        yref = "y",
-        x0 = x_left,
-        x1 = x_right,
-        y0 = 0,
-        y1 = y_lo,
-        fillcolor = "rgba(0,128,0,0.15)",
-        line = list(width = 0),
-        layer = "below"
-      ),
-      
-      # Yellow
-      list(
-        type = "rect",
-        xref = "x",
-        yref = "y",
-        x0 = x_left,
-        x1 = x_right,
-        y0 = y_lo,
-        y1 = y_hi,
-        fillcolor = "rgba(255,215,0,0.15)",
-        line = list(width = 0),
-        layer = "below"
-      ),
-      
-      # Red
-      list(
-        type = "rect",
-        xref = "x",
-        yref = "y",
-        x0 = x_left,
-        x1 = x_right,
-        y0 = y_hi,
-        y1 = max_y,
-        fillcolor = "rgba(255,0,0,0.15)",
-        line = list(width = 0),
-        layer = "below"
-      )
+  }
+
+  traces <- vector("list", 7L * n_stocks + 3L)
+  trace_count <- 0L
+  append_trace <- function(trace) {
+    trace_count <<- trace_count + 1L
+    traces[[trace_count]] <<- trace
+  }
+  shapes <- vector("list", 3L * n_stocks)
+  shape_count <- 0L
+  annotations <- vector("list", n_stocks)
+
+  zone_names <- c("Below advice", "Within advice range", "Above advice")
+  zone_groups <- c("zone_green", "zone_yellow", "zone_red")
+  zone_colours <- c(
+    "rgba(0,128,0,0.15)",
+    "rgba(255,215,0,0.15)",
+    "rgba(255,0,0,0.15)"
+  )
+  zone_legend_colours <- c(
+    "rgba(0,128,0,0.45)",
+    "rgba(255,215,0,0.55)",
+    "rgba(255,0,0,0.45)"
+  )
+  line_names <- c(
+    advice = "Advice",
+    upper = "F<sub>MSY upper</sub>",
+    lower = "F<sub>MSY lower</sub>"
+  )
+  line_dashes <- c(advice = "solid", upper = "dash", lower = "dot")
+  line_hover <- c(
+    advice = "Advice (tonnes): %{y:.0f}<extra></extra>",
+    upper = "Upper limit (tonnes): %{y:.0f}<extra></extra>",
+    lower = "Lower limit (tonnes): %{y:.0f}<extra></extra>"
+  )
+  line_legend_shown <- c(advice = FALSE, upper = FALSE, lower = FALSE)
+  x_left <- 0.5
+  x_right <- n_cat + 0.5
+  x_zone <- c(x_left, seq_len(n_cat), x_right)
+  polygon_x <- c(x_left, x_right, x_right, x_left, x_left)
+
+  for (i in seq_along(stocks)) {
+    fishstock <- stocks[[i]]
+    stock_data <- data[stock_rows[[i]], , drop = FALSE]
+    stock_adv <- adv[advice_rows[[i]], , drop = FALSE]
+    thresholds <- c(
+      advice = as.numeric(stock_adv$advice),
+      upper = as.numeric(stock_adv$upper),
+      lower = as.numeric(stock_adv$lower)
     )
-    
-    
-    p <- plotly::plot_ly()
-    
-    
-    # ============================================================
-    # HOVER POLYGONS
-    #
-    # Important:
-    #   hoverinfo = "text"
-    #
-    # rather than hovertemplate.
-    #
-    # This prevents Plotly from showing "trace xx".
-    # ============================================================
-    
-    # Green hover area
-    p <- p %>%
-      plotly::add_trace(
-        x = c(
-          x_left,
-          x_right,
-          x_right,
-          x_left,
-          x_left
-        ),
-        y = c(
-          0,
-          0,
-          y_lo,
-          y_lo,
-          0
-        ),
-        type = "scatter",
-        mode = "lines",
-        fill = "toself",
-        
-        fillcolor = "rgba(0,0,0,0.001)",
-        
-        line = list(
-          width = 0,
-          color = "rgba(0,0,0,0)"
-        ),
-        
-        hoveron = "fills",
-        hoverinfo = "text",
-        text = "Below advice",
-        
-        name = "",
-        showlegend = FALSE
-      )
-    
-    
-    # Yellow hover area
-    p <- p %>%
-      plotly::add_trace(
-        x = c(
-          x_left,
-          x_right,
-          x_right,
-          x_left,
-          x_left
-        ),
-        y = c(
-          y_lo,
-          y_lo,
-          y_hi,
-          y_hi,
-          y_lo
-        ),
-        type = "scatter",
-        mode = "lines",
-        fill = "toself",
-        
-        fillcolor = "rgba(0,0,0,0.001)",
-        
-        line = list(
-          width = 0,
-          color = "rgba(0,0,0,0)"
-        ),
-        
-        hoveron = "fills",
-        hoverinfo = "text",
-        text = "Within advice range",
-        
-        name = "",
-        showlegend = FALSE
-      )
-    
-    
-    # Red hover area
-    p <- p %>%
-      plotly::add_trace(
-        x = c(
-          x_left,
-          x_right,
-          x_right,
-          x_left,
-          x_left
-        ),
-        y = c(
-          y_hi,
-          y_hi,
-          max_y,
-          max_y,
-          y_hi
-        ),
-        type = "scatter",
-        mode = "lines",
-        fill = "toself",
-        
-        fillcolor = "rgba(0,0,0,0.001)",
-        
-        line = list(
-          width = 0,
-          color = "rgba(0,0,0,0)"
-        ),
-        
-        hoveron = "fills",
-        hoverinfo = "text",
-        text = "Above advice",
-        
-        name = "",
-        showlegend = FALSE
-      )
-    
-    
-    # ============================================================
-    # COLOURED LEGEND ITEMS
-    #
-    # Use visible = "legendonly".
-    #
-    # Unlike NA coordinates, these traces are explicitly retained
-    # by Plotly for the legend.
-    # ============================================================
-    
-    if (show_once(fishstock, first_stock)) {
-      
-      # Green legend square
-      p <- p %>%
-        plotly::add_trace(
-          x = 1,
-          y = 0,
-          type = "scatter",
-          mode = "markers",
-          
-          marker = list(
-            symbol = "square",
-            size = 16,
-            color = "rgba(0,128,0,0.45)"
-          ),
-          
-          name = "Below advice",
-          legendgroup = "zone_green",
-          
-          visible = "legendonly",
-          showlegend = TRUE,
-          
-          hoverinfo = "skip"
+
+    row <- (i - 1L) %/% n_cols + 1L
+    column <- (i - 1L) %% n_cols + 1L
+    xref <- axis_ref("x", column)
+    yref <- axis_ref("y", i)
+    y_top <- 1 - (row - 1L) * (panel_height + vertical_gap) / inner_height
+    y_domain <- pmax(0, pmin(1, c(y_top - panel_height / inner_height, y_top)))
+
+    values <- c(stock_data$catch, thresholds)
+    values <- values[is.finite(values)]
+    max_y <- if (length(values)) max(c(0, values)) * 1.1 else 1
+    if (!is.finite(max_y) || max_y <= 0) max_y <- 1
+
+    # Preserve the supplied zone rule: advice and upper define the bands.
+    # The lower reference value is drawn as a line, not used as a band edge.
+    zone_bounds <- thresholds[c("advice", "upper")]
+    zone_bounds <- zone_bounds[is.finite(zone_bounds)]
+    if (length(zone_bounds)) {
+      y_lo <- min(zone_bounds)
+      y_hi <- max(zone_bounds)
+      zone_bottom <- c(0, y_lo, y_hi)
+      zone_top <- c(y_lo, y_hi, max_y)
+
+      for (zone in seq_along(zone_names)) {
+        shape_count <- shape_count + 1L
+        shapes[[shape_count]] <- list(
+          type = "rect",
+          xref = xref, yref = yref,
+          x0 = x_left, x1 = x_right,
+          y0 = zone_bottom[[zone]], y1 = zone_top[[zone]],
+          fillcolor = zone_colours[[zone]],
+          line = list(width = 0),
+          layer = "below"
         )
-      
-      
-      # Yellow legend square
-      p <- p %>%
-        plotly::add_trace(
-          x = 1,
-          y = 0,
-          type = "scatter",
-          mode = "markers",
-          
-          marker = list(
-            symbol = "square",
-            size = 16,
-            color = "rgba(255,215,0,0.55)"
+
+        # Keep nearly invisible hover fills separate from the visible shapes.
+        # hoverinfo='text' preserves zone tooltips without 'trace xx' labels.
+        append_trace(list(
+          type = "scatter", mode = "lines",
+          x = polygon_x,
+          y = c(
+            zone_bottom[[zone]], zone_bottom[[zone]],
+            zone_top[[zone]], zone_top[[zone]], zone_bottom[[zone]]
           ),
-          
-          name = "Within advice range",
-          legendgroup = "zone_yellow",
-          
-          visible = "legendonly",
-          showlegend = TRUE,
-          
-          hoverinfo = "skip"
-        )
-      
-      
-      # Red legend square
-      p <- p %>%
-        plotly::add_trace(
-          x = 1,
-          y = 0,
-          type = "scatter",
-          mode = "markers",
-          
-          marker = list(
-            symbol = "square",
-            size = 16,
-            color = "rgba(255,0,0,0.45)"
-          ),
-          
-          name = "Above advice",
-          legendgroup = "zone_red",
-          
-          visible = "legendonly",
-          showlegend = TRUE,
-          
-          hoverinfo = "skip"
-        )
+          xaxis = xref, yaxis = yref,
+          fill = "toself",
+          fillcolor = "rgba(0,0,0,0.001)",
+          line = list(width = 0, color = "rgba(0,0,0,0)"),
+          hoveron = "fills",
+          hoverinfo = "text",
+          text = zone_names[[zone]],
+          name = "",
+          showlegend = FALSE
+        ))
+      }
     }
-    
-    
-    # ============================================================
-    # HORIZONTAL LINES
-    # ============================================================
-    
-    p <- p %>% 
-      
-      plotly::add_trace( 
+
+    if (i == 1L) {
+      # Preserve the existing explanatory zone legend entries.
+      for (zone in seq_along(zone_names)) {
+        append_trace(list(
+          type = "scatter", mode = "markers",
+          x = 1, y = 0,
+          xaxis = xref, yaxis = yref,
+          marker = list(
+            symbol = "square", size = 16,
+            color = zone_legend_colours[[zone]]
+          ),
+          name = zone_names[[zone]],
+          legendgroup = zone_groups[[zone]],
+          legendrank = zone,
+          visible = "legendonly",
+          showlegend = TRUE,
+          hoverinfo = "skip"
+        ))
+      }
+    }
+
+    # Retain all three finite reference lines, including coincident values.
+    for (key in names(line_names)) {
+      value <- thresholds[[key]]
+      if (!is.finite(value)) next
+
+      append_trace(list(
+        type = "scatter", mode = "lines",
         x = x_zone,
-        y = rep(y_advice, length(x_zone)), 
-        
-        type = "scatter",
-        mode = "lines", 
-        
-        line = list(
-          color = "#6e6e6e",
-          width = 2,
-          dash = "solid"
-        ), 
-        
-        name = "Advice", 
-        legendgroup = "line_advice", 
-        
-        showlegend = show_once(
-          fishstock,
-          first_stock
-        ),
-        
-        hovertemplate =
-          "Advice (tonnes): %{y:.0f}<extra></extra>" 
-      ) %>% 
-      
-      
-      plotly::add_trace( 
-        x = x_zone,
-        y = rep(y_upper, length(x_zone)), 
-        
-        type = "scatter",
-        mode = "lines", 
-        
-        line = list(
-          color = "#6e6e6e",
-          width = 2,
-          dash = "dash"
-        ), 
-        
-        name = "F<sub>MSY upper</sub>", 
-        legendgroup = "line_upper", 
-        
-        showlegend = show_once(
-          fishstock,
-          first_stock
-        ),
-        
-        hovertemplate =
-          "Upper limit (tonnes): %{y:.0f}<extra></extra>" 
-      ) %>% 
-      
-      
-      plotly::add_trace( 
-        x = x_zone,
-        y = rep(y_lower, length(x_zone)), 
-        
-        type = "scatter",
-        mode = "lines", 
-        
-        line = list(
-          color = "#6e6e6e",
-          width = 2,
-          dash = "dot"
-        ), 
-        
-        name = "F<sub>MSY lower</sub>", 
-        legendgroup = "line_lower", 
-        
-        showlegend = show_once(
-          fishstock,
-          first_stock
-        ),
-        
-        hovertemplate =
-          "Lower limit (tonnes): %{y:.0f}<extra></extra>" 
-      )
-    
-    
-    # ============================================================
-    # BARS
-    #
-    # Background shapes are underneath, so bar colour remains
-    # uniformly grey.
-    # ============================================================
-    
-    p <- p %>% 
-      plotly::add_trace( 
-        
-        data = stock_data, 
-        
-        x = ~idx,
-        y = ~catch, 
-        
-        type = "bar", 
-        
-        marker = list(
-          color = bar_color
-        ),
-        
-        opacity = 1,
-        
-        name = "Catch bars", 
-        legendgroup = "bars", 
-        
-        showlegend = FALSE,
-        
-        hovertemplate = paste0( 
-          "Stock: ", fishstock, "<br>", 
-          "Scenario: %{customdata}<br>", 
-          "Catches (tonnes): %{y:.0f}",
-          "<extra></extra>" 
-        ),
-        
-        customdata = stock_data$scenario 
-      )
-    
-    
-    # ============================================================
-    # PANEL LAYOUT
-    # ============================================================
-    
-    p <- p %>% 
-      plotly::layout(
-        
-        shapes = zone_shapes,
-        
-        xaxis = list( 
-          title = "", 
-          tickangle = 45, 
-          tickmode = "array", 
-          tickvals = seq_len(n_cat), 
-          ticktext = global_x, 
-          tickfont = list(size = 12), 
-          range = c(
-            0.5,
-            n_cat + 0.5
-          )
-        ),
-        
-        yaxis = list(
-          title = "",
-          range = c(
-            0,
-            max_y
-          )
-        ),
-        
-        bargap = 0.2,
-        
-        annotations = list(
-          list( 
-            x = 0.5,
-            y = 1.02,
-            
-            text = paste0(fishstock), 
-            
-            xref = "paper",
-            yref = "paper", 
-            
-            xanchor = "center",
-            yanchor = "bottom", 
-            
-            showarrow = FALSE 
-          )
-        )
-      )
-    
-    
-    subplots[[i]] <- p 
-  }
-  
-  
-  # ==============================================================
-  # COMBINE STOCK PANELS
-  # ==============================================================
-  
-  fig <- plotly::subplot( 
-    
-    subplots, 
-    
-    nrows = n_rows,
-    
-    shareX = TRUE,
-    shareY = FALSE, 
-    
-    titleY = FALSE,
-    titleX = FALSE,
-    
-    margin = 0.05 
-    
-  ) %>% 
-    
-    plotly::layout( 
-      
-      height = fig_height,
-      
-      barmode = "group", 
-      
-      showlegend = TRUE,
-      
-      legend = list( 
-        orientation = "h", 
-        
-        x = 0.5,
-        y = 1.04,
-        yref = "paper",
-        
-        xanchor = "center",
-        yanchor = "bottom"
+        y = rep(value, length(x_zone)),
+        xaxis = xref, yaxis = yref,
+        line = list(color = "#6e6e6e", width = 2, dash = line_dashes[[key]]),
+        name = line_names[[key]],
+        legendgroup = paste0("line_", key),
+        legendrank = 3L + match(key, names(line_names)),
+        showlegend = !line_legend_shown[[key]],
+        hovertemplate = line_hover[[key]]
+      ))
+      line_legend_shown[[key]] <- TRUE
+    }
+
+    append_trace(list(
+      type = "bar",
+      x = stock_data$idx,
+      y = stock_data$catch,
+      xaxis = xref, yaxis = yref,
+      marker = list(color = "#707070"),
+      opacity = 1,
+      name = "Catch bars",
+      legendgroup = "bars",
+      showlegend = FALSE,
+      hovertemplate = paste0(
+        "Stock: ", fishstock, "<br>",
+        "Scenario: %{customdata}<br>",
+        "Catches (tonnes): %{y:.0f}<extra></extra>"
       ),
-      
-      margin = list(
-        l = 80,
-        b = 170,
-        t = 160,
-        r = 20
-      ),
-      
-      title = list(
-        text = title,
-        x = 0.5,
-        y = 1.4,
-        yref = "paper",
-        xanchor = "center",
-        yanchor = "bottom"
-      ),
-      
-      annotations = list( 
-        
-        list( 
-          text = ylab, 
-          
-          x = -0.05,
-          y = 0.5, 
-          
-          xref = "paper",
-          yref = "paper", 
-          
-          showarrow = FALSE, 
-          
-          xanchor = "center",
-          yanchor = "middle", 
-          
-          textangle = -90,
-          
-          font = list(size = 16)
-        ),
-        
-        list( 
-          text = xlab, 
-          
-          x = 0.5,
-          y = -0.12, 
-          
-          xref = "paper",
-          yref = "paper", 
-          
-          showarrow = FALSE, 
-          
-          xanchor = "middle",
-          yanchor = "top", 
-          
-          font = list(size = 16)
-        ),
-        
-        list(
-          text = source_note,
-          
-          x = 1,
-          y = -0.1,
-          
-          xref = "paper",
-          yref = "paper",
-          
-          showarrow = FALSE,
-          
-          xanchor = "right",
-          yanchor = "top",
-          align = "right",
-          
-          font = list(size = 10, color = "#707070")
-        )
-      )
+      customdata = stock_data$scenario
+    ))
+
+    figure_layout[[axis_name("y", i)]] <- list(
+      domain = y_domain,
+      anchor = xref,
+      type = "linear",
+      title = list(text = ""),
+      range = c(0, max_y),
+      automargin = TRUE
     )
+    annotations[[i]] <- list(
+      x = mean(x_domains[[column]]),
+      y = y_top,
+      yshift = 6,
+      text = fishstock,
+      xref = "paper", yref = "paper",
+      xanchor = "center", yanchor = "bottom",
+      showarrow = FALSE
+    )
+  }
+
+  # Fixed pixel offsets keep labels close to the graph as its height changes.
+  annotations <- c(annotations, list(
+    list(
+      text = ylab,
+      x = 0, xshift = -65, y = 0.5,
+      xref = "paper", yref = "paper",
+      showarrow = FALSE,
+      xanchor = "center", yanchor = "middle",
+      textangle = -90,
+      font = list(size = 16)
+    ),
+    list(
+      text = xlab,
+      x = 0.5, y = 0, yshift = -80,
+      xref = "paper", yref = "paper",
+      showarrow = FALSE,
+      xanchor = "center", yanchor = "top",
+      font = list(size = 16)
+    )
+  ))
+  if (!is.null(source_note)) {
+    annotations <- c(annotations, list(list(
+      text = source_note,
+      x = 1, y = 0, yshift = -115,
+      xref = "paper", yref = "paper",
+      showarrow = FALSE,
+      xanchor = "right", yanchor = "top",
+      align = "right",
+      font = list(size = 10, color = "#707070")
+    )))
+  }
+
+  figure_layout$annotations <- annotations
+  figure_layout$shapes <- shapes[seq_len(shape_count)]
+  figure_spec <- list(
+    data = traces[seq_len(trace_count)],
+    layout = figure_layout,
+    source = "A"
+  )
+
+  # One figure build; no individual stock widgets or subplot() merge.
+  fig <- plotly::config(plotly::as_widget(figure_spec))
+  fig <- plotly::plotly_build(fig)
+
   
-  fig 
+
+  return(fig)
 }
 
+# SHINY INTEGRATION
+# In output$plot_forecast <- renderPlotly(...), replace only the existing
+# "plot1" branch with the block below. The UI and height handler stay as-is.
+#         "plot1" = {
+#           df <- current_plot_data_forecast()
+# 
+#           req(df)
+#           req(nrow(df) > 0)
+# 
+#           fig <- plot_catchScenStk_plotly(
+#             data = df,
+#             adv = data_reactive_all()$catchRange_filtered,
+#             refTable = data_reactive_all()$refTable_filtered,
+#             title = "Mixed-fisheries projections of potential 2027 catches",
+#             source_note = data_source_note()
+#           )
+# 
+#           # Match the permanent output to the height of the completed figure.
+#           session$sendCustomMessage(
+#             "mixfish-set-plot-height",
+#             list(
+#               id = ns("plot_forecast"),
+#               height = paste0(fig$height, "px"),
+#               scrollId = ns("forecast_plot_scroll")
+#             )
+#           )
+# 
+#           fig
+#         },
 
 
 #############################################################################
@@ -1432,357 +1831,542 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
 # }
 
 
+# plot_effortFltStk_plotly <- function(
+#     data, refTable,
+#     xlab = "Stock", ylab = "Effort (Thousands KW days)",
+#     linewidthDefault = 0.5, linewidthLimitation = 4,
+#     ncol = 4, rowHeight = 150, source_note = NULL,
+#     highlight = TRUE, limitationMarkerSize = 13) {
+#       plot_started <- proc.time()[["elapsed"]]
+#   # Build stock colour mapping, ordered by refTable
+#   stkFill <- data.frame(stock = unique(data$stock))
+#   stkFill <- merge(x = stkFill, y = refTable, all.x = TRUE)
+#   stkFill <- stkFill[order(stkFill$order), ]
+
+#   stkColors <- stkFill$col
+#   names(stkColors) <- stkFill$stock
+
+#   # Maintain the same stock order across all panels
+#   stocks <- as.character(stkFill$stock)
+#   data$stock <- factor(as.character(data$stock), levels = stocks)
+
+#   # Assign each stock a consistent grey shade across fleet panels
+#   stkGreys <- stats::setNames(
+#     grDevices::gray.colors(
+#       n = length(stocks),
+#       start = 0.65,
+#       end = 0.90
+#     ),
+#     stocks
+#   )
+
+#   # Keep fleets in input order
+#   fleets <- unique(data$fleet)
+
+#   # Number of subplot rows
+#   n_rows <- ceiling(length(fleets) / ncol)
+
+#   # Drawing area height, excluding the outer margins
+#   inner_height <- rowHeight * n_rows
+
+# # Total figure height, including the existing outer margins
+#   fig_height <- inner_height + 120 + 180
+
+#   # Track legend entries across panels
+#   legend_shown_stocks <- stats::setNames(
+#     rep(FALSE, length(stocks)),
+#     stocks
+#   )
+
+#   legend_shown_lim <- list(most = FALSE, least = FALSE)
+#   legend_shown_sq <- FALSE
+
+#   limitation_names <- c(
+#     most = "Most limiting stock",
+#     least = "Least limiting stock"
+#   )
+
+#   limitation_colours <- c(
+#     most = "red",
+#     least = "green"
+#   )
+
+#   limitation_symbols <- c(
+#     most = "x",
+#     least = "circle-open"
+#   )
+
+#   plot_list <- list()
+
+#   for (i in seq_along(fleets)) {
+#     fleet <- fleets[i]
+#     fleet_data <- data[data$fleet == fleet, , drop = FALSE]
+
+#     p <- plotly::plot_ly(height = fig_height)
+
+#     # Bars: one trace per stock
+#     for (stock in stocks) {
+#       stock_data <- fleet_data[
+#         fleet_data$stock == stock, ,
+#         drop = FALSE
+#       ]
+
+#       if (nrow(stock_data) == 0) next
+
+#       # As in the original function, each fleet-stock combination
+#       # is assumed to have one consistent limitation status
+#       lim_val <- as.character(stock_data$Limitation[1])
+#       is_limiting <- lim_val %in% c("most", "least")
+
+#       # Highlight mode keeps original colours only for most/least
+#       bar_colour <- if (highlight && !is_limiting) {
+#         unname(stkGreys[stock])
+#       } else {
+#         unname(stkColors[stock])
+#       }
+
+#       # Stock legend entries are shown only in full-colour mode
+#       show_legend_stock <- (
+#         !highlight && !legend_shown_stocks[[stock]]
+#       )
+
+#       if (show_legend_stock) {
+#         legend_shown_stocks[[stock]] <- TRUE
+#       }
+
+#       p <- plotly::add_bars(
+#         p,
+#         data = stock_data,
+#         x = ~stock,
+#         y = ~quotaEffort,
+#         name = stock,
+#         width = 1,
+#         legendgroup = paste0("stock_", stock),
+#         marker = list(
+#           color = bar_colour,
+#           line = list(width = 0)
+#         ),
+#         showlegend = show_legend_stock,
+#         hovertemplate = paste0(
+#           "<b>Stock:</b> ", stock, "<br>",
+#           "<b>Effort:</b> %{y:.2f}<br>",
+#           "<b>Fleet:</b> ", fleet,
+#           "<extra></extra>"
+#         )
+#       )
+#     }
+
+#     # Thick limitation outlines: only for most and least
+#     for (stock in stocks) {
+#       stock_data <- fleet_data[
+#         fleet_data$stock == stock, ,
+#         drop = FALSE
+#       ]
+
+#       if (nrow(stock_data) == 0) next
+
+#       lim_val <- as.character(stock_data$Limitation[1])
+
+#       if (!(lim_val %in% c("most", "least"))) next
+
+#       limitation_color <- unname(limitation_colours[lim_val])
+#       lim_name <- unname(limitation_names[lim_val])
+
+#       p <- plotly::add_bars(
+#         p,
+#         data = stock_data,
+#         x = ~stock,
+#         y = ~quotaEffort,
+#         name = lim_name,
+#         width = 1,
+#         legendgroup = paste0("lim_", lim_val),
+#         marker = list(
+#           color = "rgba(0,0,0,0)",
+#           line = list(
+#             color = limitation_color,
+#             width = linewidthLimitation
+#           )
+#         ),
+
+#         # Marker traces provide the limitation legend entries
+#         showlegend = FALSE,
+#         hovertemplate = paste0(
+#           "<b>Stock:</b> ", stock, "<br>",
+#           "<b>Effort:</b> %{y:.2f}<br>",
+#           "<b>Limitation:</b> ", lim_val, "<br>",
+#           "<b>Fleet:</b> ", fleet,
+#           "<extra></extra>"
+#         )
+#       )
+#     }
+
+#     # Status quo line
+#     if (nrow(fleet_data) > 0 &&
+#       is.finite(fleet_data$sqEffort[1])) {
+#       show_legend_sq <- !legend_shown_sq
+
+#       if (show_legend_sq) {
+#         legend_shown_sq <- TRUE
+#       }
+
+#       line_df <- data.frame(
+#         stock = factor(stocks, levels = stocks),
+#         sq = rep(fleet_data$sqEffort[1], length(stocks)),
+#         stringsAsFactors = FALSE
+#       )
+
+#       p <- plotly::add_lines(
+#         p,
+#         data = line_df,
+#         x = ~stock,
+#         y = ~sq,
+#         name = "Status quo effort",
+#         legendgroup = "sq",
+#         legendrank = 3,
+#         line = list(
+#           dash = "dash",
+#           color = "black"
+#         ),
+#         showlegend = show_legend_sq,
+#         hovertemplate = paste0(
+#           "Status quo effort: ", fleet_data$sqEffort[1],
+#           "<br>Fleet: ", fleet,
+#           "<extra></extra>"
+#         )
+#       )
+#     }
+
+#     # Hoverable limitation markers, drawn after bars and status quo
+#     for (stock in stocks) {
+#       stock_data <- fleet_data[
+#         fleet_data$stock == stock, ,
+#         drop = FALSE
+#       ]
+
+#       if (nrow(stock_data) == 0) next
+
+#       lim_val <- as.character(stock_data$Limitation[1])
+
+#       if (!(lim_val %in% c("most", "least"))) next
+
+#       # Keep genuine zero values; exclude missing/infinite effort
+#       marker_data <- stock_data[
+#         is.finite(stock_data$quotaEffort), ,
+#         drop = FALSE
+#       ]
+
+#       if (nrow(marker_data) == 0) next
+
+#       show_legend_lim <- !legend_shown_lim[[lim_val]]
+
+#       if (show_legend_lim) {
+#         legend_shown_lim[[lim_val]] <- TRUE
+#       }
+
+#       p <- plotly::add_markers(
+#         p,
+#         data = marker_data,
+#         x = ~stock,
+#         y = ~quotaEffort,
+#         inherit = FALSE,
+#         name = unname(limitation_names[lim_val]),
+#         legendgroup = paste0("lim_", lim_val),
+#         legendrank = if (lim_val == "most") 1 else 2,
+#         showlegend = show_legend_lim,
+#         cliponaxis = FALSE,
+#         hoveron = "points",
+#         marker = list(
+#           symbol = unname(limitation_symbols[lim_val]),
+#           size = limitationMarkerSize,
+#           color = unname(limitation_colours[lim_val]),
+#           opacity = 1,
+#           line = list(
+#             color = "white",
+#             width = 1.5
+#           )
+#         ),
+#         hovertemplate = paste0(
+#           "<b>Stock:</b> ", stock, "<br>",
+#           "<b>Effort:</b> %{y:.2f}<br>",
+#           "<b>Limitation:</b> ", lim_val, "<br>",
+#           "<b>Fleet:</b> ", fleet,
+#           "<extra></extra>"
+#         )
+#       )
+#     }
+
+#     # Pad the y-axis so zero-effort markers sit inside the panel.
+#     # Both bar heights and marker positions retain their actual values.
+#     effort_values <- c(
+#       0,
+#       fleet_data$quotaEffort,
+#       fleet_data$sqEffort[1]
+#     )
+
+#     effort_values <- effort_values[is.finite(effort_values)]
+
+#     y_limits <- range(effort_values)
+#     y_span <- diff(y_limits)
+
+#     # Avoid a degenerate range when all available effort values are zero
+#     if (y_span == 0) y_span <- 1
+
+#     y_range <- c(
+#       y_limits[1] - 0.10 * y_span,
+#       y_limits[2] + 0.15 * y_span
+#     )
+
+#     # Compute axis titles for bottom / left plots
+#     row_index <- ceiling(i / ncol)
+#     show_x_title <- if (row_index == n_rows) xlab else ""
+#     show_y_title <- if (((i - 1) %% ncol) == 0) ylab else ""
+
+#     p <- plotly::layout(
+#       p,
+#       xaxis = list(
+#         title = show_x_title,
+#         tickangle = 45,
+#         categoryorder = "array",
+#         categoryarray = stocks,
+#         type = "category",
+#         layer = "below traces"
+#       ),
+#       yaxis = list(
+#         title = show_y_title,
+#         type = "linear",
+#         range = y_range,
+#         zeroline = TRUE,
+#         zerolinecolor = "#B0B0B0",
+#         zerolinewidth = 1,
+#         layer = "below traces"
+#       ),
+#       barmode = "overlay"
+#     )
+
+#     # Fleet title
+#     p <- plotly::add_annotations(
+#       p,
+#       x = 0.5,
+#       y = 1.05,
+#       xref = "paper",
+#       yref = "paper",
+#       text = fleet,
+#       xanchor = "center",
+#       yanchor = "bottom",
+#       showarrow = FALSE,
+#       font = list(size = 16)
+#     )
+
+#     plot_list[[i]] <- p
+#   }
+
+#   # Combine fleet panels
+#   fig <- plotly::subplot(
+#     plot_list,
+#     nrows = n_rows,
+#     shareX = TRUE,
+#     shareY = FALSE,
+#     titleX = FALSE,
+#     titleY = FALSE,
+#     margin = c(
+#       0.02, # Left
+#       0.02, # Right
+#       20 / inner_height, # Top
+#       20 / inner_height # Bottom
+#     )
+#   )
+
+#   fig <- plotly::layout(
+#     fig,
+#     margin = list(
+#       t = 120,
+#       b = 180,
+#       r = 90
+#     ),
+#     legend = list(
+#       orientation = "h",
+#       x = 0.5,
+#       y = 1 + 40 / inner_height,
+#       xanchor = "center",
+#       yanchor = "bottom",
+#       tracegroupgap = 30
+#     ),
+#     barmode = "overlay",
+#     hovermode = "closest",
+#     xaxis = list(
+#       categoryorder = "array",
+#       categoryarray = stocks,
+#       tickangle = 45,
+#       layer = "below traces"
+#     ),
+#     annotations = list(
+#       list(
+#         text = ylab,
+#         x = -0.05,
+#         y = 0.5,
+#         xref = "paper",
+#         yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "center",
+#         yanchor = "middle",
+#         textangle = -90,
+#         font = list(size = 16)
+#       ),
+#       list(
+#         text = xlab,
+#         x = 0.5,
+#         y = 0,
+#         yshift = -85,
+#         xref = "paper",
+#         yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "center",
+#         yanchor = "top",
+#         font = list(size = 16)
+#       ),
+#       list(
+#         text = source_note,
+#         x = 1,
+#         y = 0,
+#         yshift = -115,
+#         xref = "paper",
+#         yref = "paper",
+#         showarrow = FALSE,
+#         xanchor = "right",
+#         yanchor = "top",
+#         align = "right",
+#         font = list(
+#           size = 10,
+#           color = "#707070"
+#         )
+#       )
+#     )
+#   )
+#   message(sprintf(
+#   "Effort function: %.2f seconds; %d fleets; %d traces",
+#   proc.time()[["elapsed"]] - plot_started,
+#   length(fleets),
+#   length(fig$x$data)
+# ))
+#   return(fig)
+# }
+
+# Effort by fleet and stock, built directly from Plotly trace/layout lists.
+# The function keeps its existing interface and prints a temporary timing line.
 plot_effortFltStk_plotly <- function(
     data, refTable,
     xlab = "Stock", ylab = "Effort (Thousands KW days)",
     linewidthDefault = 0.5, linewidthLimitation = 4,
     ncol = 4, rowHeight = 150, source_note = NULL,
     highlight = TRUE, limitationMarkerSize = 13) {
-  # Build stock colour mapping, ordered by refTable
+
+  
+
+  required_columns <- c("fleet", "stock", "quotaEffort", "sqEffort", "Limitation")
+  if (!all(required_columns %in% names(data))) {
+    stop("data must contain: ", paste(required_columns, collapse = ", "),
+      call. = FALSE)
+  }
+  if (!all(c("stock", "order", "col") %in% names(refTable))) {
+    stop("refTable must contain stock, order and col.", call. = FALSE)
+  }
+  if (NROW(data) == 0L) {
+    stop("There are no fleet-stock observations to plot.", call. = FALSE)
+  }
+  if (length(ncol) != 1L || !is.finite(ncol) || ncol < 1 || ncol != floor(ncol)) {
+    stop("ncol must be a positive whole number.", call. = FALSE)
+  }
+  if (length(rowHeight) != 1L || !is.finite(rowHeight) || rowHeight <= 0) {
+    stop("rowHeight must be a positive number.", call. = FALSE)
+  }
+
+  data <- as.data.frame(data)
+  data$fleet <- as.character(data$fleet)
+  data$stock <- as.character(data$stock)
+  data$Limitation <- as.character(data$Limitation)
+
+  if (anyNA(data$fleet) || anyNA(data$stock)) {
+    stop("fleet and stock must not contain missing values.", call. = FALSE)
+  }
+
+  # Retain the original reference-table stock order and colour mapping.
   stkFill <- data.frame(stock = unique(data$stock))
   stkFill <- merge(x = stkFill, y = refTable, all.x = TRUE)
-  stkFill <- stkFill[order(stkFill$order), ]
-
-  stkColors <- stkFill$col
-  names(stkColors) <- stkFill$stock
-
-  # Maintain the same stock order across all panels
+  stkFill <- stkFill[order(stkFill$order), , drop = FALSE]
   stocks <- as.character(stkFill$stock)
-  data$stock <- factor(as.character(data$stock), levels = stocks)
 
-  # Assign each stock a consistent grey shade across fleet panels
+  if (anyDuplicated(stocks)) {
+    stop("refTable must contain no more than one row per stock.", call. = FALSE)
+  }
+
+  stock_colours <- as.character(stkFill$col)
+  missing_colour <- is.na(stock_colours) | !nzchar(stock_colours)
+  stock_colours[missing_colour] <- "#BDBDBD"
+  stkColors <- stats::setNames(stock_colours, stocks)
   stkGreys <- stats::setNames(
-    grDevices::gray.colors(
-      n = length(stocks),
-      start = 0.65,
-      end = 0.90
-    ),
+    grDevices::gray.colors(length(stocks), start = 0.65, end = 0.90),
     stocks
   )
 
-  # Keep fleets in input order
   fleets <- unique(data$fleet)
-
-  # Number of subplot rows
-  n_rows <- ceiling(length(fleets) / ncol)
-
-  # Drawing area height, excluding the outer margins
+  n_fleets <- length(fleets)
+  n_rows <- ceiling(n_fleets / ncol)
+  # Match the effective column count of the former subplot(..., nrows=...).
+  n_cols <- ceiling(n_fleets / n_rows)
   inner_height <- rowHeight * n_rows
-
-# Total figure height, including the existing outer margins
   fig_height <- inner_height + 120 + 180
 
-  # Track legend entries across panels
-  legend_shown_stocks <- stats::setNames(
-    rep(FALSE, length(stocks)),
-    stocks
+  # Split once, preserving the input fleet order.
+  fleet_rows <- split(
+    seq_len(nrow(data)),
+    factor(data$fleet, levels = fleets),
+    drop = TRUE
   )
-
-  legend_shown_lim <- list(most = FALSE, least = FALSE)
-  legend_shown_sq <- FALSE
 
   limitation_names <- c(
     most = "Most limiting stock",
     least = "Least limiting stock"
   )
+  limitation_colours <- c(most = "red", least = "green")
+  limitation_symbols <- c(most = "x", least = "circle-open")
+  legend_shown_stocks <- stats::setNames(rep(FALSE, length(stocks)), stocks)
+  legend_shown_lim <- c(most = FALSE, least = FALSE)
+  legend_shown_sq <- FALSE
 
-  limitation_colours <- c(
-    most = "red",
-    least = "green"
-  )
-
-  limitation_symbols <- c(
-    most = "x",
-    least = "circle-open"
-  )
-
-  plot_list <- list()
-
-  for (i in seq_along(fleets)) {
-    fleet <- fleets[i]
-    fleet_data <- data[data$fleet == fleet, , drop = FALSE]
-
-    p <- plotly::plot_ly(height = fig_height)
-
-    # Bars: one trace per stock
-    for (stock in stocks) {
-      stock_data <- fleet_data[
-        fleet_data$stock == stock, ,
-        drop = FALSE
-      ]
-
-      if (nrow(stock_data) == 0) next
-
-      # As in the original function, each fleet-stock combination
-      # is assumed to have one consistent limitation status
-      lim_val <- as.character(stock_data$Limitation[1])
-      is_limiting <- lim_val %in% c("most", "least")
-
-      # Highlight mode keeps original colours only for most/least
-      bar_colour <- if (highlight && !is_limiting) {
-        unname(stkGreys[stock])
-      } else {
-        unname(stkColors[stock])
-      }
-
-      # Stock legend entries are shown only in full-colour mode
-      show_legend_stock <- (
-        !highlight && !legend_shown_stocks[[stock]]
-      )
-
-      if (show_legend_stock) {
-        legend_shown_stocks[[stock]] <- TRUE
-      }
-
-      p <- plotly::add_bars(
-        p,
-        data = stock_data,
-        x = ~stock,
-        y = ~quotaEffort,
-        name = stock,
-        width = 1,
-        legendgroup = paste0("stock_", stock),
-        marker = list(
-          color = bar_colour,
-          line = list(width = 0)
-        ),
-        showlegend = show_legend_stock,
-        hovertemplate = paste0(
-          "<b>Stock:</b> ", stock, "<br>",
-          "<b>Effort:</b> %{y:.2f}<br>",
-          "<b>Fleet:</b> ", fleet,
-          "<extra></extra>"
-        )
-      )
-    }
-
-    # Thick limitation outlines: only for most and least
-    for (stock in stocks) {
-      stock_data <- fleet_data[
-        fleet_data$stock == stock, ,
-        drop = FALSE
-      ]
-
-      if (nrow(stock_data) == 0) next
-
-      lim_val <- as.character(stock_data$Limitation[1])
-
-      if (!(lim_val %in% c("most", "least"))) next
-
-      limitation_color <- unname(limitation_colours[lim_val])
-      lim_name <- unname(limitation_names[lim_val])
-
-      p <- plotly::add_bars(
-        p,
-        data = stock_data,
-        x = ~stock,
-        y = ~quotaEffort,
-        name = lim_name,
-        width = 1,
-        legendgroup = paste0("lim_", lim_val),
-        marker = list(
-          color = "rgba(0,0,0,0)",
-          line = list(
-            color = limitation_color,
-            width = linewidthLimitation
-          )
-        ),
-
-        # Marker traces provide the limitation legend entries
-        showlegend = FALSE,
-        hovertemplate = paste0(
-          "<b>Stock:</b> ", stock, "<br>",
-          "<b>Effort:</b> %{y:.2f}<br>",
-          "<b>Limitation:</b> ", lim_val, "<br>",
-          "<b>Fleet:</b> ", fleet,
-          "<extra></extra>"
-        )
-      )
-    }
-
-    # Status quo line
-    if (nrow(fleet_data) > 0 &&
-      is.finite(fleet_data$sqEffort[1])) {
-      show_legend_sq <- !legend_shown_sq
-
-      if (show_legend_sq) {
-        legend_shown_sq <- TRUE
-      }
-
-      line_df <- data.frame(
-        stock = factor(stocks, levels = stocks),
-        sq = rep(fleet_data$sqEffort[1], length(stocks)),
-        stringsAsFactors = FALSE
-      )
-
-      p <- plotly::add_lines(
-        p,
-        data = line_df,
-        x = ~stock,
-        y = ~sq,
-        name = "Status quo effort",
-        legendgroup = "sq",
-        legendrank = 3,
-        line = list(
-          dash = "dash",
-          color = "black"
-        ),
-        showlegend = show_legend_sq,
-        hovertemplate = paste0(
-          "Status quo effort: ", fleet_data$sqEffort[1],
-          "<br>Fleet: ", fleet,
-          "<extra></extra>"
-        )
-      )
-    }
-
-    # Hoverable limitation markers, drawn after bars and status quo
-    for (stock in stocks) {
-      stock_data <- fleet_data[
-        fleet_data$stock == stock, ,
-        drop = FALSE
-      ]
-
-      if (nrow(stock_data) == 0) next
-
-      lim_val <- as.character(stock_data$Limitation[1])
-
-      if (!(lim_val %in% c("most", "least"))) next
-
-      # Keep genuine zero values; exclude missing/infinite effort
-      marker_data <- stock_data[
-        is.finite(stock_data$quotaEffort), ,
-        drop = FALSE
-      ]
-
-      if (nrow(marker_data) == 0) next
-
-      show_legend_lim <- !legend_shown_lim[[lim_val]]
-
-      if (show_legend_lim) {
-        legend_shown_lim[[lim_val]] <- TRUE
-      }
-
-      p <- plotly::add_markers(
-        p,
-        data = marker_data,
-        x = ~stock,
-        y = ~quotaEffort,
-        inherit = FALSE,
-        name = unname(limitation_names[lim_val]),
-        legendgroup = paste0("lim_", lim_val),
-        legendrank = if (lim_val == "most") 1 else 2,
-        showlegend = show_legend_lim,
-        cliponaxis = FALSE,
-        hoveron = "points",
-        marker = list(
-          symbol = unname(limitation_symbols[lim_val]),
-          size = limitationMarkerSize,
-          color = unname(limitation_colours[lim_val]),
-          opacity = 1,
-          line = list(
-            color = "white",
-            width = 1.5
-          )
-        ),
-        hovertemplate = paste0(
-          "<b>Stock:</b> ", stock, "<br>",
-          "<b>Effort:</b> %{y:.2f}<br>",
-          "<b>Limitation:</b> ", lim_val, "<br>",
-          "<b>Fleet:</b> ", fleet,
-          "<extra></extra>"
-        )
-      )
-    }
-
-    # Pad the y-axis so zero-effort markers sit inside the panel.
-    # Both bar heights and marker positions retain their actual values.
-    effort_values <- c(
-      0,
-      fleet_data$quotaEffort,
-      fleet_data$sqEffort[1]
-    )
-
-    effort_values <- effort_values[is.finite(effort_values)]
-
-    y_limits <- range(effort_values)
-    y_span <- diff(y_limits)
-
-    # Avoid a degenerate range when all available effort values are zero
-    if (y_span == 0) y_span <- 1
-
-    y_range <- c(
-      y_limits[1] - 0.10 * y_span,
-      y_limits[2] + 0.15 * y_span
-    )
-
-    # Compute axis titles for bottom / left plots
-    row_index <- ceiling(i / ncol)
-    show_x_title <- if (row_index == n_rows) xlab else ""
-    show_y_title <- if (((i - 1) %% ncol) == 0) ylab else ""
-
-    p <- plotly::layout(
-      p,
-      xaxis = list(
-        title = show_x_title,
-        tickangle = 45,
-        categoryorder = "array",
-        categoryarray = stocks,
-        type = "category",
-        layer = "below traces"
-      ),
-      yaxis = list(
-        title = show_y_title,
-        type = "linear",
-        range = y_range,
-        zeroline = TRUE,
-        zerolinecolor = "#B0B0B0",
-        zerolinewidth = 1,
-        layer = "below traces"
-      ),
-      barmode = "overlay"
-    )
-
-    # Fleet title
-    p <- plotly::add_annotations(
-      p,
-      x = 0.5,
-      y = 1.05,
-      xref = "paper",
-      yref = "paper",
-      text = fleet,
-      xanchor = "center",
-      yanchor = "bottom",
-      showarrow = FALSE,
-      font = list(size = 16)
-    )
-
-    plot_list[[i]] <- p
+  # In highlight mode: one base-bar trace, up to two outline traces,
+  # two marker traces and one status-quo trace per fleet.
+  max_traces <- n_fleets * (if (isTRUE(highlight)) 6L else length(stocks) + 5L)
+  traces <- vector("list", max_traces)
+  trace_count <- 0L
+  append_trace <- function(trace) {
+    trace_count <<- trace_count + 1L
+    traces[[trace_count]] <<- trace
   }
 
-  # Combine fleet panels
-  fig <- plotly::subplot(
-    plot_list,
-    nrows = n_rows,
-    shareX = TRUE,
-    shareY = FALSE,
-    titleX = FALSE,
-    titleY = FALSE,
-    margin = c(
-      0.02, # Left
-      0.02, # Right
-      20 / inner_height, # Top
-      20 / inner_height # Bottom
-    )
-  )
+  axis_ref <- function(axis, index) {
+    paste0(axis, if (index == 1L) "" else as.character(index))
+  }
+  axis_name <- function(axis, index) {
+    paste0(axis, "axis", if (index == 1L) "" else as.character(index))
+  }
 
-  fig <- plotly::layout(
-    fig,
-    margin = list(
-      t = 120,
-      b = 180,
-      r = 90
-    ),
+  # Use the same spacing as the previous subplot layout. The caps only
+  # protect unusually small row heights or very large column counts.
+  horizontal_margin <- min(0.02, 0.2 / n_cols)
+  vertical_margin <- min(20 / inner_height, 0.2 / n_rows)
+  x_domains <- lapply(seq_len(n_cols), function(column) {
+    c(
+      (column - 1) / n_cols + if (column == 1L) 0 else horizontal_margin,
+      column / n_cols - if (column == n_cols) 0 else horizontal_margin
+    )
+  })
+
+  figure_layout <- list(
+    # This is a Plotly figure specification, not a call to layout(height=...).
+    height = fig_height,
+    margin = list(t = 120, b = 180, r = 90),
+    barmode = "overlay",
+    hovermode = "closest",
     legend = list(
       orientation = "h",
       x = 0.5,
@@ -1790,62 +2374,255 @@ plot_effortFltStk_plotly <- function(
       xanchor = "center",
       yanchor = "bottom",
       tracegroupgap = 30
-    ),
-    barmode = "overlay",
-    hovermode = "closest",
-    xaxis = list(
-      categoryorder = "array",
-      categoryarray = stocks,
-      tickangle = 45,
-      layer = "below traces"
-    ),
-    annotations = list(
-      list(
-        text = ylab,
-        x = -0.05,
-        y = 0.5,
-        xref = "paper",
-        yref = "paper",
-        showarrow = FALSE,
-        xanchor = "center",
-        yanchor = "middle",
-        textangle = -90,
-        font = list(size = 16)
-      ),
-      list(
-        text = xlab,
-        x = 0.5,
-        y = 0,
-        yshift = -85,
-        xref = "paper",
-        yref = "paper",
-        showarrow = FALSE,
-        xanchor = "center",
-        yanchor = "top",
-        font = list(size = 16)
-      ),
-      list(
-        text = source_note,
-        x = 1,
-        y = 0,
-        yshift = -115,
-        xref = "paper",
-        yref = "paper",
-        showarrow = FALSE,
-        xanchor = "right",
-        yanchor = "top",
-        align = "right",
-        font = list(
-          size = 10,
-          color = "#707070"
-        )
-      )
     )
   )
 
+  # One shared categorical x-axis per column. Anchor it to the bottom
+  # occupied panel, including when the last row is incomplete.
+  for (column in seq_len(n_cols)) {
+    bottom_panel <- max(seq.int(column, n_fleets, by = n_cols))
+    figure_layout[[axis_name("x", column)]] <- list(
+      domain = x_domains[[column]],
+      anchor = axis_ref("y", bottom_panel),
+      type = "category",
+      categoryorder = "array",
+      categoryarray = stocks,
+      tickangle = 45,
+      automargin = TRUE,
+      layer = "below traces",
+      title = list(text = "")
+    )
+  }
+
+  annotations <- vector("list", n_fleets)
+
+  for (i in seq_along(fleets)) {
+    fleet <- fleets[[i]]
+    fleet_data <- data[fleet_rows[[i]], , drop = FALSE]
+    sq_effort <- fleet_data$sqEffort[[1L]]
+
+    # Keep stock order and the original first-status-per-fleet-stock rule.
+    fleet_data <- fleet_data[
+      order(match(fleet_data$stock, stocks)), , drop = FALSE
+    ]
+    first_stock_row <- match(fleet_data$stock, fleet_data$stock)
+    limitation <- fleet_data$Limitation[first_stock_row]
+    is_limiting <- limitation %in% names(limitation_names)
+    bar_colours <- unname(stkColors[fleet_data$stock])
+    if (isTRUE(highlight)) {
+      bar_colours[!is_limiting] <- unname(stkGreys[fleet_data$stock[!is_limiting]])
+    }
+
+    row <- (i - 1L) %/% n_cols + 1L
+    column <- (i - 1L) %% n_cols + 1L
+    xref <- axis_ref("x", column)
+    yref <- axis_ref("y", i)
+    y_domain <- c(
+      1 - row / n_rows + if (row == n_rows) 0 else vertical_margin,
+      1 - (row - 1) / n_rows - if (row == 1L) 0 else vertical_margin
+    )
+
+    bar_hover <- paste0(
+      "<b>Stock:</b> %{x}<br>",
+      "<b>Effort:</b> %{y:.2f}<br>",
+      "<b>Fleet:</b> ", fleet, "<extra></extra>"
+    )
+
+    if (isTRUE(highlight)) {
+      append_trace(list(
+        type = "bar",
+        x = fleet_data$stock,
+        y = fleet_data$quotaEffort,
+        xaxis = xref, yaxis = yref,
+        name = "Stock effort",
+        width = 1,
+        marker = list(color = bar_colours, line = list(width = 0)),
+        showlegend = FALSE,
+        hovertemplate = bar_hover
+      ))
+    } else {
+      # Full-colour mode retains a trace per stock so its existing legend
+      # can still toggle that stock across all fleet panels.
+      for (stock in unique(fleet_data$stock)) {
+        stock_rows <- which(fleet_data$stock == stock)
+        append_trace(list(
+          type = "bar",
+          x = fleet_data$stock[stock_rows],
+          y = fleet_data$quotaEffort[stock_rows],
+          xaxis = xref, yaxis = yref,
+          name = stock,
+          width = 1,
+          legendgroup = paste0("stock_", stock),
+          marker = list(color = unname(stkColors[[stock]]), line = list(width = 0)),
+          showlegend = !legend_shown_stocks[[stock]],
+          hovertemplate = bar_hover
+        ))
+        legend_shown_stocks[[stock]] <- TRUE
+      }
+    }
+
+    # Retain separate outlines so the limitation legend still toggles
+    # both the outlines and markers independently of the stock fills.
+    for (lim_val in names(limitation_names)) {
+      lim_rows <- which(limitation == lim_val)
+      if (!length(lim_rows)) next
+
+      append_trace(list(
+        type = "bar",
+        x = fleet_data$stock[lim_rows],
+        y = fleet_data$quotaEffort[lim_rows],
+        xaxis = xref, yaxis = yref,
+        name = unname(limitation_names[[lim_val]]),
+        width = 1,
+        legendgroup = paste0("lim_", lim_val),
+        marker = list(
+          color = "rgba(0,0,0,0)",
+          line = list(
+            color = unname(limitation_colours[[lim_val]]),
+            width = linewidthLimitation
+          )
+        ),
+        showlegend = FALSE,
+        hovertemplate = paste0(
+          "<b>Stock:</b> %{x}<br><b>Effort:</b> %{y:.2f}<br>",
+          "<b>Limitation:</b> ", lim_val, "<br>",
+          "<b>Fleet:</b> ", fleet, "<extra></extra>"
+        )
+      ))
+    }
+
+    if (is.finite(sq_effort)) {
+      append_trace(list(
+        type = "scatter", mode = "lines",
+        x = stocks,
+        y = rep(sq_effort, length(stocks)),
+        xaxis = xref, yaxis = yref,
+        name = "Status quo effort",
+        legendgroup = "sq",
+        legendrank = 3,
+        line = list(dash = "dash", color = "black"),
+        showlegend = !legend_shown_sq,
+        hovertemplate = paste0(
+          "Status quo effort: ", sq_effort,
+          "<br>Fleet: ", fleet, "<extra></extra>"
+        )
+      ))
+      legend_shown_sq <- TRUE
+    }
+
+    # Draw hoverable markers last. Zero effort remains a real zero.
+    for (lim_val in names(limitation_names)) {
+      marker_rows <- which(
+        limitation == lim_val & is.finite(fleet_data$quotaEffort)
+      )
+      if (!length(marker_rows)) next
+
+      append_trace(list(
+        type = "scatter", mode = "markers",
+        x = fleet_data$stock[marker_rows],
+        y = fleet_data$quotaEffort[marker_rows],
+        xaxis = xref, yaxis = yref,
+        name = unname(limitation_names[[lim_val]]),
+        legendgroup = paste0("lim_", lim_val),
+        legendrank = if (lim_val == "most") 1 else 2,
+        showlegend = !legend_shown_lim[[lim_val]],
+        cliponaxis = FALSE,
+        hoveron = "points",
+        marker = list(
+          symbol = unname(limitation_symbols[[lim_val]]),
+          size = limitationMarkerSize,
+          color = unname(limitation_colours[[lim_val]]),
+          opacity = 1,
+          line = list(color = "white", width = 1.5)
+        ),
+        hovertemplate = paste0(
+          "<b>Stock:</b> %{x}<br><b>Effort:</b> %{y:.2f}<br>",
+          "<b>Limitation:</b> ", lim_val, "<br>",
+          "<b>Fleet:</b> ", fleet, "<extra></extra>"
+        )
+      ))
+      legend_shown_lim[[lim_val]] <- TRUE
+    }
+
+    effort_values <- c(0, fleet_data$quotaEffort, sq_effort)
+    effort_values <- effort_values[is.finite(effort_values)]
+    y_limits <- range(effort_values)
+    y_span <- diff(y_limits)
+    if (y_span == 0) y_span <- 1
+
+    figure_layout[[axis_name("y", i)]] <- list(
+      domain = y_domain,
+      anchor = xref,
+      type = "linear",
+      automargin = TRUE,
+      range = c(y_limits[1] - 0.10 * y_span, y_limits[2] + 0.15 * y_span),
+      zeroline = TRUE,
+      zerolinecolor = "#B0B0B0",
+      zerolinewidth = 1,
+      layer = "below traces",
+      title = list(text = "")
+    )
+
+    annotations[[i]] <- list(
+      x = mean(x_domains[[column]]),
+      y = y_domain[2] + 0.05 * diff(y_domain),
+      xref = "paper", yref = "paper",
+      text = fleet,
+      xanchor = "center", yanchor = "bottom",
+      showarrow = FALSE,
+      font = list(size = 16)
+    )
+  }
+
+  annotations <- c(annotations, list(
+    list(
+      text = ylab,
+      x = -0.05, y = 0.5,
+      xref = "paper", yref = "paper",
+      showarrow = FALSE,
+      xanchor = "center", yanchor = "middle",
+      textangle = -90,
+      font = list(size = 16)
+    ),
+    list(
+      text = xlab,
+      x = 0.5, y = 0, yshift = -85,
+      xref = "paper", yref = "paper",
+      showarrow = FALSE,
+      xanchor = "center", yanchor = "top",
+      font = list(size = 16)
+    )
+  ))
+
+  if (!is.null(source_note)) {
+    annotations <- c(annotations, list(list(
+      text = source_note,
+      x = 1, y = 0, yshift = -115,
+      xref = "paper", yref = "paper",
+      showarrow = FALSE,
+      xanchor = "right", yanchor = "top",
+      align = "right",
+      font = list(size = 10, color = "#707070")
+    )))
+  }
+
+  figure_layout$annotations <- annotations
+  figure_spec <- list(
+    data = traces[seq_len(trace_count)],
+    layout = figure_layout,
+    source = "A"
+  )
+
+  # Public low-level constructor: no per-fleet plotly_build()/subplot() calls.
+  # Build once here so the timing includes R-side validation and defaults,
+  # instead of just moving that work to the later widget render.
+  fig <- plotly::config(plotly::as_widget(figure_spec))
+  fig <- plotly::plotly_build(fig)
+
+  
+
   return(fig)
 }
-
 
 #############################################################################
 

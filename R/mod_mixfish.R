@@ -1766,29 +1766,31 @@ mod_mixfish_server <- function(
 
       switch(plot_name_forecast(),
         "plot1" = {
-          df <- current_plot_data_forecast()
+  df <- current_plot_data_forecast()
 
-          req(df)
-          req(nrow(df) > 0)
+  req(df)
+  req(nrow(df) > 0)
 
-          # Resize the permanent output before sending the new figure.
-          session$sendCustomMessage(
-            "mixfish-set-plot-height",
-            list(
-              id = ns("plot_forecast"),
-              height = "75vh",
-              scrollId = ns("forecast_plot_scroll")
-            )
-          )
+  fig <- plot_catchScenStk_plotly(
+    data = df,
+    adv = data_reactive_all()$catchRange_filtered,
+    refTable = data_reactive_all()$refTable_filtered,
+    title = "Mixed-fisheries projections of potential 2027 catches",
+    source_note = data_source_note()
+  )
 
-          plot_catchScenStk_plotly(
-            data = df,
-            adv = data_reactive_all()$catchRange_filtered,
-            refTable = data_reactive_all()$refTable_filtered,
-            title = "Mixed-fisheries projections of potential 2027 catches",
-            source_note = data_source_note()
-          )
-        },
+  # Match the permanent output to the height of the completed figure.
+  session$sendCustomMessage(
+    "mixfish-set-plot-height",
+    list(
+      id = ns("plot_forecast"),
+      height = paste0(fig$height, "px"),
+      scrollId = ns("forecast_plot_scroll")
+    )
+  )
+
+  fig
+},
         "plot2" = {
           # Wait for initialization; an unchecked FALSE value is valid.
           req(!is.null(input$plot2_highlight))
