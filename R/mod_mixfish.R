@@ -158,12 +158,12 @@ mod_mixfish_ui <- function(id) {
               class = "p-1",
               div(
                 style = "
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    width: 100%;
-    margin-bottom: 8px;
-  ",
+                          display: flex;
+                          gap: 12px;
+                          align-items: flex-start;
+                          width: 100%;
+                          margin-bottom: 8px;
+                        ",
 
                 # Plot selector
                 div(
@@ -188,11 +188,11 @@ mod_mixfish_ui <- function(id) {
                 div(
                   class = "form-group shiny-input-container",
                   style = "
-      flex: 1 1 0;
-      min-width: 0;
-      width: auto;
-      margin-bottom: 0;
-    ",
+                            flex: 1 1 0;
+                            min-width: 0;
+                            width: auto;
+                            margin-bottom: 0;
+                          ",
                   tags$label(
                     class = "control-label",
                     style = "visibility: hidden;",
@@ -205,9 +205,54 @@ mod_mixfish_ui <- function(id) {
               # mixfish_scenarios_box(ns),
 
               uiOutput(ns("filter_ui_forecast")),
-              withSpinner(
-                plotlyOutput(ns("plot_forecast"), height = "75vh"),
-                caption = "Getting mix-fish results..."
+
+              div(
+                id = ns("forecast_plot_scroll"),
+                style = "
+                  flex: 1 1 0;
+                  min-height: 0;
+                  width: 100%;
+                  overflow-y: auto;
+                  overflow-x: hidden;
+                ",
+
+                # Change the existing output's height without rebuilding its UI.
+                tags$script(HTML("
+                  (function () {
+                    if (window.mixfishPlotHeightHandlerRegistered) return;
+
+                    Shiny.addCustomMessageHandler(
+                      'mixfish-set-plot-height',
+                      function (message) {
+                        var plot = document.getElementById(message.id);
+
+                        if (plot) {
+                          plot.style.height = message.height;
+                        }
+
+                        var viewport = document.getElementById(message.scrollId);
+
+                        if (viewport) {
+                          viewport.scrollTop = 0;
+                        }
+                      }
+                    );
+
+                    window.mixfishPlotHeightHandlerRegistered = true;
+                  })();
+                ")),
+
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(
+                    outputId = ns("plot_forecast"),
+                    width = "100%",
+                    height = "450px",
+                    fill = FALSE
+                  ),
+                  proxy.height = "450px",
+                  hide.ui = TRUE,
+                  caption = "Getting mix-fish results..."
+                )
               )
             )
           )
@@ -408,7 +453,6 @@ mod_mixfish_server <- function(
     bookmark_qs = reactive(NULL),
     set_subtab = function(...) {},
     set_plot = function(...) {}) {
-
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -550,8 +594,7 @@ mod_mixfish_server <- function(
       tab <- input$main_tabset
       if (is.null(tab)) tab <- "history"
 
-      date_text <- switch(
-        tab,
+      date_text <- switch(tab,
         "history" = "October, 2025",
         "fleet_activity" = "October, 2025",
         "forecast" = "October, 2025",
@@ -651,52 +694,57 @@ mod_mixfish_server <- function(
 
       acr <- get_ecoregion_acronym(selected_ecoregion())
 
-      switch(
-        acr,
+      switch(acr,
         "CS" = c("Celtic Sea", "Irish Sea"),
         "BI" = c("Bay of Biscay", "Iberian Waters"),
         selected_ecoregion()
       )
     })
 
-    observeEvent(subregion_choices(), {
-      choices <- subregion_choices()
-      if (is.null(choices)) choices <- character(0)
+    observeEvent(subregion_choices(),
+      {
+        choices <- subregion_choices()
+        if (is.null(choices)) choices <- character(0)
 
-      sel <- if (!is.null(selected_subRegion()) && selected_subRegion() %in% choices) {
-        selected_subRegion()
-      } else if (length(choices) > 0) {
-        choices[1]
-      } else {
-        character(0)
-      }
+        sel <- if (!is.null(selected_subRegion()) && selected_subRegion() %in% choices) {
+          selected_subRegion()
+        } else if (length(choices) > 0) {
+          choices[1]
+        } else {
+          character(0)
+        }
 
-      updateRadioButtons(
-        session, "subRegion_history",
-        choices = choices, selected = sel, inline = TRUE
-      )
+        updateRadioButtons(
+          session, "subRegion_history",
+          choices = choices, selected = sel, inline = TRUE
+        )
 
-      updateRadioButtons(
-        session, "subRegion_forecast",
-        choices = choices, selected = sel, inline = TRUE
-      )
+        updateRadioButtons(
+          session, "subRegion_forecast",
+          choices = choices, selected = sel, inline = TRUE
+        )
 
-      updateRadioButtons(
-        session, "subRegion_fleet",
-        choices = choices, selected = sel, inline = TRUE
-      )
-    }, ignoreInit = FALSE)
+        updateRadioButtons(
+          session, "subRegion_fleet",
+          choices = choices, selected = sel, inline = TRUE
+        )
+      },
+      ignoreInit = FALSE
+    )
 
-    observeEvent(selected_ecoregion(), {
-      region_ready(FALSE)
+    observeEvent(selected_ecoregion(),
+      {
+        region_ready(FALSE)
 
-      choices <- subregion_choices()
-      selected_subRegion(choices[1])
+        choices <- subregion_choices()
+        selected_subRegion(choices[1])
 
-      session$onFlushed(function() {
-        region_ready(TRUE)
-      }, once = TRUE)
-    }, ignoreInit = FALSE)
+        session$onFlushed(function() {
+          region_ready(TRUE)
+        }, once = TRUE)
+      },
+      ignoreInit = FALSE
+    )
 
     # Keep the case-study radio buttons of all tabs in sync
     subregion_input_ids <- c(
@@ -706,79 +754,81 @@ mod_mixfish_server <- function(
     )
 
     lapply(subregion_input_ids, function(this_id) {
-      observeEvent(input[[this_id]], {
-        req(input[[this_id]])
+      observeEvent(input[[this_id]],
+        {
+          req(input[[this_id]])
 
-        if (!identical(input[[this_id]], selected_subRegion())) {
-          selected_subRegion(input[[this_id]])
+          if (!identical(input[[this_id]], selected_subRegion())) {
+            selected_subRegion(input[[this_id]])
 
-          for (other_id in setdiff(subregion_input_ids, this_id)) {
-            updateRadioButtons(
-              session,
-              other_id,
-              selected = input[[this_id]]
-            )
+            for (other_id in setdiff(subregion_input_ids, this_id)) {
+              updateRadioButtons(
+                session,
+                other_id,
+                selected = input[[this_id]]
+              )
+            }
           }
-        }
 
-        region_ready(TRUE)
-      }, ignoreInit = TRUE)
+          region_ready(TRUE)
+        },
+        ignoreInit = TRUE
+      )
     })
 
 
 
     ################################## Forecast scenario definitions ##################################
 
-    output$mixfish_scenarios_table <- renderTable({
+    output$mixfish_scenarios_table <- renderTable(
+      {
+        req(selected_subRegion())
 
-      req(selected_subRegion())
-
-      df <- select_text(
-        texts,
-        "mixfish_scenarios",
-        NULL
-      )
-
-      validate(
-        need(
-          all(
-            c(
-              "Scenario",
-              "Mixed fisheries effort assumption",
-              "Basis for catch limit in forecast year",
-              "case_study"
-            ) %in% names(df)
-          ),
-          "Scenario definitions are not available."
-        )
-      )
-
-      df <- df %>%
-        dplyr::filter(
-          as.character(case_study) ==
-            as.character(selected_subRegion())
-        ) %>%
-        dplyr::select(
-          Scenario,
-          `Mixed fisheries effort assumption`,
-          `Basis for catch limit in forecast year`
+        df <- select_text(
+          texts,
+          "mixfish_scenarios",
+          NULL
         )
 
-      validate(
-        need(
-          nrow(df) > 0,
-          "No scenario definitions are available for this case study."
+        validate(
+          need(
+            all(
+              c(
+                "Scenario",
+                "Mixed fisheries effort assumption",
+                "Basis for catch limit in forecast year",
+                "case_study"
+              ) %in% names(df)
+            ),
+            "Scenario definitions are not available."
+          )
         )
-      )
 
-      df
+        df <- df %>%
+          dplyr::filter(
+            as.character(case_study) ==
+              as.character(selected_subRegion())
+          ) %>%
+          dplyr::select(
+            Scenario,
+            `Mixed fisheries effort assumption`,
+            `Basis for catch limit in forecast year`
+          )
 
-    },
-    rownames = FALSE,
-    striped = TRUE,
-    hover = TRUE,
-    bordered = FALSE,
-    spacing = "s"
+        validate(
+          need(
+            nrow(df) > 0,
+            "No scenario definitions are available for this case study."
+          )
+        )
+
+        df
+      },
+      rownames = FALSE,
+      striped = TRUE,
+      hover = TRUE,
+      bordered = FALSE,
+      spacing = "s"
     )
 
     ################################## Data preparation ##################################
@@ -802,36 +852,30 @@ mod_mixfish_server <- function(
       list(
         catchScenarioStk_filtered =
           mixfish_data$catchScenarioStk %>%
-          dplyr::filter(ecoregion == eco_acronym),
-
+            dplyr::filter(ecoregion == eco_acronym),
         catchRange_filtered =
           mixfish_data$catchRange %>%
-          dplyr::filter(ecoregion == eco_acronym),
-
+            dplyr::filter(ecoregion == eco_acronym),
         EffortByFleetStock_filtered =
           mixfish_data$EffortByFleetStock %>%
-          dplyr::filter(ecoregion == eco_acronym),
-
+            dplyr::filter(ecoregion == eco_acronym),
         MetierStockLandings_filtered =
           mixfish_data$MetierStockLandings %>%
-          dplyr::filter(ecoregion == eco_acronym),
-
+            dplyr::filter(ecoregion == eco_acronym),
         StockLandings_filtered =
           mixfish_data$StockLandings %>%
-          dplyr::filter(ecoregion == eco_acronym),
-
+            dplyr::filter(ecoregion == eco_acronym),
         stfMtStkSum_filtered =
           mixfish_data$stfMtStkSum %>%
-          dplyr::filter(ecoregion == eco_acronym) %>% 
-          dplyr::mutate(
-          country = sub("_.*$", "", fleet),
-          area = sub("^.*\\.", "", metier),
-          area = ifelse(grepl("\\.", metier), area, NA_character_)
-        ),
-
+            dplyr::filter(ecoregion == eco_acronym) %>%
+            dplyr::mutate(
+              country = sub("_.*$", "", fleet),
+              area = sub("^.*\\.", "", metier),
+              area = ifelse(grepl("\\.", metier), area, NA_character_)
+            ),
         refTable_filtered =
           mixfish_data$refTable %>%
-          dplyr::filter(ecoregion == eco_acronym)
+            dplyr::filter(ecoregion == eco_acronym)
       )
     })
 
@@ -853,8 +897,7 @@ mod_mixfish_server <- function(
     ################################## Filter helpers ##################################
 
     filter_source_data_impl <- function(name) {
-      switch(
-        name,
+      switch(name,
         "plot1" = data_reactive_all()$catchScenarioStk_filtered,
         "plot2" = data_reactive_all()$EffortByFleetStock_filtered,
         # "plot3" = data_reactive_all()$MetierStockLandings_filtered,
@@ -881,8 +924,12 @@ mod_mixfish_server <- function(
     })
 
     safe_choices <- function(data, var) {
-      if (is.null(data)) return(character(0))
-      if (!var %in% names(data)) return(character(0))
+      if (is.null(data)) {
+        return(character(0))
+      }
+      if (!var %in% names(data)) {
+        return(character(0))
+      }
 
       choices <- sort(unique(data[[var]]))
       choices <- choices[!is.na(choices)]
@@ -906,7 +953,9 @@ mod_mixfish_server <- function(
     }
 
     apply_optional_filter <- function(data, var, selected_values) {
-      if (is.null(selected_values) || length(selected_values) == 0) return(data)
+      if (is.null(selected_values) || length(selected_values) == 0) {
+        return(data)
+      }
 
       data %>%
         dplyr::filter(
@@ -1164,16 +1213,18 @@ mod_mixfish_server <- function(
       filters <- list()
 
       if (!is.null(input$plot5_year_filter) &&
-          length(input$plot5_year_filter) > 0) {
+        length(input$plot5_year_filter) > 0) {
         filters$year <- input$plot5_year_filter
       }
 
       if (!is.null(input$plot5_country_filter) &&
-          length(input$plot5_country_filter) > 0) {
+        length(input$plot5_country_filter) > 0) {
         filters$country <- input$plot5_country_filter
       }
 
-      if (length(filters) == 0) return(NULL)
+      if (length(filters) == 0) {
+        return(NULL)
+      }
 
       filters
     })
@@ -1211,69 +1262,66 @@ mod_mixfish_server <- function(
 
     ################################## Plot 6 alluvial data ##################################
 
-# Number of most recent years averaged in the alluvial plot
-plot6_n_years <- 3
+    # Number of most recent years averaged in the alluvial plot
+    plot6_n_years <- 3
 
-# Yearly data (last years are selected and averaged later, see
-# average_last_years() / plot_alluvial_plotly(year_var = "year"))
-plot6_data <- reactive({
+    # Yearly data (last years are selected and averaged later, see
+    # average_last_years() / plot_alluvial_plotly(year_var = "year"))
+    plot6_data <- reactive({
+      req(region_ready())
 
-  req(region_ready())
+      # Same source dataset used by Plot 5
+      df <- filter_source_data_fleet()
 
-  # Same source dataset used by Plot 5
-  df <- filter_source_data_fleet()
+      # Year filter removed: the plot averages the last plot6_n_years years
+      # df <- df %>%
+      #   dplyr::filter(
+      #     as.character(year) == as.character(input$plot6_year_filter)
+      #   )
 
-  # Year filter removed: the plot averages the last plot6_n_years years
-  # df <- df %>%
-  #   dplyr::filter(
-  #     as.character(year) == as.character(input$plot6_year_filter)
-  #   )
+      # Optional country filter
+      if (!is.null(input$plot6_country_filter) &&
+        length(input$plot6_country_filter) > 0) {
+        df <- df %>%
+          dplyr::filter(
+            country %in% input$plot6_country_filter
+          )
+      }
 
-  # Optional country filter
-  if (!is.null(input$plot6_country_filter) &&
-      length(input$plot6_country_filter) > 0) {
+      # Optional stock filter
+      if (!is.null(input$plot6_stock_filter) &&
+        length(input$plot6_stock_filter) > 0) {
+        df <- df %>%
+          dplyr::filter(
+            as.character(stock) %in% as.character(input$plot6_stock_filter)
+          )
+      }
 
-    df <- df %>%
-      dplyr::filter(
-        country %in% input$plot6_country_filter
+      # Prepare data for Sankey
+      # Stock identifiers are already in the correct format
+      df <- df %>%
+        dplyr::select(
+          year,
+          fleet,
+          metier,
+          stock,
+          value = landings
+        ) %>%
+        dplyr::filter(
+          !is.na(stock),
+          !is.na(value),
+          value > 0
+        )
+
+      validate(
+        need(
+          nrow(df) > 0,
+          "No positive landings available for the selected filters."
+        )
       )
-  }
 
-  # Optional stock filter
-  if (!is.null(input$plot6_stock_filter) &&
-      length(input$plot6_stock_filter) > 0) {
-
-    df <- df %>%
-      dplyr::filter(
-        as.character(stock) %in% as.character(input$plot6_stock_filter)
-      )
-  }
-
-  # Prepare data for Sankey
-  # Stock identifiers are already in the correct format
-  df <- df %>%
-    dplyr::select(
-      year,
-      fleet,
-      metier,
-      stock,
-      value = landings
-    ) %>%
-    dplyr::filter(
-      !is.na(stock),
-      !is.na(value),
-      value > 0
-    )
-
-  validate(
-    need(
-      nrow(df) > 0,
-      "No positive landings available for the selected filters."
-    )
-  )
-
-  df
-})
+      df
+    })
 
     ################################## Dynamic filter UI: Forecast ##################################
 
@@ -1283,9 +1331,7 @@ plot6_data <- reactive({
 
       df <- filter_source_data_forecast()
 
-      switch(
-        plot_name_forecast(),
-
+      switch(plot_name_forecast(),
         "plot1" = div(
           style = "
             margin-bottom: 0px;
@@ -1294,7 +1340,6 @@ plot6_data <- reactive({
             align-items: flex-start;
             flex-wrap: wrap;
           ",
-
           div(
             style = "width: 320px;",
             filter_selectize(
@@ -1304,16 +1349,16 @@ plot6_data <- reactive({
             )
           )
         ),
-
         "plot2" = div(
           style = "
-            margin-bottom: 0px;
-            display: flex;
-            gap: 4px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-          ",
+                  margin-bottom: 0px;
+                  display: flex;
+                  gap: 4px;
+                  align-items: flex-start;
+                  flex-wrap: wrap;
+                ",
 
+          # Country filter
           div(
             style = "width: 320px;",
             filter_selectize(
@@ -1329,12 +1374,34 @@ plot6_data <- reactive({
             )
           ),
 
+          # Fleet filter
           div(
             style = "width: 320px;",
             filter_selectize(
               input_id = "plot2_fleet_filter",
               label = "Fleet:",
               choices = safe_choices(df, "fleet")
+            )
+          ),
+
+          # Highlight checkbox
+          div(
+            style = "
+                      width: 240px;
+                      min-width: 240px;
+                      padding-top: 25px;
+                    ",
+            checkboxInput(
+              inputId = ns("plot2_highlight"),
+              label = "Highlight limiting stocks",
+              value = shiny::isolate({
+                if (is.null(input$plot2_highlight)) {
+                  TRUE
+                } else {
+                  isTRUE(input$plot2_highlight)
+                }
+              }),
+              width = "100%"
             )
           )
         )
@@ -1489,7 +1556,7 @@ plot6_data <- reactive({
         )
 
         if (!has_selection &&
-            !isTRUE(filter_touched_forecast$plot1)) {
+          !isTRUE(filter_touched_forecast$plot1)) {
           return()
         }
 
@@ -1512,43 +1579,61 @@ plot6_data <- reactive({
 
     ################################## Plot 2: conditional Fleet choices ##################################
 
-    observeEvent(input$plot2_country_filter, {
-      req(plot_name_forecast() == "plot2")
-      req(region_ready())
+    observeEvent(
+      input$plot2_country_filter,
+      {
+        req(plot_name_forecast() == "plot2")
+        req(region_ready())
 
-      df <- filter_source_data_forecast() %>%
-        dplyr::mutate(
-          country = substr(fleet, 1, 2)
-        )
-
-      if (!is.null(input$plot2_country_filter) &&
-          length(input$plot2_country_filter) > 0) {
-        df <- df %>%
-          dplyr::filter(
-            country %in% input$plot2_country_filter
+        df <- filter_source_data_forecast() %>%
+          dplyr::mutate(
+            country = substr(fleet, 1, 2)
           )
-      }
 
-      fleet_choices <- sort(unique(df$fleet))
-      fleet_choices <- fleet_choices[!is.na(fleet_choices)]
+        if (!is.null(input$plot2_country_filter) &&
+          length(input$plot2_country_filter) > 0) {
+          df <- df %>%
+            dplyr::filter(
+              country %in% input$plot2_country_filter
+            )
+        }
 
-      current_selection <- input$plot2_fleet_filter
+        fleet_choices <- sort(unique(df$fleet))
+        fleet_choices <- fleet_choices[!is.na(fleet_choices)]
+        fleet_choices <- as.character(fleet_choices)
 
-      if (!is.null(current_selection)) {
-        current_selection <- intersect(
+        current_selection <- input$plot2_fleet_filter
+
+        if (is.null(current_selection)) {
+          current_selection <- character(0)
+        }
+
+        current_selection <- as.character(current_selection)
+
+        new_selection <- intersect(
           current_selection,
           fleet_choices
         )
-      }
 
-      updateSelectizeInput(
-        session,
-        "plot2_fleet_filter",
-        choices = fleet_choices,
-        selected = current_selection,
-        server = TRUE
-      )
-    }, ignoreInit = TRUE)
+        # Avoid filtering with an old fleet selection after a country change.
+        if (!setequal(current_selection, new_selection)) {
+          shiny::freezeReactiveValue(
+            input,
+            "plot2_fleet_filter"
+          )
+        }
+
+        updateSelectizeInput(
+          session,
+          "plot2_fleet_filter",
+          choices = fleet_choices,
+          selected = new_selection,
+          server = TRUE
+        )
+      },
+      ignoreInit = TRUE,
+      priority = 100
+    )
 
     ################################## Plot 2: filter plotted data ##################################
 
@@ -1569,7 +1654,7 @@ plot6_data <- reactive({
         )
 
         if (!has_selection &&
-            !isTRUE(filter_touched_forecast$plot2)) {
+          !isTRUE(filter_touched_forecast$plot2)) {
           return()
         }
 
@@ -1599,12 +1684,13 @@ plot6_data <- reactive({
     ################################## Data source note ##################################
     data_source_note <- reactive({
       paste0(
-      "2026 ICES Advice.<br>",
-      selected_subRegion(),
-      " mixed fisheries considerations.<br>13-Nov-2026, ICES, Copenhagen.")
+        "2026 ICES Advice.<br>",
+        selected_subRegion(),
+        " mixed fisheries considerations.<br>13-Nov-2026, ICES, Copenhagen."
+      )
     })
     ################################## Plot rendering: History ##################################
-    
+
     output$plot_history <- renderPlotly({
       req(plot_name_history())
       req(region_ready())
@@ -1639,8 +1725,11 @@ plot6_data <- reactive({
             selectors = plot5_selectors(),
             divider = plot5_divider(),
             yvar = "landings",
-            relative = if (is.null(input$plot5_relative)) TRUE
-             else isTRUE(input$plot5_relative),
+            relative = if (is.null(input$plot5_relative)) {
+              TRUE
+            } else {
+              isTRUE(input$plot5_relative)
+            },
             source_note = data_source_note()
           )
         }
@@ -1675,28 +1764,65 @@ plot6_data <- reactive({
       req(plot_name_forecast())
       req(region_ready())
 
-      switch(
-        plot_name_forecast(),
-
+      switch(plot_name_forecast(),
         "plot1" = {
-          req(current_plot_data_forecast())
-          req(nrow(current_plot_data_forecast()) > 0)
+  df <- current_plot_data_forecast()
 
-          plot_catchScenStk_plotly(
-            data = current_plot_data_forecast(),
-            adv = data_reactive_all()$catchRange_filtered,
-            refTable = data_reactive_all()$refTable_filtered,
-            title = "Mixed-fisheries projections of potential 2027 catches",
-            source_note = data_source_note()
-          )
-        },
+  req(df)
+  req(nrow(df) > 0)
 
+  fig <- plot_catchScenStk_plotly(
+    data = df,
+    adv = data_reactive_all()$catchRange_filtered,
+    refTable = data_reactive_all()$refTable_filtered,
+    title = "Mixed-fisheries projections of potential 2027 catches",
+    source_note = data_source_note()
+  )
+
+  # Match the permanent output to the height of the completed figure.
+  session$sendCustomMessage(
+    "mixfish-set-plot-height",
+    list(
+      id = ns("plot_forecast"),
+      height = paste0(fig$height, "px"),
+      scrollId = ns("forecast_plot_scroll")
+    )
+  )
+
+  fig
+},
         "plot2" = {
-          req(current_plot_data_forecast())
+          # Wait for initialization; an unchecked FALSE value is valid.
+          req(!is.null(input$plot2_highlight))
+
+          df <- current_plot_data_forecast()
+
+          req(df)
+          req(nrow(df) > 0)
+
+          # Keep the container and plotting function on the same settings.
+          effort_ncol <- 4
+          effort_row_height <- 150
+
+          n_fleets <- length(unique(df$fleet))
+          n_rows <- ceiling(n_fleets / effort_ncol)
+          plot_height <- effort_row_height * n_rows + 120 + 180
+
+          session$sendCustomMessage(
+            "mixfish-set-plot-height",
+            list(
+              id = ns("plot_forecast"),
+              height = paste0(plot_height, "px"),
+              scrollId = ns("forecast_plot_scroll")
+            )
+          )
 
           plot_effortFltStk_plotly(
-            data = current_plot_data_forecast(),
+            data = df,
             refTable = data_reactive_all()$refTable_filtered,
+            ncol = effort_ncol,
+            rowHeight = effort_row_height,
+            highlight = isTRUE(input$plot2_highlight),
             source_note = data_source_note()
           )
         }
@@ -1712,8 +1838,7 @@ plot6_data <- reactive({
       req(plot_name_history())
       req(region_ready())
 
-      switch(
-        plot_name_history(),
+      switch(plot_name_history(),
         # "plot3" = {
         #   df <- current_plot_data_history()
         #   if (is.null(df)) df <- filter_source_data_history()
@@ -1753,8 +1878,7 @@ plot6_data <- reactive({
       req(plot_name_forecast())
       req(region_ready())
 
-      switch(
-        plot_name_forecast(),
+      switch(plot_name_forecast(),
         "plot1" = {
           df <- current_plot_data_forecast()
           if (is.null(df)) df <- filter_source_data_forecast()
