@@ -413,9 +413,29 @@ mod_mixfish_ui <- function(id) {
                 # )
               ),
               uiOutput(ns("filter_ui_history")),
-              withSpinner(
-                plotlyOutput(ns("plot_history"), height = "75vh"),
-                caption = "Getting mix-fish results..."
+              div(
+                id = ns("history_plot_scroll"),
+
+                style = "
+                  flex: 1 1 0;
+                  min-height: 0;
+                  min-width: 0;
+                  width: 100%;
+                  overflow-y: auto;
+                  overflow-x: hidden;
+                ",
+
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(
+                    outputId = ns("plot_history"),
+                    width = "100%",
+                    height = "300px",
+                    fill = FALSE
+                  ),
+                  proxy.height = "300px",
+                  hide.ui = TRUE,
+                  caption = "Getting mix-fish results..."
+                )
               )
             )
           )
@@ -1713,25 +1733,37 @@ mod_mixfish_server <- function(
         #   )
         # },
         "plot5" = {
+          # Wait for the controls to initialize.
+          # FALSE is a valid checkbox value; "" is the valid "None" divider.
+          req(!is.null(input$plot5_relative))
+          req(!is.null(input$plot5_divider))
+
           df <- filter_source_data_history()
 
           req(!is.null(df))
           req(NROW(df) > 0)
 
-          plot_catchComp_plotly_v3(
+          fig <- plot_catchComp_plotly_v3(
             data = df,
             refTable = data_reactive_all()$refTable_filtered,
             filters = plot5_filters(),
             selectors = plot5_selectors(),
             divider = plot5_divider(),
             yvar = "landings",
-            relative = if (is.null(input$plot5_relative)) {
-              TRUE
-            } else {
-              isTRUE(input$plot5_relative)
-            },
+            relative = isTRUE(input$plot5_relative),
             source_note = data_source_note()
           )
+
+          session$sendCustomMessage(
+            "mixfish-set-plot-height",
+            list(
+              id = ns("plot_history"),
+              height = paste0(fig$height, "px"),
+              scrollId = ns("history_plot_scroll")
+            )
+          )
+
+          fig
         }
       )
     })
