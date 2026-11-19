@@ -158,12 +158,12 @@ mod_mixfish_ui <- function(id) {
               class = "p-1",
               div(
                 style = "
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    width: 100%;
-    margin-bottom: 8px;
-  ",
+                          display: flex;
+                          gap: 12px;
+                          align-items: flex-start;
+                          width: 100%;
+                          margin-bottom: 8px;
+                        ",
 
                 # Plot selector
                 div(
@@ -205,9 +205,54 @@ mod_mixfish_ui <- function(id) {
               # mixfish_scenarios_box(ns),
 
               uiOutput(ns("filter_ui_forecast")),
-              withSpinner(
-                plotlyOutput(ns("plot_forecast"), height = "75vh"),
-                caption = "Getting mix-fish results..."
+
+              div(
+                id = ns("forecast_plot_scroll"),
+                style = "
+                  flex: 1 1 0;
+                  min-height: 0;
+                  width: 100%;
+                  overflow-y: auto;
+                  overflow-x: hidden;
+                ",
+
+                # Change the existing output's height without rebuilding its UI.
+                tags$script(HTML("
+                  (function () {
+                    if (window.mixfishPlotHeightHandlerRegistered) return;
+
+                    Shiny.addCustomMessageHandler(
+                      'mixfish-set-plot-height',
+                      function (message) {
+                        var plot = document.getElementById(message.id);
+
+                        if (plot) {
+                          plot.style.height = message.height;
+                        }
+
+                        var viewport = document.getElementById(message.scrollId);
+
+                        if (viewport) {
+                          viewport.scrollTop = 0;
+                        }
+                      }
+                    );
+
+                    window.mixfishPlotHeightHandlerRegistered = true;
+                  })();
+                ")),
+
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(
+                    outputId = ns("plot_forecast"),
+                    width = "100%",
+                    height = "450px",
+                    fill = FALSE
+                  ),
+                  proxy.height = "450px",
+                  hide.ui = TRUE,
+                  caption = "Getting mix-fish results..."
+                )
               )
             )
           )
@@ -1534,7 +1579,8 @@ mod_mixfish_server <- function(
 
     ################################## Plot 2: conditional Fleet choices ##################################
 
-    observeEvent(input$plot2_country_filter,
+    observeEvent(
+      input$plot2_country_filter,
       {
         req(plot_name_forecast() == "plot2")
         req(region_ready())
@@ -1554,13 +1600,26 @@ mod_mixfish_server <- function(
 
         fleet_choices <- sort(unique(df$fleet))
         fleet_choices <- fleet_choices[!is.na(fleet_choices)]
+        fleet_choices <- as.character(fleet_choices)
 
         current_selection <- input$plot2_fleet_filter
 
-        if (!is.null(current_selection)) {
-          current_selection <- intersect(
-            current_selection,
-            fleet_choices
+        if (is.null(current_selection)) {
+          current_selection <- character(0)
+        }
+
+        current_selection <- as.character(current_selection)
+
+        new_selection <- intersect(
+          current_selection,
+          fleet_choices
+        )
+
+        # Avoid filtering with an old fleet selection after a country change.
+        if (!setequal(current_selection, new_selection)) {
+          shiny::freezeReactiveValue(
+            input,
+            "plot2_fleet_filter"
           )
         }
 
@@ -1568,11 +1627,12 @@ mod_mixfish_server <- function(
           session,
           "plot2_fleet_filter",
           choices = fleet_choices,
-          selected = current_selection,
+          selected = new_selection,
           server = TRUE
         )
       },
-      ignoreInit = TRUE
+      ignoreInit = TRUE,
+      priority = 100
     )
 
     ################################## Plot 2: filter plotted data ##################################
@@ -1706,11 +1766,23 @@ mod_mixfish_server <- function(
 
       switch(plot_name_forecast(),
         "plot1" = {
-          req(current_plot_data_forecast())
-          req(nrow(current_plot_data_forecast()) > 0)
+          df <- current_plot_data_forecast()
+
+          req(df)
+          req(nrow(df) > 0)
+
+          # Resize the permanent output before sending the new figure.
+          session$sendCustomMessage(
+            "mixfish-set-plot-height",
+            list(
+              id = ns("plot_forecast"),
+              height = "75vh",
+              scrollId = ns("forecast_plot_scroll")
+            )
+          )
 
           plot_catchScenStk_plotly(
-            data = current_plot_data_forecast(),
+            data = df,
             adv = data_reactive_all()$catchRange_filtered,
             refTable = data_reactive_all()$refTable_filtered,
             title = "Mixed-fisheries projections of potential 2027 catches",
@@ -1718,19 +1790,37 @@ mod_mixfish_server <- function(
           )
         },
         "plot2" = {
+          # Wait for initialization; an unchecked FALSE value is valid.
+          req(!is.null(input$plot2_highlight))
+
           df <- current_plot_data_forecast()
 
           req(df)
           req(nrow(df) > 0)
 
+          # Keep the container and plotting function on the same settings.
+          effort_ncol <- 4
+          effort_row_height <- 150
+
+          n_fleets <- length(unique(df$fleet))
+          n_rows <- ceiling(n_fleets / effort_ncol)
+          plot_height <- effort_row_height * n_rows + 120 + 180
+
+          session$sendCustomMessage(
+            "mixfish-set-plot-height",
+            list(
+              id = ns("plot_forecast"),
+              height = paste0(plot_height, "px"),
+              scrollId = ns("forecast_plot_scroll")
+            )
+          )
+
           plot_effortFltStk_plotly(
             data = df,
             refTable = data_reactive_all()$refTable_filtered,
-            highlight = if (is.null(input$plot2_highlight)) {
-              TRUE
-            } else {
-              isTRUE(input$plot2_highlight)
-            },
+            ncol = effort_ncol,
+            rowHeight = effort_row_height,
+            highlight = isTRUE(input$plot2_highlight),
             source_note = data_source_note()
           )
         }

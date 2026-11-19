@@ -1433,12 +1433,11 @@ plot_catchScenStk_plotly <- function(data, adv, refTable,
 
 
 plot_effortFltStk_plotly <- function(
-  data, refTable,
-  xlab = "Stock", ylab = "Effort (Thousands KW days)",
-  linewidthDefault = 0.5, linewidthLimitation = 4,
-  ncol = 3, rowHeight = 200, source_note = NULL,
-  highlight = TRUE, limitationMarkerSize = 13) {
-
+    data, refTable,
+    xlab = "Stock", ylab = "Effort (Thousands KW days)",
+    linewidthDefault = 0.5, linewidthLimitation = 4,
+    ncol = 4, rowHeight = 150, source_note = NULL,
+    highlight = TRUE, limitationMarkerSize = 13) {
   # Build stock colour mapping, ordered by refTable
   stkFill <- data.frame(stock = unique(data$stock))
   stkFill <- merge(x = stkFill, y = refTable, all.x = TRUE)
@@ -1464,9 +1463,14 @@ plot_effortFltStk_plotly <- function(
   # Keep fleets in input order
   fleets <- unique(data$fleet)
 
-  # Calculate dynamic height
+  # Number of subplot rows
   n_rows <- ceiling(length(fleets) / ncol)
-  fig_height <- rowHeight * n_rows
+
+  # Drawing area height, excluding the outer margins
+  inner_height <- rowHeight * n_rows
+
+# Total figure height, including the existing outer margins
+  fig_height <- inner_height + 120 + 180
 
   # Track legend entries across panels
   legend_shown_stocks <- stats::setNames(
@@ -1488,25 +1492,22 @@ plot_effortFltStk_plotly <- function(
   )
 
   limitation_symbols <- c(
-  most = "x",
-  least = "cross"
-)
+    most = "x",
+    least = "circle-open"
+  )
 
   plot_list <- list()
 
   for (i in seq_along(fleets)) {
-
     fleet <- fleets[i]
     fleet_data <- data[data$fleet == fleet, , drop = FALSE]
 
-    p <- plotly::plot_ly()
+    p <- plotly::plot_ly(height = fig_height)
 
     # Bars: one trace per stock
     for (stock in stocks) {
-
       stock_data <- fleet_data[
-        fleet_data$stock == stock,
-        ,
+        fleet_data$stock == stock, ,
         drop = FALSE
       ]
 
@@ -1557,10 +1558,8 @@ plot_effortFltStk_plotly <- function(
 
     # Thick limitation outlines: only for most and least
     for (stock in stocks) {
-
       stock_data <- fleet_data[
-        fleet_data$stock == stock,
-        ,
+        fleet_data$stock == stock, ,
         drop = FALSE
       ]
 
@@ -1591,7 +1590,6 @@ plot_effortFltStk_plotly <- function(
 
         # Marker traces provide the limitation legend entries
         showlegend = FALSE,
-
         hovertemplate = paste0(
           "<b>Stock:</b> ", stock, "<br>",
           "<b>Effort:</b> %{y:.2f}<br>",
@@ -1604,8 +1602,7 @@ plot_effortFltStk_plotly <- function(
 
     # Status quo line
     if (nrow(fleet_data) > 0 &&
-        is.finite(fleet_data$sqEffort[1])) {
-
+      is.finite(fleet_data$sqEffort[1])) {
       show_legend_sq <- !legend_shown_sq
 
       if (show_legend_sq) {
@@ -1641,10 +1638,8 @@ plot_effortFltStk_plotly <- function(
 
     # Hoverable limitation markers, drawn after bars and status quo
     for (stock in stocks) {
-
       stock_data <- fleet_data[
-        fleet_data$stock == stock,
-        ,
+        fleet_data$stock == stock, ,
         drop = FALSE
       ]
 
@@ -1656,8 +1651,7 @@ plot_effortFltStk_plotly <- function(
 
       # Keep genuine zero values; exclude missing/infinite effort
       marker_data <- stock_data[
-        is.finite(stock_data$quotaEffort),
-        ,
+        is.finite(stock_data$quotaEffort), ,
         drop = FALSE
       ]
 
@@ -1675,15 +1669,12 @@ plot_effortFltStk_plotly <- function(
         x = ~stock,
         y = ~quotaEffort,
         inherit = FALSE,
-
         name = unname(limitation_names[lim_val]),
         legendgroup = paste0("lim_", lim_val),
         legendrank = if (lim_val == "most") 1 else 2,
         showlegend = show_legend_lim,
-
         cliponaxis = FALSE,
         hoveron = "points",
-
         marker = list(
           symbol = unname(limitation_symbols[lim_val]),
           size = limitationMarkerSize,
@@ -1694,7 +1685,6 @@ plot_effortFltStk_plotly <- function(
             width = 1.5
           )
         ),
-
         hovertemplate = paste0(
           "<b>Stock:</b> ", stock, "<br>",
           "<b>Effort:</b> %{y:.2f}<br>",
@@ -1733,7 +1723,6 @@ plot_effortFltStk_plotly <- function(
 
     p <- plotly::layout(
       p,
-
       xaxis = list(
         title = show_x_title,
         tickangle = 45,
@@ -1742,7 +1731,6 @@ plot_effortFltStk_plotly <- function(
         type = "category",
         layer = "below traces"
       ),
-
       yaxis = list(
         title = show_y_title,
         type = "linear",
@@ -1752,7 +1740,6 @@ plot_effortFltStk_plotly <- function(
         zerolinewidth = 1,
         layer = "below traces"
       ),
-
       barmode = "overlay"
     )
 
@@ -1780,39 +1767,38 @@ plot_effortFltStk_plotly <- function(
     shareX = TRUE,
     shareY = FALSE,
     titleX = FALSE,
-    titleY = FALSE
+    titleY = FALSE,
+    margin = c(
+      0.02, # Left
+      0.02, # Right
+      20 / inner_height, # Top
+      20 / inner_height # Bottom
+    )
   )
 
   fig <- plotly::layout(
     fig,
-
-    height = fig_height,
-
     margin = list(
       t = 120,
-      b = 120,
+      b = 180,
       r = 90
     ),
-
     legend = list(
       orientation = "h",
       x = 0.5,
-      y = 1.05,
+      y = 1 + 40 / inner_height,
       xanchor = "center",
       yanchor = "bottom",
       tracegroupgap = 30
     ),
-
     barmode = "overlay",
     hovermode = "closest",
-
     xaxis = list(
       categoryorder = "array",
       categoryarray = stocks,
       tickangle = 45,
       layer = "below traces"
     ),
-
     annotations = list(
       list(
         text = ylab,
@@ -1826,23 +1812,23 @@ plot_effortFltStk_plotly <- function(
         textangle = -90,
         font = list(size = 16)
       ),
-
       list(
         text = xlab,
         x = 0.5,
-        y = -0.8,
+        y = 0,
+        yshift = -85,
         xref = "paper",
         yref = "paper",
         showarrow = FALSE,
         xanchor = "center",
-        yanchor = "middle",
+        yanchor = "top",
         font = list(size = 16)
       ),
-
       list(
         text = source_note,
         x = 1,
-        y = -0.9,
+        y = 0,
+        yshift = -115,
         xref = "paper",
         yref = "paper",
         showarrow = FALSE,
