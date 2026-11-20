@@ -320,6 +320,7 @@ mod_mixfish_ui <- function(id) {
                 # mixfish_about_box()
               ),
               uiOutput(ns("filter_ui_fleet")),
+              uiOutput(ns("alluvial_plot_note")),
               withSpinner(
                 plotlyOutput(ns("plot_fleet"), height = "75vh"),
                 caption = "Getting mix-fish results..."
@@ -1765,7 +1766,13 @@ mod_mixfish_server <- function(
     })
 
     ################################## Plot rendering: Fleet activity ##################################
-
+    output$alluvial_plot_note <- renderUI({
+      tagList(
+        tags$p(
+          "Note: Consider filtering to resolve better the view."
+        )
+      )
+    })
     output$plot_fleet <- renderPlotly({
       req(region_ready())
 

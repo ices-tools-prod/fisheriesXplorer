@@ -4906,6 +4906,712 @@ average_last_years <- function(
 }
 
 
+# #' Interactive alluvial plot
+# #'
+# #' @param data data.frame containing grouping variables and a `value` column.
+# #' @param refTable data.frame containing fill-variable lookup information,
+# #'   including `col` and `order`.
+# #' @param group_vars vector of variable names defining the alluvial axes.
+# #' @param fill_var character. Variable used to colour the flows.
+# #' @param group_labs labels for the alluvial axes.
+# #' @param text_repel retained for compatibility with plot_alluvial().
+# #' @param text_size text size.
+# #' @param mult_x retained for compatibility with plot_alluvial().
+# #' @param nudge_x retained for compatibility with plot_alluvial().
+# #' @param stratum_width approximate node width.
+# #' @param stratum_col colour for strata not corresponding to fill_var.
+# #' @param xlab x-axis label.
+# #' @param ylab value label used in hover text.
+# #' @param fillLegendTitle legend title.
+# #' @param addLegend logical. Add colour legend.
+# #' @param plotTitle plot title.
+# #' @param source_note optional data-source citation shown bottom-right.
+# #' @param year_var optional character. Name of a year column in `data`. When
+# #'   given, the plot shows the average of the last `n_years` years available
+# #'   in `data` (see [average_last_years()]) instead of the values as supplied.
+# #' @param n_years integer. Number of most recent years to average over when
+# #'   `year_var` is given.
+# #'
+# #' @return plotly object
+# #'
+# #' @export
+# plot_alluvial_plotly <- function(
+#     data,
+#     refTable,
+#     group_vars = c("fleet", "metier", "stock"),
+#     fill_var = "stock",
+#     group_labs = NULL,
+#     text_repel = FALSE,
+#     text_size = 11,
+#     mult_x = c(0.1, 0.1),
+#     nudge_x = 1/3,
+#     stratum_width = 1/3,
+#     stratum_col = "white",
+#     xlab = NULL,
+#     ylab = "Landings [t]",
+#     fillLegendTitle = "Stock",
+#     addLegend = TRUE,
+#     plotTitle = NULL,
+#     source_note = NULL,
+#     year_var = NULL,
+#     n_years = 3) {
+
+#   # ------------------------------------------------------------------
+#   # Checks
+#   # ------------------------------------------------------------------
+
+#   if (length(fill_var) != 1) {
+#     stop("fill_var must contain exactly one variable name")
+#   }
+
+#   if (!fill_var %in% names(refTable)) {
+#     stop("fill_var must be variable in refTable")
+#   }
+
+#   # ------------------------------------------------------------------
+#   # Average over the last n_years available in the data
+#   # ------------------------------------------------------------------
+
+#   if (!is.null(year_var)) {
+#     data <- average_last_years(
+#       data = data,
+#       group_vars = unique(c(group_vars, fill_var)),
+#       year_var = year_var,
+#       value_var = "value",
+#       n_years = n_years
+#     )
+#   }
+
+# required_vars <- c(group_vars, fill_var, "value")
+#   missing_vars <- setdiff(required_vars, names(data))
+
+#   if (length(missing_vars) > 0) {
+#     stop(
+#       paste(
+#         "Missing required variables in data:",
+#         paste(missing_vars, collapse = ", ")
+#       )
+#     )
+#   }
+
+#   if (is.null(group_labs)) group_labs <- group_vars
+
+#   if (length(group_labs) != length(group_vars)) {
+#     stop("group_labs must have the same length as group_vars")
+#   }
+
+#   if (length(group_vars) < 2) {
+#     stop("group_vars must contain at least two variables")
+#   }
+
+
+#   # ------------------------------------------------------------------
+#   # Colour lookup - same basic logic as plot_alluvial()
+#   # ------------------------------------------------------------------
+
+#   palFill <- data.frame(
+#     tmp = unique(as.character(data[[fill_var]])),
+#     stringsAsFactors = FALSE
+#   )
+
+#   names(palFill) <- fill_var
+
+#   palFill <- merge(
+#     x = palFill,
+#     y = refTable,
+#     by = fill_var,
+#     all.x = TRUE
+#   )
+
+#   if ("order" %in% names(palFill)) {
+#     palFill <- palFill[order(palFill$order), , drop = FALSE]
+#   }
+
+#   palColors <- palFill$col
+#   names(palColors) <- as.character(palFill[[fill_var]])
+
+#   # Fallback colour if a fill value is missing from refTable
+#   palColors[is.na(palColors)] <- "#BDBDBD"
+
+
+#   # ------------------------------------------------------------------
+#   # Clean data
+#   # ------------------------------------------------------------------
+
+#   dat <- data
+#   # Sankey link weights represent landings in tonnes
+#   dat$value <- as.numeric(dat$value)
+
+#   dat <- dat[
+#     !is.na(dat$value) &
+#       dat$value > 0,
+#     ,
+#     drop = FALSE
+#   ]
+
+#   for (v in group_vars) {
+#     dat[[v]] <- as.character(dat[[v]])
+#   }
+
+#   dat[[fill_var]] <- as.character(dat[[fill_var]])
+
+
+#   # ------------------------------------------------------------------
+#   # Create unique node IDs
+#   #
+#   # Important: "BE" under Fleet and "BE" under another axis must be
+#   # treated as different nodes.
+#   # ------------------------------------------------------------------
+
+#   node_tables <- lapply(seq_along(group_vars), function(i) {
+#     var <- group_vars[i]
+
+#     vals <- unique(dat[[var]])
+
+#     data.frame(
+#       axis_no = i,
+#       variable = var,
+#       label = vals,
+#       node_id = paste(i, vals, sep = "__"),
+#       stringsAsFactors = FALSE
+#     )
+#   })
+
+#   nodes <- dplyr::bind_rows(node_tables)
+
+#   nodes$index <- seq_len(nrow(nodes)) - 1
+
+
+#   # ------------------------------------------------------------------
+#   # Node colours
+#   #
+#   # Only the axis corresponding to fill_var receives stock colours.
+#   # Other strata retain stratum_col, matching the original intention.
+#   # ------------------------------------------------------------------
+
+#   nodes$color <- stratum_col
+
+#   fill_axis <- which(group_vars == fill_var)
+
+#   if (length(fill_axis) > 0) {
+#     idx <- nodes$axis_no %in% fill_axis
+
+#     matched_col <- palColors[nodes$label[idx]]
+
+#     nodes$color[idx] <- ifelse(
+#       is.na(matched_col),
+#       stratum_col,
+#       matched_col
+#     )
+#   }
+
+
+#   # ------------------------------------------------------------------
+#   # Node totals for hover
+#   # ------------------------------------------------------------------
+
+#   node_totals <- lapply(seq_along(group_vars), function(i) {
+#     var <- group_vars[i]
+
+#     tmp <- dat %>%
+#       dplyr::group_by(.data[[var]]) %>%
+#       dplyr::summarise(
+#         total = sum(value, na.rm = TRUE),
+#         .groups = "drop"
+#       )
+
+#     names(tmp)[1] <- "label"
+
+#     tmp$axis_no <- i
+#     tmp
+#   }) %>%
+#     dplyr::bind_rows()
+
+#   nodes <- nodes %>%
+#     dplyr::left_join(
+#       node_totals,
+#       by = c("axis_no", "label")
+#     )
+
+
+#   # ------------------------------------------------------------------
+# # Build links between every pair of adjacent axes
+# # ------------------------------------------------------------------
+
+# link_list <- vector("list", length(group_vars) - 1)
+
+# for (i in seq_len(length(group_vars) - 1)) {
+
+#   left_var  <- group_vars[i]
+#   right_var <- group_vars[i + 1]
+
+#   # Avoid duplicate grouping variables when fill_var is also
+#   # one of the two axes (e.g. stock -> stock).
+#   vars_to_group <- unique(c(left_var, right_var, fill_var))
+
+#   links <- dat %>%
+#     dplyr::group_by(dplyr::across(dplyr::all_of(vars_to_group))) %>%
+#     dplyr::summarise(
+#       value = sum(value, na.rm = TRUE),
+#       .groups = "drop"
+#     ) %>%
+#     dplyr::transmute(
+#       source_label = as.character(.data[[left_var]]),
+#       target_label = as.character(.data[[right_var]]),
+#       fill_value = as.character(.data[[fill_var]]),
+#       value = value
+#     )
+
+#   source_lookup <- nodes %>%
+#     dplyr::filter(axis_no == i) %>%
+#     dplyr::select(
+#       source_label = label,
+#       source = index
+#     )
+
+#   target_lookup <- nodes %>%
+#     dplyr::filter(axis_no == i + 1) %>%
+#     dplyr::select(
+#       target_label = label,
+#       target = index
+#     )
+
+#   links <- links %>%
+#     dplyr::left_join(source_lookup, by = "source_label") %>%
+#     dplyr::left_join(target_lookup, by = "target_label")
+
+#   links$source_var <- left_var
+#   links$target_var <- right_var
+
+#   link_list[[i]] <- links
+# }
+
+# links <- dplyr::bind_rows(link_list)
+
+
+#   # ------------------------------------------------------------------
+#   # Link colours
+#   # ------------------------------------------------------------------
+
+#   links$color <- palColors[
+#     as.character(links$fill_value)
+#   ]
+
+#   links$color[is.na(links$color)] <- "#BDBDBD"
+
+
+#   # Make links slightly transparent
+#   hex_to_rgba <- function(cols, alpha = 0.55) {
+
+#     vapply(cols, function(col) {
+
+#       rgb <- grDevices::col2rgb(col)
+
+#       sprintf(
+#         "rgba(%d,%d,%d,%.2f)",
+#         rgb[1],
+#         rgb[2],
+#         rgb[3],
+#         alpha
+#       )
+
+#     }, character(1))
+#   }
+
+#   links$color_rgba <- hex_to_rgba(
+#     links$color,
+#     alpha = 0.55
+#   )
+
+
+#   # ------------------------------------------------------------------
+#   # Hover text
+#   # ------------------------------------------------------------------
+
+#   # Axis names shown in the hover use group_labs (e.g. "Stock", not "stock")
+#   axis_lab <- function(var) group_labs[match(var, group_vars)]
+
+#   # The fill variable only gets its own line when it is not already one of
+#   # the axes shown above (otherwise e.g. the stock would appear twice)
+#   fill_in_axes <- fill_var %in% group_vars
+
+#   # links$hover <- paste0(
+#   #   links$source_var, ": ", links$source_label,
+#   #   "<br>",
+#   #   links$target_var, ": ", links$target_label,
+#   #   "<br>",
+#   #   fillLegendTitle, ": ", links$fill_value,
+#   #   "<br>",
+#   #   ylab, ": ", format(
+#   #     round(links$value, 1),
+#   #     big.mark = ",",
+#   #     trim = TRUE
+#   #   )
+#   # )
+
+#   links$hover <- paste0(
+#     axis_lab(links$source_var), ": ", links$source_label,
+#     "<br>",
+#     axis_lab(links$target_var), ": ", links$target_label,
+#     "<br>",
+#     if (fill_in_axes) "" else paste0(
+#       fillLegendTitle, ": ", links$fill_value,
+#       "<br>"
+#     ),
+#     ylab, ": ", format(
+#       round(links$value, 1),
+#       big.mark = ",",
+#       trim = TRUE
+#     )
+#   )
+
+#   nodes$hover <- paste0(
+#     axis_lab(nodes$variable), ": ", nodes$label,
+#     "<br>",
+#     ylab, ": ", format(
+#       round(nodes$total, 1),
+#       big.mark = ",",
+#       trim = TRUE
+#     )
+#   )
+
+
+#   # ------------------------------------------------------------------
+#   # Fixed x positions for each alluvial axis
+#   # ------------------------------------------------------------------
+
+#   axis_positions <- seq(
+#     0.02,
+#     0.98,
+#     length.out = length(group_vars)
+#   )
+
+#   nodes$x <- axis_positions[
+#     nodes$axis_no
+#   ]
+
+
+#   # ------------------------------------------------------------------
+#   # Create Plotly Sankey
+#   # ------------------------------------------------------------------
+
+#   p <- plotly::plot_ly(
+#     type = "sankey",
+#     arrangement = "snap",
+
+#     node = list(
+#       label = nodes$label,
+#       x = nodes$x,
+#       color = nodes$color,
+
+#       # Plotly thickness is in pixels, so this is only an
+#       # approximation of ggalluvial's stratum_width.
+#       thickness = max(
+#         10,
+#         round(30 * stratum_width / (1/3))
+#       ),
+
+#       pad = 10,
+
+#       line = list(
+#         color = "#808080",
+#         width = 0.5
+#       ),
+
+#       customdata = nodes$hover,
+#       hovertemplate = "%{customdata}<extra></extra>"
+#     ),
+
+#     link = list(
+#       source = links$source,
+#       target = links$target,
+#       value = links$value,
+#       color = links$color_rgba,
+#       customdata = links$hover,
+#       hovertemplate = "%{customdata}<extra></extra>"
+#     )
+#   )
+
+
+#   # ------------------------------------------------------------------
+#   # Axis labels
+#   # ------------------------------------------------------------------
+
+#   axis_annotations <- lapply(
+#     seq_along(group_vars),
+#     function(i) {
+
+#       list(
+#         x = axis_positions[i],
+#         y = 1.05,
+#         xref = "paper",
+#         yref = "paper",
+#         text = group_labs[i],
+#         showarrow = FALSE,
+#         xanchor = "center",
+#         font = list(
+#           size = text_size + 1
+#         )
+#       )
+#     }
+#   )
+
+
+#   # ------------------------------------------------------------------
+#   # Optional colour legend
+#   #
+#   # Sankey traces do not have a conventional categorical legend,
+#   # so we create a compact annotation-based one.
+#   # ------------------------------------------------------------------
+
+#   legend_annotations <- list()
+
+#   if (addLegend) {
+
+#     legend_data <- palFill[
+#       !is.na(palFill[[fill_var]]),
+#       ,
+#       drop = FALSE
+#     ]
+
+#     if (nrow(legend_data) > 0) {
+
+#       legend_annotations <- c(
+#         list(
+#           list(
+#             x = 1.03,
+#             y = 1,
+#             xref = "paper",
+#             yref = "paper",
+#             text = paste0(
+#               "<b>",
+#               fillLegendTitle,
+#               "</b>"
+#             ),
+#             showarrow = FALSE,
+#             xanchor = "left"
+#           )
+#         ),
+
+#         lapply(seq_len(nrow(legend_data)), function(i) {
+
+#           col <- legend_data$col[i]
+#           if (is.na(col)) col <- "#BDBDBD"
+
+#           list(
+#             x = 1.03,
+#             y = 1 - i * 0.045,
+#             xref = "paper",
+#             yref = "paper",
+#             text = paste0(
+#               "<span style='color:",
+#               col,
+#               "; font-size:18px;'>■</span> ",
+#               legend_data[[fill_var]][i]
+#             ),
+#             showarrow = FALSE,
+#             xanchor = "left",
+#             align = "left"
+#           )
+#         })
+#       )
+#     }
+#   }
+
+
+#   # ------------------------------------------------------------------
+#   # Layout
+#   # ------------------------------------------------------------------
+
+#   right_margin <- if (addLegend) 170 else 30
+
+#   source_annotation <- list(
+#     list(
+#       text = source_note,
+#       x = 1, y = -0.02,
+#       xref = "paper", yref = "paper",
+#       showarrow = FALSE,
+#       xanchor = "right",
+#       yanchor = "top",
+#       align = "right",
+#       font = list(size = 10, color = "#707070")
+#     )
+#   )
+
+#   p <- p %>%
+#     plotly::layout(
+#       title = list(
+#         text = plotTitle,
+#         x = 0.5,
+#         xanchor = "center"
+#       ),
+
+#       font = list(
+#         size = text_size
+#       ),
+
+#       annotations = c(
+#         axis_annotations,
+#         legend_annotations,
+#         source_annotation
+#       ),
+
+#       margin = list(
+#         l = 30,
+#         r = right_margin,
+#         t = 70,
+#         b = 140
+#       )
+#     )
+
+
+#   # ------------------------------------------------------------------
+#   # Add hover highlighting for stock-fleet-metier connections
+#   # ------------------------------------------------------------------
+
+#   p <- p %>%
+#     htmlwidgets::onRender("
+#       function(el, x) {
+#         var data = x.data;
+#         var baseOpacity = 0.55;
+
+#         // Build a map of node index to connected link indices
+#         var nodeToLinks = {};
+#         if (data[0] && data[0].source) {
+#           var links = data[0];
+#           for (var i = 0; i < links.source.length; i++) {
+#             var source = links.source[i];
+#             var target = links.target[i];
+
+#             if (!nodeToLinks[source]) nodeToLinks[source] = [];
+#             if (!nodeToLinks[target]) nodeToLinks[target] = [];
+
+#             nodeToLinks[source].push(i);
+#             nodeToLinks[target].push(i);
+#           }
+#         }
+
+#         el.on('plotly_hover', function(data) {
+#           if (!data.points || data.points.length === 0) return;
+
+#           var point = data.points[0];
+#           var hasSource = typeof point.source !== 'undefined';
+#           var hasTarget = typeof point.target !== 'undefined';
+#           var opacities = [];
+
+#           // If hovering over a link
+#           if (hasSource && hasTarget) {
+#             var pointNumber = data.points[0].pointNumber;
+
+#             // Dim all links except the hovered one
+#             for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
+#               opacities.push(i === pointNumber ? 1 : 0.15);
+#             }
+#             Plotly.restyle(el, {'line.opacity': opacities}, 0);
+#           }
+#           // If hovering over a node
+#           else if (data.points[0].pointNumber !== undefined && !hasSource) {
+#             var nodeIndex = data.points[0].pointNumber;
+#             var connectedLinks = nodeToLinks[nodeIndex] || [];
+
+#             // Set opacities: highlight connected links, dim others
+#             for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
+#               opacities.push(connectedLinks.indexOf(i) !== -1 ? 1 : 0.15);
+#             }
+#             Plotly.restyle(el, {'line.opacity': opacities}, 0);
+
+#             // # COMMENTED OUT - Original node-only highlighting approach
+#             // # var nodeIndex = data.points[0].pointNumber;
+#             // # Highlight only the node itself without showing connections
+#           }
+#         });
+
+#         el.on('plotly_unhover', function(data) {
+#           // Restore original opacities
+#           var opacities = [];
+#           for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
+#             opacities.push(baseOpacity);
+#           }
+#           Plotly.restyle(el, {'line.opacity': opacities}, 0);
+#         });
+#       }
+#     ")
+
+#   # # COMMENTED OUT - Previous approach without hover highlighting
+#   # # This approach did not highlight connections on hover
+#   # # To restore, comment out the onRender block above and uncomment this section
+
+
+#   return(p)
+# }
+
+#' Average landings over the last years available in the data
+#'
+#' Keeps the last `n_years` distinct values of `year_var`, sums `value_var`
+#' within each year for every combination of `group_vars`, and then averages
+#' those yearly totals across the selected years. A combination with no
+#' records in one of the selected years counts as 0 for that year.
+#'
+#' @param data data.frame containing `group_vars`, `year_var` and `value_var`.
+#' @param group_vars character vector of grouping variables to keep.
+#' @param year_var character. Name of the year column.
+#' @param value_var character. Name of the value column.
+#' @param n_years integer. Number of most recent years to average over.
+#'
+#' @return data.frame with `group_vars`, the averaged `value_var`, and an
+#'   attribute `"years"` listing the years that were used.
+#'
+#' @noRd
+average_last_years <- function(
+    data,
+    group_vars,
+    year_var = "year",
+    value_var = "value",
+    n_years = 3) {
+
+  missing_vars <- setdiff(c(group_vars, year_var, value_var), names(data))
+
+  if (length(missing_vars) > 0) {
+    stop(
+      paste(
+        "Missing required variables in data:",
+        paste(missing_vars, collapse = ", ")
+      )
+    )
+  }
+
+  yrs <- unique(data[[year_var]])
+  yrs <- yrs[!is.na(yrs)]
+
+  # Sort numerically when the years can be read as numbers
+  yrs_num <- suppressWarnings(as.numeric(as.character(yrs)))
+  yrs <- if (!anyNA(yrs_num)) yrs[order(yrs_num)] else sort(yrs)
+
+  yrs <- utils::tail(yrs, n_years)
+
+  dat <- data[data[[year_var]] %in% yrs, , drop = FALSE]
+  dat[[value_var]] <- as.numeric(dat[[value_var]])
+
+  out <- dat %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(c(group_vars, year_var)))) %>%
+    dplyr::summarise(
+      .total = sum(.data[[value_var]], na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) %>%
+    dplyr::summarise(
+      .avg = sum(.total, na.rm = TRUE) / length(yrs),
+      .groups = "drop"
+    )
+
+  names(out)[names(out) == ".avg"] <- value_var
+
+  attr(out, "years") <- yrs
+
+  out
+}
+
+
 #' Interactive alluvial plot
 #'
 #' @param data data.frame containing grouping variables and a `value` column.
@@ -4931,6 +5637,12 @@ average_last_years <- function(
 #'   in `data` (see [average_last_years()]) instead of the values as supplied.
 #' @param n_years integer. Number of most recent years to average over when
 #'   `year_var` is given.
+#'
+#' @details Stock nodes use fully opaque reference colours. Links share one
+#'   baseline opacity. Hovering a stock highlights all links for that stock;
+#'   hovering another node highlights its adjacent links; hovering a link
+#'   highlights that link. Unrelated links fade while a hover is active.
+#'   Hover styling is applied in the browser without rebuilding the plot.
 #'
 #' @return plotly object
 #'
@@ -4967,6 +5679,11 @@ plot_alluvial_plotly <- function(
   if (!fill_var %in% names(refTable)) {
     stop("fill_var must be variable in refTable")
   }
+
+  # Consistent opacity settings; these are internal styling constants.
+  link_base_opacity <- 0.50
+  link_focus_opacity <- 1.00
+  link_dim_opacity <- 0.08
 
   # ------------------------------------------------------------------
   # Average over the last n_years available in the data
@@ -5027,11 +5744,17 @@ required_vars <- c(group_vars, fill_var, "value")
     palFill <- palFill[order(palFill$order), , drop = FALSE]
   }
 
-  palColors <- palFill$col
+  # Normalize the palette once so nodes, links and legend share the same RGB.
+  # Alpha is assigned separately below; stock nodes stay fully opaque.
+  palColors <- as.character(palFill$col)
+  palColors[is.na(palColors) | !nzchar(palColors)] <- "#BDBDBD"
+  palette_rgb <- grDevices::col2rgb(palColors)
+  palColors <- grDevices::rgb(
+    palette_rgb[1L, ], palette_rgb[2L, ], palette_rgb[3L, ],
+    maxColorValue = 255
+  )
   names(palColors) <- as.character(palFill[[fill_var]])
-
-  # Fallback colour if a fill value is missing from refTable
-  palColors[is.na(palColors)] <- "#BDBDBD"
+  palFill$col <- unname(palColors)
 
 
   # ------------------------------------------------------------------
@@ -5200,8 +5923,8 @@ links <- dplyr::bind_rows(link_list)
   links$color[is.na(links$color)] <- "#BDBDBD"
 
 
-  # Make links slightly transparent
-  hex_to_rgba <- function(cols, alpha = 0.55) {
+  # Every link uses the same baseline alpha.
+  hex_to_rgba <- function(cols, alpha = 1) {
 
     vapply(cols, function(col) {
 
@@ -5218,10 +5941,10 @@ links <- dplyr::bind_rows(link_list)
     }, character(1))
   }
 
-  links$color_rgba <- hex_to_rgba(
+  links$color_rgba <- unname(hex_to_rgba(
     links$color,
-    alpha = 0.55
-  )
+    alpha = link_base_opacity
+  ))
 
 
   # ------------------------------------------------------------------
@@ -5231,32 +5954,19 @@ links <- dplyr::bind_rows(link_list)
   # Axis names shown in the hover use group_labs (e.g. "Stock", not "stock")
   axis_lab <- function(var) group_labs[match(var, group_vars)]
 
-  # The fill variable only gets its own line when it is not already one of
-  # the axes shown above (otherwise e.g. the stock would appear twice)
-  fill_in_axes <- fill_var %in% group_vars
-
-  # links$hover <- paste0(
-  #   links$source_var, ": ", links$source_label,
-  #   "<br>",
-  #   links$target_var, ": ", links$target_label,
-  #   "<br>",
-  #   fillLegendTitle, ": ", links$fill_value,
-  #   "<br>",
-  #   ylab, ": ", format(
-  #     round(links$value, 1),
-  #     big.mark = ",",
-  #     trim = TRUE
-  #   )
-  # )
+  # Include the stock in fleet-to-metier tooltips even though the stock
+  # appears on another axis. Only omit it when an endpoint already names it.
+  fill_in_link <- links$source_var == fill_var | links$target_var == fill_var
 
   links$hover <- paste0(
     axis_lab(links$source_var), ": ", links$source_label,
     "<br>",
     axis_lab(links$target_var), ": ", links$target_label,
     "<br>",
-    if (fill_in_axes) "" else paste0(
-      fillLegendTitle, ": ", links$fill_value,
-      "<br>"
+    ifelse(
+      fill_in_link,
+      "",
+      paste0(fillLegendTitle, ": ", links$fill_value, "<br>")
     ),
     ylab, ": ", format(
       round(links$value, 1),
@@ -5466,82 +6176,191 @@ links <- dplyr::bind_rows(link_list)
 
 
   # ------------------------------------------------------------------
-  # Add hover highlighting for stock-fleet-metier connections
+  # Strong hover contrast without rebuilding the Sankey.
   # ------------------------------------------------------------------
 
-  p <- p %>%
-    htmlwidgets::onRender("
-      function(el, x) {
-        var data = x.data;
-        var baseOpacity = 0.55;
+  # Group IDs carry the fill identity independently of tooltip strings.
+  # Node -1 means a non-fill axis, which highlights adjacent links only.
+  fill_values <- unique(links$fill_value)
+  link_groups <- match(links$fill_value, fill_values) - 1L
+  node_groups <- rep(-1L, nrow(nodes))
+  fill_nodes <- which(nodes$variable == fill_var)
+  node_groups[fill_nodes] <- match(nodes$label[fill_nodes], fill_values) - 1L
 
-        // Build a map of node index to connected link indices
-        var nodeToLinks = {};
-        if (data[0] && data[0].source) {
-          var links = data[0];
-          for (var i = 0; i < links.source.length; i++) {
-            var source = links.source[i];
-            var target = links.target[i];
+  p <- htmlwidgets::onRender(
+    p,
+    jsCode = r"---(
+function(el, x, opts) {
+  'use strict';
 
-            if (!nodeToLinks[source]) nodeToLinks[source] = [];
-            if (!nodeToLinks[target]) nodeToLinks[target] = [];
+  // This hook owns only its own listeners; Plotly's tooltip handlers stay active.
+  if (typeof el.__mixfishSankeyHoverCleanup === 'function') {
+    el.__mixfishSankeyHoverCleanup();
+  }
 
-            nodeToLinks[source].push(i);
-            nodeToLinks[target].push(i);
-          }
-        }
+  opts = opts || {};
 
-        el.on('plotly_hover', function(data) {
-          if (!data.points || data.points.length === 0) return;
+  function asArray(value) {
+    if (value == null) return [];
+    if (Array.isArray(value)) return value;
+    if (ArrayBuffer.isView(value)) return Array.from(value);
+    return [value];
+  }
 
-          var point = data.points[0];
-          var hasSource = typeof point.source !== 'undefined';
-          var hasTarget = typeof point.target !== 'undefined';
-          var opacities = [];
+  function isIndex(value) {
+    return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+  }
 
-          // If hovering over a link
-          if (hasSource && hasTarget) {
-            var pointNumber = data.points[0].pointNumber;
+  function opacity(value, fallback) {
+    return typeof value === 'number' && Number.isFinite(value)
+      ? Math.max(0, Math.min(1, value))
+      : fallback;
+  }
 
-            // Dim all links except the hovered one
-            for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
-              opacities.push(i === pointNumber ? 1 : 0.15);
-            }
-            Plotly.restyle(el, {'line.opacity': opacities}, 0);
-          }
-          // If hovering over a node
-          else if (data.points[0].pointNumber !== undefined && !hasSource) {
-            var nodeIndex = data.points[0].pointNumber;
-            var connectedLinks = nodeToLinks[nodeIndex] || [];
+  var traces = asArray(x && x.data);
+  var traceIndex = traces.findIndex(function(trace) {
+    return trace && trace.type === 'sankey';
+  });
+  if (traceIndex < 0 || typeof el.on !== 'function') return;
 
-            // Set opacities: highlight connected links, dim others
-            for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
-              opacities.push(connectedLinks.indexOf(i) !== -1 ? 1 : 0.15);
-            }
-            Plotly.restyle(el, {'line.opacity': opacities}, 0);
+  var link = traces[traceIndex].link || {};
+  var sources = asArray(link.source);
+  var targets = asArray(link.target);
+  if (!sources.length || sources.length !== targets.length) return;
 
-            // # COMMENTED OUT - Original node-only highlighting approach
-            // # var nodeIndex = data.points[0].pointNumber;
-            // # Highlight only the node itself without showing connections
-          }
-        });
+  var linkGroups = asArray(opts.linkGroups);
+  var nodeGroups = asArray(opts.nodeGroups);
+  var baseOpacity = opacity(opts.baseOpacity, 0.50);
+  var focusOpacity = opacity(opts.focusOpacity, 1);
+  var dimOpacity = opacity(opts.dimOpacity, 0.08);
 
-        el.on('plotly_unhover', function(data) {
-          // Restore original opacities
-          var opacities = [];
-          for (var i = 0; i < (data[0] && data[0].source ? data[0].source.length : 0); i++) {
-            opacities.push(baseOpacity);
-          }
-          Plotly.restyle(el, {'line.opacity': opacities}, 0);
-        });
-      }
-    ")
+  // Original array indices are preserved by Plotly as pointNumber.
+  // D3's own node/link index can differ when observations are removed.
+  var nodeToLinks = new Map();
+  var groupToLinks = new Map();
 
-  # # COMMENTED OUT - Previous approach without hover highlighting
-  # # This approach did not highlight connections on hover
-  # # To restore, comment out the onRender block above and uncomment this section
+  function append(map, key, value) {
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(value);
+  }
 
+  for (var i = 0; i < sources.length; i++) {
+    if (isIndex(sources[i])) append(nodeToLinks, sources[i], i);
+    if (isIndex(targets[i])) append(nodeToLinks, targets[i], i);
+    if (isIndex(linkGroups[i])) append(groupToLinks, linkGroups[i], i);
+  }
+
+  var paths = [];
+  var focus = null;
+  var cleaned = false;
+
+  function activeLinks() {
+    if (!focus) return null;
+    if (focus.kind === 'link') return new Set([focus.index]);
+
+    var group = nodeGroups[focus.index];
+    // A stock node selects that stock in every layer; other nodes select
+    // only their incident links, avoiding unrelated merged downstream flows.
+    return new Set(isIndex(group)
+      ? (groupToLinks.get(group) || [])
+      : (nodeToLinks.get(focus.index) || []));
+  }
+
+  function applyStyles() {
+    var active = activeLinks();
+    paths.forEach(function(item) {
+      var alpha = active === null
+        ? baseOpacity
+        : (active.has(item.index) ? focusOpacity : dimOpacity);
+      // Plotly uses a separate coloured stroke even for ordinary ribbons.
+      item.element.style.setProperty('fill-opacity', String(alpha));
+      item.element.style.setProperty('stroke-opacity', String(alpha));
+    });
+  }
+
+  function refreshPaths() {
+    if (cleaned) return;
+    paths = [];
+    el.querySelectorAll('path.sankey-link').forEach(function(path) {
+      var datum = path.__data__;
+      var point = datum && datum.link;
+      if (!point || !isIndex(point.pointNumber)) return;
+      if (point.pointNumber >= sources.length) return;
+      if (point.curveNumber != null && point.curveNumber !== traceIndex) return;
+      paths.push({element: path, index: point.pointNumber});
+    });
+    applyStyles();
+  }
+
+  function onHover(event) {
+    if (cleaned || !event || !event.points || !event.points.length) return;
+    var point = event.points[0];
+    if (!point || !isIndex(point.pointNumber)) return;
+    if (point.curveNumber != null && point.curveNumber !== traceIndex) return;
+
+    var isLink = point.source !== undefined && point.target !== undefined;
+    if (isLink && point.pointNumber >= sources.length) return;
+    if (!isLink && !nodeToLinks.has(point.pointNumber)) return;
+
+    focus = {kind: isLink ? 'link' : 'node', index: point.pointNumber};
+    // Native Sankey hover applies its styling before emitting this event.
+    applyStyles();
+  }
+
+  function reset() {
+    if (cleaned) return;
+    focus = null;
+    applyStyles();
+  }
+
+  function onUnhover(event) {
+    var point = event && event.points && event.points[0];
+    if (point && point.curveNumber != null && point.curveNumber !== traceIndex) {
+      return;
+    }
+    reset();
+  }
+
+  function removeListener(name, handler) {
+    if (typeof el.removeListener === 'function') {
+      el.removeListener(name, handler);
+    } else if (typeof el.off === 'function') {
+      el.off(name, handler);
+    }
+  }
+
+  function cleanup() {
+    if (cleaned) return;
+    reset();
+    cleaned = true;
+    removeListener('plotly_hover', onHover);
+    removeListener('plotly_unhover', onUnhover);
+    removeListener('plotly_afterplot', refreshPaths);
+    el.removeEventListener('mouseleave', reset);
+    if (el.__mixfishSankeyHoverCleanup === cleanup) {
+      delete el.__mixfishSankeyHoverCleanup;
+    }
+    paths = [];
+  }
+
+  el.on('plotly_hover', onHover);
+  el.on('plotly_unhover', onUnhover);
+  el.on('plotly_afterplot', refreshPaths);
+  el.addEventListener('mouseleave', reset);
+  el.__mixfishSankeyHoverCleanup = cleanup;
+
+  // Initial afterplot can precede onRender; style the existing paths now.
+  refreshPaths();
+}
+)---",
+    data = list(
+      linkGroups = unname(as.list(as.integer(link_groups))),
+      nodeGroups = unname(as.list(as.integer(node_groups))),
+      baseOpacity = link_base_opacity,
+      focusOpacity = link_focus_opacity,
+      dimOpacity = link_dim_opacity
+    )
+  )
 
   return(p)
 }
-
