@@ -2254,18 +2254,23 @@ plot_catchScenStk_plotly <- function(
 # Effort by fleet and stock, built directly from Plotly trace/layout lists.
 # The function keeps its existing interface and prints a temporary timing line.
 plot_effortFltStk_plotly <- function(
-    data, refTable,
-    xlab = "Stock", ylab = "Effort (Thousands KW days)",
-    linewidthDefault = 0.5, linewidthLimitation = 4,
-    ncol = 4, rowHeight = 150, source_note = NULL,
-    highlight = TRUE, limitationMarkerSize = 13) {
-
-  
-
+    data,
+    refTable,
+    title = NULL,
+    xlab = "Stock",
+    ylab = "Effort (Thousands KW days)",
+    linewidthDefault = 0.5,
+    linewidthLimitation = 4,
+    ncol = 4,
+    rowHeight = 150,
+    source_note = NULL,
+    highlight = TRUE,
+    limitationMarkerSize = 13) {
   required_columns <- c("fleet", "stock", "quotaEffort", "sqEffort", "Limitation")
   if (!all(required_columns %in% names(data))) {
     stop("data must contain: ", paste(required_columns, collapse = ", "),
-      call. = FALSE)
+      call. = FALSE
+    )
   }
   if (!all(c("stock", "order", "col") %in% names(refTable))) {
     stop("refTable must contain stock, order and col.", call. = FALSE)
@@ -2314,7 +2319,31 @@ plot_effortFltStk_plotly <- function(
   # Match the effective column count of the former subplot(..., nrows=...).
   n_cols <- ceiling(n_fleets / n_rows)
   inner_height <- rowHeight * n_rows
-  fig_height <- inner_height + 120 + 180
+
+  # Highlight mode has only the two limitation entries and status quo.
+  # Full-colour mode also includes one legend entry per stock.
+  n_legend_items <- if (isTRUE(highlight)) {
+    3L
+  } else {
+    length(stocks) + 3L
+  }
+
+  # Estimate the space needed for the horizontal legend.
+  legend_rows <- max(1L, ceiling(n_legend_items / 6L))
+
+  # Start the legend below the main title.
+  legend_top_px <- 60
+
+  # Reserve space for the title, legend rows and fleet headings.
+  top_margin <- max(
+    120,
+    legend_top_px + 28 * legend_rows + 30
+  )
+
+  bottom_margin <- 180
+
+  # Preserve the drawing height allocated to the subplots.
+  fig_height <- inner_height + top_margin + bottom_margin
 
   # Split once, preserving the input fleet order.
   fleet_rows <- split(
@@ -2362,18 +2391,40 @@ plot_effortFltStk_plotly <- function(
   })
 
   figure_layout <- list(
-    # This is a Plotly figure specification, not a call to layout(height=...).
     height = fig_height,
-    margin = list(t = 120, b = 180, r = 90),
+
+    # Main plot title
+    title = list(
+      text = title,
+      x = 0.5,
+      xref = "container",
+      xanchor = "center",
+      y = 1,
+      yref = "container",
+      yanchor = "top",
+      pad = list(t = 15),
+      font = list(size = 20)
+    ),
+    margin = list(
+      t = top_margin,
+      b = bottom_margin,
+      r = 90
+    ),
     barmode = "overlay",
     hovermode = "closest",
     legend = list(
       orientation = "h",
       x = 0.5,
-      y = 1 + 40 / inner_height,
       xanchor = "center",
-      yanchor = "bottom",
-      tracegroupgap = 30
+
+      # Position the top of the legend 60 pixels below the figure's top.
+      y = 1 - legend_top_px / fig_height,
+      yref = "container",
+      yanchor = "top",
+
+      # Remove the extra spacing between stock legend groups.
+      tracegroupgap = 0,
+      font = list(size = 12)
     )
   )
 
@@ -2403,7 +2454,8 @@ plot_effortFltStk_plotly <- function(
 
     # Keep stock order and the original first-status-per-fleet-stock rule.
     fleet_data <- fleet_data[
-      order(match(fleet_data$stock, stocks)), , drop = FALSE
+      order(match(fleet_data$stock, stocks)), ,
+      drop = FALSE
     ]
     first_stock_row <- match(fleet_data$stock, fleet_data$stock)
     limitation <- fleet_data$Limitation[first_stock_row]
@@ -2619,7 +2671,7 @@ plot_effortFltStk_plotly <- function(
   fig <- plotly::config(plotly::as_widget(figure_spec))
   fig <- plotly::plotly_build(fig)
 
-  
+
 
   return(fig)
 }
