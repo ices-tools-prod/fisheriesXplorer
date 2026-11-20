@@ -53,10 +53,10 @@ mixfish_about_box <- function() {
     title = "About this module",
     shiny::p(
       style = "margin: 0;",
-      "Mixed fisheries use fishing gear that catch multiple species at the same time, which can result in unwanted bycatch.", br(),
-      "Mixed fisheries can become limited by stock(s) with the most restrictive catch limits (i.e. quota), referred to as 'choke species'.", br(),
-      "Mixed fisheries models are used to estimate how the quota for one stock may influence fishing opportunities for others within case study areas and explore options for minimizing overfishing and maximizing yield.", br(),
-      "Stock, métier and fleet definitions are available in the glossary. "
+      "Mixed-fisheries use fishing gear that catch multiple species at the same time, which can result in unwanted bycatch.",
+      "Mixed-fisheries can become limited by stock(s) with the most restrictive catch limits (i.e. quota), referred to as 'choke species'.", br(),
+      "Mixed-fisheries models are used to estimate how the quota for one stock may influence fishing opportunities for others within case study areas and explore options for minimizing overfishing and maximizing yield.", br(),
+      "Stock, métier and fleet definitions are available in the glossary."
     )
   )
 }
@@ -107,7 +107,7 @@ mod_mixfish_ui <- function(id) {
       ################################## Forecast ##################################
 
       tabPanel(
-        title = "Mixed fisheries options",
+        title = "Mixed-fisheries options",
         value = "forecast",
         layout_sidebar(
           bg = "white",
@@ -205,7 +205,6 @@ mod_mixfish_ui <- function(id) {
               # mixfish_scenarios_box(ns),
 
               uiOutput(ns("filter_ui_forecast")),
-
               div(
                 id = ns("forecast_plot_scroll"),
                 style = "
@@ -241,7 +240,6 @@ mod_mixfish_ui <- function(id) {
                     window.mixfishPlotHeightHandlerRegistered = true;
                   })();
                 ")),
-
                 shinycssloaders::withSpinner(
                   plotly::plotlyOutput(
                     outputId = ns("plot_forecast"),
@@ -322,6 +320,7 @@ mod_mixfish_ui <- function(id) {
                 # mixfish_about_box()
               ),
               uiOutput(ns("filter_ui_fleet")),
+              uiOutput(ns("alluvial_plot_note")),
               withSpinner(
                 plotlyOutput(ns("plot_fleet"), height = "75vh"),
                 caption = "Getting mix-fish results..."
@@ -413,9 +412,27 @@ mod_mixfish_ui <- function(id) {
                 # )
               ),
               uiOutput(ns("filter_ui_history")),
-              withSpinner(
-                plotlyOutput(ns("plot_history"), height = "75vh"),
-                caption = "Getting mix-fish results..."
+              div(
+                id = ns("history_plot_scroll"),
+                style = "
+                  flex: 1 1 0;
+                  min-height: 0;
+                  min-width: 0;
+                  width: 100%;
+                  overflow-y: auto;
+                  overflow-x: hidden;
+                ",
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(
+                    outputId = ns("plot_history"),
+                    width = "100%",
+                    height = "300px",
+                    fill = FALSE
+                  ),
+                  proxy.height = "300px",
+                  hide.ui = TRUE,
+                  caption = "Getting mix-fish results..."
+                )
               )
             )
           )
@@ -1713,31 +1730,49 @@ mod_mixfish_server <- function(
         #   )
         # },
         "plot5" = {
+          # Wait for the controls to initialize.
+          # FALSE is a valid checkbox value; "" is the valid "None" divider.
+          req(!is.null(input$plot5_relative))
+          req(!is.null(input$plot5_divider))
+
           df <- filter_source_data_history()
 
           req(!is.null(df))
           req(NROW(df) > 0)
 
-          plot_catchComp_plotly_v3(
+          fig <- plot_catchComp_plotly_v3(
             data = df,
             refTable = data_reactive_all()$refTable_filtered,
             filters = plot5_filters(),
             selectors = plot5_selectors(),
             divider = plot5_divider(),
             yvar = "landings",
-            relative = if (is.null(input$plot5_relative)) {
-              TRUE
-            } else {
-              isTRUE(input$plot5_relative)
-            },
+            relative = isTRUE(input$plot5_relative),
             source_note = data_source_note()
           )
+
+          session$sendCustomMessage(
+            "mixfish-set-plot-height",
+            list(
+              id = ns("plot_history"),
+              height = paste0(fig$height, "px"),
+              scrollId = ns("history_plot_scroll")
+            )
+          )
+
+          fig
         }
       )
     })
 
     ################################## Plot rendering: Fleet activity ##################################
-
+    output$alluvial_plot_note <- renderUI({
+      tagList(
+        tags$p(
+          "Note: Consider filtering to resolve better the view."
+        )
+      )
+    })
     output$plot_fleet <- renderPlotly({
       req(region_ready())
 
@@ -1766,31 +1801,31 @@ mod_mixfish_server <- function(
 
       switch(plot_name_forecast(),
         "plot1" = {
-  df <- current_plot_data_forecast()
+          df <- current_plot_data_forecast()
 
-  req(df)
-  req(nrow(df) > 0)
+          req(df)
+          req(nrow(df) > 0)
 
-  fig <- plot_catchScenStk_plotly(
-    data = df,
-    adv = data_reactive_all()$catchRange_filtered,
-    refTable = data_reactive_all()$refTable_filtered,
-    title = "Mixed-fisheries projections of potential 2027 catches",
-    source_note = data_source_note()
-  )
+          fig <- plot_catchScenStk_plotly(
+            data = df,
+            adv = data_reactive_all()$catchRange_filtered,
+            refTable = data_reactive_all()$refTable_filtered,
+            title = paste0("Mixed-fisheries projections of potential 2027 catches for the ", selected_subRegion()),
+            source_note = data_source_note()
+          )
 
-  # Match the permanent output to the height of the completed figure.
-  session$sendCustomMessage(
-    "mixfish-set-plot-height",
-    list(
-      id = ns("plot_forecast"),
-      height = paste0(fig$height, "px"),
-      scrollId = ns("forecast_plot_scroll")
-    )
-  )
+          # Match the permanent output to the height of the completed figure.
+          session$sendCustomMessage(
+            "mixfish-set-plot-height",
+            list(
+              id = ns("plot_forecast"),
+              height = paste0(fig$height, "px"),
+              scrollId = ns("forecast_plot_scroll")
+            )
+          )
 
-  fig
-},
+          fig
+        },
         "plot2" = {
           # Wait for initialization; an unchecked FALSE value is valid.
           req(!is.null(input$plot2_highlight))
@@ -1800,31 +1835,30 @@ mod_mixfish_server <- function(
           req(df)
           req(nrow(df) > 0)
 
-          # Keep the container and plotting function on the same settings.
           effort_ncol <- 4
           effort_row_height <- 150
 
-          n_fleets <- length(unique(df$fleet))
-          n_rows <- ceiling(n_fleets / effort_ncol)
-          plot_height <- effort_row_height * n_rows + 120 + 180
-
-          session$sendCustomMessage(
-            "mixfish-set-plot-height",
-            list(
-              id = ns("plot_forecast"),
-              height = paste0(plot_height, "px"),
-              scrollId = ns("forecast_plot_scroll")
-            )
-          )
-
-          plot_effortFltStk_plotly(
+          fig <- plot_effortFltStk_plotly(
             data = df,
             refTable = data_reactive_all()$refTable_filtered,
+            title = paste0("Forecasted fishing effort by fleet in 2027 for the ", selected_subRegion()),
             ncol = effort_ncol,
             rowHeight = effort_row_height,
             highlight = isTRUE(input$plot2_highlight),
             source_note = data_source_note()
           )
+
+          # Match the output container to the height calculated by the function.
+          session$sendCustomMessage(
+            "mixfish-set-plot-height",
+            list(
+              id = ns("plot_forecast"),
+              height = paste0(fig$height, "px"),
+              scrollId = ns("forecast_plot_scroll")
+            )
+          )
+
+          fig
         }
       )
     })
