@@ -415,7 +415,8 @@ mod_bycatch_server <- function(
 
       out <- tryCatch(
         {
-          raw <- get_bycatch_ecoregion(eco)
+          # raw <- get_bycatch_ecoregion(eco)
+          raw <- get_beam_bycatch_ecoregion(eco)
           clean_bycatch_data(raw)
         },
         error = function(e) {
