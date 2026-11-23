@@ -1,3 +1,91 @@
+get_beam_bycatch_ecoregion <- function(ecoregion) {
+ # put token here
+
+  if (!nzchar(token)) {
+    stop("Set BYCATCH_API_TOKEN to access the BEAM bycatch API.")
+  }
+
+  url <- paste0(
+    "https://bycatch.ices.dk/API/GetAdviceResults_Premier?token=",
+    utils::URLencode(token, reserved = TRUE)
+    # "&assessmentYear=2026&selectedReliability=more+reliable"
+  )
+
+  response <- tryCatch(
+    curl::curl_fetch_memory(
+      url,
+      handle = curl::new_handle(timeout = 90)
+    ),
+    error = function(e) {
+      stop(
+        "The BEAM bycatch API request failed.",
+        call. = FALSE
+      )
+    }
+  )
+
+  if (response$status_code != 200L) {
+    stop(
+      "The BEAM bycatch API returned HTTP ",
+      response$status_code,
+      ".",
+      call. = FALSE
+    )
+  }
+
+  raw <- tryCatch(
+    jsonlite::fromJSON(rawToChar(response$content)),
+    error = function(e) {
+      stop(
+        "The BEAM bycatch API returned invalid JSON.",
+        call. = FALSE
+      )
+    }
+  )
+
+
+  required <- c(
+    "ecoregion",
+    "taxon",
+    "metier_L4",
+    "species",
+    "common_name",
+    "priority",
+    "bycatch_2024",
+    "bycatch_lower_CI",
+    "bycatch_upper_CI",
+    "bpuE_Numeric",
+    "bpuE_lower_CI_Numeric",
+    "bpuE_upper_CI_Numeric"
+  )
+
+  if (!is.data.frame(raw)) {
+    stop(
+      "The BEAM bycatch API response is not a data frame.",
+      call. = FALSE
+    )
+  }
+
+  missing <- setdiff(required, names(raw))
+
+  if (length(missing) > 0L) {
+    stop(
+      "The BEAM bycatch API response is missing required columns: ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+
+  
+  # Filter by the requested ecoregion
+  keep <- !is.na(raw$ecoregion) &
+    tolower(trimws(raw$ecoregion)) == tolower(trimws(ecoregion))
+
+  raw <- raw[keep, , drop = FALSE]
+  
+  raw
+}
 #' Create an empty bycatch data frame
 #'
 #' Returns an empty data frame with the expected column names and column types
