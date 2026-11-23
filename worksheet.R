@@ -1794,3 +1794,53 @@ library(httr)
      # Print response status and content
     print(status_code(response))
     print(content(response, as = "text", encoding = "UTF-8"))
+
+
+
+
+# Set the working directory to the application root
+setwd("D:/GitHub_2023/fisheriesXplorer")
+
+# Confirm the directory
+getwd()
+
+# Destination for the temporary review app
+review_app_name <- "bycatch-review-8e6b94c2d17a"
+review_account <- "ices-tools-dev"
+review_server <- "shinyapps.io"
+
+# FIRST DEPLOYMENT ONLY:
+# Check that the chosen name is not already used in this account.
+existing_apps <- rsconnect::applications(
+  account = review_account,
+  server = review_server
+)
+
+if (review_app_name %in% existing_apps$name) {
+  stop(
+    "An application with this review name already exists. ",
+    "Choose a different name for a new review app.",
+    call. = FALSE
+  )
+}
+
+# Deploy the new review app
+rsconnect::deployApp(
+  appDir = ".",
+  appName = review_app_name,
+  appTitle = paste(desc::desc_get_field("Package"), "- review"),
+  account = review_account,
+  server = review_server,
+  appFiles = c(
+    "R/",
+    "inst/",
+    "data/",
+    "NAMESPACE",
+    "DESCRIPTION",
+    "app.R"
+  ),
+  appId = NULL,
+  appVisibility = "public",
+  lint = FALSE,
+  forceUpdate = FALSE
+)
