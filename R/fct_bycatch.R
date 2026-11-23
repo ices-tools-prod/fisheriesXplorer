@@ -1,5 +1,5 @@
 get_beam_bycatch_ecoregion <- function(ecoregion) {
- # put token here
+ # token
 
   if (!nzchar(token)) {
     stop("Set BYCATCH_API_TOKEN to access the BEAM bycatch API.")
@@ -407,7 +407,7 @@ plot_bycatch_metric_interactive <- function(df,
   }
 
   cap_text <- paste0(
-    "2025 ICES Advice on bycatch of endangered, <br>threatened and protected (ETP) species.<br>",
+    "2026 ICES Advice on bycatch of endangered, <br>threatened and protected (ETP) species.<br>",
     base::format(base::Sys.Date(), "%d-%b-%y"), ", ICES, Copenhagen."
   )
 
@@ -583,7 +583,7 @@ plot_bycatch_interactive <- function(df,
     value_col = "bycatch_2024",
     lower_col = "bycatch_lower_CI",
     upper_col = "bycatch_upper_CI",
-    y_label = "Total Bycatch in 2024 \n (individuals)",
+    y_label = "Total Bycatch in 2025 \n (individuals)",
     empty_title = "No bycatch data available",
     palette = palette,
     ecoregion = get_ecoregion_acronym(ecoregion)

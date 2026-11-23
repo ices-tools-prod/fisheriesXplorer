@@ -78,12 +78,12 @@ app_ui <- function(request) {
       id = "nav-page",
       # theme = bslib::bs_theme(version = 5),
       tabPanel("Home", value = "home", mod_navigation_page_ui("navigation_page_1")),
-      tabPanel("Overview", value = "overview", mod_overview_ui("overview_1")),
-      tabPanel("Landings", value = "landings", mod_landings_ui("landings_1")),
-      tabPanel("Stock status", value = "stock_status", mod_stock_status_ui("stock_status_1")),
-      tabPanel("VMS", value = "vms", mod_vms_ui("vms_1")),
+      # tabPanel("Overview", value = "overview", mod_overview_ui("overview_1")),
+      # tabPanel("Landings", value = "landings", mod_landings_ui("landings_1")),
+      # tabPanel("Stock status", value = "stock_status", mod_stock_status_ui("stock_status_1")),
+      # tabPanel("VMS", value = "vms", mod_vms_ui("vms_1")),
       tabPanel("Bycatch", value = "bycatch", mod_bycatch_ui("bycatch_1")),
-      tabPanel("Mixed fisheries", value = "mixfish", mod_mixfish_ui("mixfish_1")),
+      # tabPanel("Mixed fisheries", value = "mixfish", mod_mixfish_ui("mixfish_1")),
 
       # push right
       bslib::nav_spacer(),

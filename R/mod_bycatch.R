@@ -12,8 +12,14 @@ bycatch_about_box <- function() {
         rel = "noopener noreferrer",
         "ICES Roadmap for Bycatch of Endangered, Threatened, and Protected (ETP) Species."
       ),
-      "Due to data limitation, ICES estimates bycatch only for certain species and métier combinations. ",
-      "See ICES (2026) for more details. "
+      "Due to data limitation, ICES estimates bycatch only for certain species and métier combinations. See ",
+      shiny::tags$a(
+        href = "https://doi.org/10.17895/ices.advice.30734714",
+        target = "_blank",
+        rel = "noopener noreferrer",
+        "ICES (2026) "
+      ),      
+       "for more details."
     )
   )
 }
