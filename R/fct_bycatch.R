@@ -1,5 +1,5 @@
 get_beam_bycatch_ecoregion <- function(ecoregion) {
- # token
+#  token
 
   if (!nzchar(token)) {
     stop("Set BYCATCH_API_TOKEN to access the BEAM bycatch API.")
