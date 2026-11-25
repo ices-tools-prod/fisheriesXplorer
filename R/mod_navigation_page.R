@@ -3,9 +3,8 @@
 #' Build the landing page for the fisheriesXplorer app, combining:
 #' \itemize{
 #'   \item an interactive ICES ecoregion map with a synced selector, and
-#'   \item three large topic buttons (Overview, Landings, Stock status)
-#'         that the server module can use to navigate to the relevant
-#'         sections of the app.
+#'   \item six large topic buttons that the server module can use to
+#'         navigate to the relevant sections of the app.
 #' }
 #'
 #' The module exposes a single UI function to be used in \code{app_ui()}
@@ -72,7 +71,7 @@ mod_navigation_page_ui <- function(id) {
               style = "overflow: visible;",
               fluidRow(
                 column(
-                  6,
+                  4,
                   align = "center",
                   div(
                     class = "image-button-wrap",
@@ -85,7 +84,7 @@ mod_navigation_page_ui <- function(id) {
                   )
                 ),
                 column(
-                  6,
+                  4,
                   align = "center",
                   div(
                     class = "image-button-wrap",
@@ -96,11 +95,9 @@ mod_navigation_page_ui <- function(id) {
                     ),
                     div(class = "fx-tooltip", HTML("<strong>Landings</strong><br><br>Landings over time:<br>by country, species, fish guild, and gear type"))
                   )
-                )
-              ),
-              fluidRow(
+                ),
                 column(
-                  6,
+                  4,
                   align = "center",
                   div(
                     class = "image-button-wrap",
@@ -111,9 +108,11 @@ mod_navigation_page_ui <- function(id) {
                     ),
                     div(class = "fx-tooltip", HTML("<strong>Stock status</strong><br><br>Relative to MSY &amp; PA reference points, and MSFD descriptors"))
                   )
-                ),
+                )
+              ),
+              fluidRow(
                 column(
-                  6,
+                  4,
                   align = "center",
                   div(
                     class = "image-button-wrap",
@@ -125,11 +124,9 @@ mod_navigation_page_ui <- function(id) {
                     ),
                     div(class = "fx-tooltip", HTML("<strong>VMS</strong><br><br>Fishing Effort &amp; Swept Area Ratio (SAR)"))
                   )
-                )
-              ),
-              fluidRow(
+                ),
                 column(
-                  6,
+                  4,
                   align = "center",
                   div(
                     class = "image-button-wrap",
@@ -143,7 +140,7 @@ mod_navigation_page_ui <- function(id) {
                   )
                 ),
                 column(
-                  6,
+                  4,
                   align = "center",
                   div(
                     class = "image-button-wrap",
