@@ -80,14 +80,16 @@ The module:
         \code{shared$SID} via \code{format_sag()},
         \code{add_proxyRefPoints()}, and
         \code{stockstatus_CLD_current_proxy()}.
-      \item Renders MSY/PA pies with \code{plot_status_prop_pies()} and
-        GES pies with \code{plot_GES_pies()}, using client data width for
-        responsive sizing.
+      \item Displays an indexed stock-summary or GES HTML in a full-width
+        iframe, according to \code{status_summary_selector}, only when
+        the Summary tab is active. Documented no-data selections show
+        the export report's reason.
       \item Provides ZIP bundles for clean status data
         (\code{download_clean_status_data}) and GES/catch status
         (\code{download_status_catch_data}), each containing a CSV export,
         a disclaimer text (fetched via \code{safe_download()}), and a PNG
-        plot (generated with \code{ragg::agg_png()} or
+        plot from live app data, not the HTML export snapshot
+        (generated with \code{ragg::agg_png()} or
         \code{ggplot2::ggsave()} where possible).
     }
   \item For the \strong{Trends by group} tab:
@@ -104,13 +106,12 @@ The module:
       \item Computes \code{kobe_cld_data()} from \code{catch_current()}
         filtered by the selected guild(s) and \code{plot_CLD_bar_app()}
         with \code{return_data = TRUE}.
-      \item Renders \code{status_kobe} and \code{status_cld} plots by
-        slicing the top \code{n} stocks and passing them to
-        \code{plot_kobe_app()} and \code{plot_CLD_bar_app()}
-        (\code{return_data = FALSE}).
+      \item Displays an indexed HTML Kobe plot for the selected ecoregion
+        and guild when the tab is active, mapping All Stocks to
+        \code{all_stocks}. Documented no-data selections show their reason.
       \item Provides a ZIP bundle (\code{download_CLD_data}) containing the
-        filtered CSV, a disclaimer, and PNG images of both Kobe and CLD
-        plots.
+        full selected-guild live-data CSV, a disclaimer, and static PNG
+        images of both Kobe and CLD plots, not the HTML export snapshot.
     }
   \item For the \strong{Stock status lookup} tab:
     \itemize{

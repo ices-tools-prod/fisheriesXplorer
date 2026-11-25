@@ -78,7 +78,7 @@ mod_navigation_page_ui <- function(id) {
                     class = "image-button-wrap",
                     actionLink(
                       ns("overviewBtn"),
-                      label = NULL, class = "image-button-link",  `aria-label` = "Overview",
+                      label = NULL, class = "image-button-link", `aria-label` = "Overview",
                       style = "background-image: url('www/icons/overview.svg');"
                     ),
                     div(class = "fx-tooltip", HTML("<strong>Overview</strong><br><br>Key signals and detailed <br>catch-by-country information"))
@@ -96,7 +96,8 @@ mod_navigation_page_ui <- function(id) {
                     ),
                     div(class = "fx-tooltip", HTML("<strong>Landings</strong><br><br>Landings over time:<br>by country, species, fish guild, and gear type"))
                   )
-                )),
+                )
+              ),
               fluidRow(
                 column(
                   6,
@@ -140,9 +141,22 @@ mod_navigation_page_ui <- function(id) {
                     ),
                     div(class = "fx-tooltip", HTML("<strong>Bycatch</strong><br><br>Bycatch of mammals, seabirds, and elasmobranchs"))
                   )
+                ),
+                column(
+                  6,
+                  align = "center",
+                  div(
+                    class = "image-button-wrap",
+                    actionLink(
+                      ns("mixfishBtn"),
+                      label = NULL, class = "image-button-link",
+                      style = "background-image: url('www/icons/mixfish.svg');",
+                      title = "MixFish", `aria-label` = "MixFish"
+                    ),
+                    div(class = "fx-tooltip", HTML("<strong>MixFish</strong><br><br>Mixed fisheries &amp; considerations"))
+                  )
                 )
               )
-
             )
           )
         )
@@ -221,14 +235,14 @@ mod_navigation_page_ui <- function(id) {
 #' @importFrom shinyWidgets updateVirtualSelect
 #' @noRd
 mod_navigation_page_server <- function(
-  id, 
-  parent_session, 
-  selected_ecoregion,
-  bookmark_qs = reactive(NULL)) {
+    id,
+    parent_session,
+    selected_ecoregion,
+    bookmark_qs = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-   ################################## bookmarking #########################################
+    ################################## bookmarking #########################################
     # This module participates in the global bookmarking via two hooks:
     # - `bookmark_qs`: a reactive list provided by the main server with the
     #   parsed query-string (including $subtab).
@@ -262,7 +276,7 @@ mod_navigation_page_server <- function(
       map_ecoregion(eco_shape, map_shape)
     })
 
-    
+
     proxy_map <- leaflet::leafletProxy("map", session = session)
 
     selected_map <- reactiveValues(groups = character())
@@ -274,7 +288,7 @@ mod_navigation_page_server <- function(
         selected_map$groups <- c(selected_map$groups, input$map_shape_click$id)
       }
 
-      
+
       updateVirtualSelect(
         inputId = "selected_locations",
         choices = eco_shape$Ecoregion,
@@ -283,25 +297,40 @@ mod_navigation_page_server <- function(
       )
     })
 
-    observeEvent(input$selected_locations, {
-      removed <- setdiff(selected_map$groups, input$selected_locations)
-      selected_map$groups <- input$selected_locations
+    observeEvent(input$selected_locations,
+      {
+        removed <- setdiff(selected_map$groups, input$selected_locations)
+        selected_map$groups <- input$selected_locations
 
-      proxy_map %>%
-        leaflet::hideGroup(removed) %>%
-        leaflet::showGroup(input$selected_locations)
-    }, ignoreNULL = FALSE)
+        proxy_map %>%
+          leaflet::hideGroup(removed) %>%
+          leaflet::showGroup(input$selected_locations)
+      },
+      ignoreNULL = FALSE
+    )
 
     observeEvent(input$selected_locations, {
       selected_ecoregion(input$selected_locations)
     })
 
     # Top-tab switches via actionLinks (by tab values)
-    observeEvent(input$overviewBtn,   { updateNavbarPage(parent_session, "nav-page", selected = "overview") })
-    observeEvent(input$landingsBtn,   { updateNavbarPage(parent_session, "nav-page", selected = "landings") })
-    observeEvent(input$stockStatusBtn,{ updateNavbarPage(parent_session, "nav-page", selected = "stock_status") })
-    observeEvent(input$vmsBtn,{ updateNavbarPage(parent_session, "nav-page", selected = "vms") })
-    observeEvent(input$bycatchBtn,{ updateNavbarPage(parent_session, "nav-page", selected = "bycatch") })
+    observeEvent(input$overviewBtn, {
+      updateNavbarPage(parent_session, "nav-page", selected = "overview")
+    })
+    observeEvent(input$landingsBtn, {
+      updateNavbarPage(parent_session, "nav-page", selected = "landings")
+    })
+    observeEvent(input$stockStatusBtn, {
+      updateNavbarPage(parent_session, "nav-page", selected = "stock_status")
+    })
+    observeEvent(input$vmsBtn, {
+      updateNavbarPage(parent_session, "nav-page", selected = "vms")
+    })
+    observeEvent(input$bycatchBtn, {
+      updateNavbarPage(parent_session, "nav-page", selected = "bycatch")
+    })
+    observeEvent(input$mixfishBtn, {
+      updateNavbarPage(parent_session, "nav-page", selected = "mixfish")
+    })
   })
 }
-

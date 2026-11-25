@@ -435,6 +435,36 @@ nzchar
 #   else if (nzchar(search)) shiny::parseQueryString(search)
 #   else list()
 # }
+
+
+
+# parse_nav <- function(hash, search) {
+#   qs <- if (nzchar(hash)) {
+#     shiny::parseQueryString(sub("^#", "", hash))
+#   } else if (nzchar(search)) {
+#     shiny::parseQueryString(sub("^\\?", "", search))
+#   } else {
+#     list()
+#   }
+
+#   list(
+#     eco    = qs$eco    %|?% "",
+#     tab    = qs$tab    %|?% "",
+#     subtab = qs$subtab %|?% "",
+#     stock  = qs$stock  %|?% ""
+#   )
+# }
+
+# Map subtab input ids (read) & selectors (write)
+SUBTAB_INPUTS <- list(
+  overview     = "overview_1-tabs_overview",
+  landings     = "landings_1-main_tabset",
+  stock_status = "stock_status_1-main_tabset",
+  bycatch      = "bycatch_1-bycatch_tabset",
+  mixfish      = "mixfish_1-mixfish_tabset",
+  resources    = "resources_1-resources_nav"
+)
+
 parse_nav <- function(hash, search) {
   qs <- if (nzchar(hash)) {
     shiny::parseQueryString(sub("^#", "", hash))
@@ -448,18 +478,11 @@ parse_nav <- function(hash, search) {
     eco    = qs$eco    %|?% "",
     tab    = qs$tab    %|?% "",
     subtab = qs$subtab %|?% "",
-    stock  = qs$stock  %|?% ""
+    stock  = qs$stock  %|?% "",
+    plot   = qs$plot   %|?% "",
+    subregion = qs$subregion %|?% ""
   )
 }
-
-# Map subtab input ids (read) & selectors (write)
-SUBTAB_INPUTS <- list(
-  overview     = "overview_1-tabs_overview",
-  landings     = "landings_1-main_tabset",
-  stock_status = "stock_status_1-main_tabset",
-  bycatch      = "bycatch_1-bycatch_tabset",
-  resources    = "resources_1-resources_nav"
-)
 
 #' Get current sub-tab for a main tab
 #'
@@ -584,17 +607,43 @@ select_subtab <- function(tab, value, session) {
 #     if (nzchar(sub %|?% "")) paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else ""
 #   )
 # }
-write_hash <- function(eco, tab, sub, stock = NULL) {
+# write_hash <- function(eco, tab, sub, stock = NULL) {
+#   eco   <- eco   %|?% ""
+#   tab   <- tab   %|?% ""
+#   sub   <- sub   %|?% ""
+#   stock <- stock %|?% ""
+
+#   paste0(
+#     "#eco=", utils::URLencode(eco, reserved = TRUE),
+#     "&tab=", utils::URLencode(tab, reserved = TRUE),
+#     if (nzchar(sub))   paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else "",
+#     if (nzchar(stock)) paste0("&stock=",  utils::URLencode(stock, reserved = TRUE)) else ""
+#   )
+# }
+write_hash <- function(eco, tab, sub, stock = NULL, plot = NULL, subregion = NULL) {
+
   eco   <- eco   %|?% ""
   tab   <- tab   %|?% ""
   sub   <- sub   %|?% ""
   stock <- stock %|?% ""
+  plot  <- plot  %|?% ""
+  subregion <- subregion %|?% ""
 
   paste0(
     "#eco=", utils::URLencode(eco, reserved = TRUE),
     "&tab=", utils::URLencode(tab, reserved = TRUE),
-    if (nzchar(sub))   paste0("&subtab=", utils::URLencode(sub, reserved = TRUE)) else "",
-    if (nzchar(stock)) paste0("&stock=",  utils::URLencode(stock, reserved = TRUE)) else ""
+    if (nzchar(sub))
+      paste0("&subtab=", utils::URLencode(sub, reserved = TRUE))
+    else "",
+    if (nzchar(stock))
+      paste0("&stock=", utils::URLencode(stock, reserved = TRUE))
+    else "",
+    if (nzchar(plot))
+      paste0("&plot=", utils::URLencode(plot, reserved = TRUE))
+    else "",
+    if (nzchar(subregion))
+      paste0("&subregion=", utils::URLencode(subregion, reserved = TRUE))
+    else ""
   )
 }
 ####################################### End bookmarking Helpers #######################################
@@ -663,7 +712,7 @@ add_keys <- function(df, stock_label, keys, key_col = "AssessmentKey") {
 #'  Used in the Overview tab.
 revision_dates <- c(
   AZ = "2022-11-30",
-  BI = "2022-11-30",
+  BI = "2026-11-16",
   BrS ="2022-11-30",
   BtS = "2022-11-30",
   CS  = "2025-11-27",
@@ -910,4 +959,45 @@ get_ecoregion_acronym <- function(ecoregion) {
 
   # normalize empty results to NA
   if (is.null(acr) || identical(acr, "")) NA_character_ else acr
+}
+
+
+
+tab_about_box <- function(title, ...) {
+  shiny::tags$details(
+    open = "open",
+    style = "
+      flex: 0 0 auto;
+      width: 100%;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      background-color: #eef4f8;
+      border: 1px solid #d5e2ea;
+      border-radius: 30px;
+      overflow: hidden;
+    ",
+
+    shiny::tags$summary(
+      style = "
+        margin: 0;
+        padding: 8px 14px;
+        line-height: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        background-color: #dceaf2;
+        list-style-position: inside;
+      ",
+      title
+    ),
+
+    shiny::div(
+      style = "
+        padding: 12px 14px;
+        background-color: #eef4f8;
+        line-height: 1.5;
+      ",
+      ...
+    )
+  )
 }

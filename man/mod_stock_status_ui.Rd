@@ -32,10 +32,10 @@ The layout consists of:
       \item \strong{Status Summary} (\code{"status_summary"}):
         \itemize{
           \item Sidebar with explanatory text (\code{status_text1}).
-          \item Two cards containing static plots:
-            \code{status_summary_ices} (MSY & Precautionary Approach)
-            and \code{status_summary_ges} (catches vs MSY status),
-            each with a combined data + graph download link
+          \item One full-width HTML plot (\code{status_summary_html}),
+            selected with \code{status_summary_selector}: Stocks
+            (stock summary) or Catches (GES).
+          \item The selected view's existing live-data and static-graph download
             (\code{download_clean_status_data},
             \code{download_status_catch_data}).
         }
@@ -52,11 +52,11 @@ The layout consists of:
         \itemize{
           \item Sidebar with explanatory text (\code{status_text3}).
           \item Controls for group selection
-            (\code{status_kobe_cld_selector}) and a year/period slider
-            (\code{kobe_cld_slider}), plus a combined data + graphs
+            (\code{status_kobe_cld_selector}), including All Stocks,
+            plus a combined live data + static graphs
             download link (\code{download_CLD_data}).
-          \item Two plots: CLD (\code{status_cld}) and Kobe diagram
-            (\code{status_kobe}).
+          \item A full-width HTML Kobe diagram
+            (\code{status_kobe_html}) for the selected ecoregion and guild.
         }
       \item \strong{Stock status Lookup} (\code{"status_lookup"}):
         \itemize{

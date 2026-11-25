@@ -178,7 +178,8 @@ make_disclaimer_block <- function() {
         tags$li("Exclusions to unrestricted public access (relevant to fisheriesXplorer) include:"),
         tags$ul(
           tags$li("Commercial catch data from RDB-FishFrame and InterCatch"),
-          tags$li("VMS and Logbook data")
+          tags$li("VMS and Logbook data"),
+          tags$li("Regional DataBase and Estimation System (RDBES)")
         )
       ),
       p(
@@ -295,7 +296,7 @@ build_app_citation <- function(
   org         = "ICES",
   authors     = c("ICES"),
   year        = format(Sys.Date(), "%Y"),
-  app_url     = "https://ices-tools-dev.shinyapps.io/fisheriesXplorer/",
+  app_url     = "https://ices-taf.shinyapps.io/fisheriesXplorer/",
   repo_url    = "https://github.com/ices-tools-prod/fisheriesXplorer",
   version     = Sys.getenv("APP_VERSION", unset = NA),
   commit      = Sys.getenv("APP_COMMIT",  unset = NA),

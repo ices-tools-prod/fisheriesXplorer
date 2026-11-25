@@ -89,7 +89,9 @@ app_server <- function(input, output, session) {
         eco    = p$eco %|?% "",
         tab    = p$tab %|?% "",
         subtab = p$subtab %|?% "",
-        stock  = p$stock %|?% ""
+        stock  = p$stock %|?% "",
+        plot   = p$plot %|?% "",
+        subregion = p$subregion %|?% ""
       ))
       # Flip the global "restore in progress" flag; the observer below will do the work
       is_restoring(TRUE)
@@ -129,10 +131,82 @@ app_server <- function(input, output, session) {
     # Step 4: if a stock is requested, set it (some modules may choose to ignore this)
     if (nzchar(d$stock)) selected_stock(d$stock)
 
+    # Step 5: mixed-fisheries subregion
+    if (
+      identical(d$tab, "mixfish") &&
+        nzchar(d$subregion %|?% "")
+    ) {
+      updateRadioButtons(
+        session,
+        "mixfish_1-subRegion_history",
+        selected = d$subregion
+      )
+
+      updateRadioButtons(
+        session,
+        "mixfish_1-subRegion_forecast",
+        selected = d$subregion
+      )
+
+      updateRadioButtons(
+        session,
+        "mixfish_1-subRegion_fleet",
+        selected = d$subregion
+      )
+    }
+
+
+    # Step 6: mixed-fisheries plot
+    if (
+      identical(d$tab, "mixfish") &&
+        nzchar(d$plot)
+    ) {
+      plot_id <- switch(d$plot,
+        scenarios = "plot1",
+        effort_by_fleet_stock = "plot2",
+        # landings_by_metier_stock = "plot3",
+        # landings_by_stock = "plot4",
+        landings_composition_by_fleet = "plot5",
+        landings_alluvial_by_stock = "plot6",
+        NULL
+      )
+
+      if (!is.null(plot_id)) {
+        # History has no plot selector anymore: it always shows plot5
+        # if (identical(d$subtab, "history")) {
+        #   updateSelectizeInput(
+        #     session,
+        #     "mixfish_1-plot_selected_history",
+        #     selected = plot_id
+        #   )
+        # }
+
+        if (identical(d$subtab, "forecast")) {
+          updateSelectizeInput(
+            session,
+            "mixfish_1-plot_selected_forecast",
+            selected = plot_id
+          )
+        }
+      }
+    }
+
+
     # Check whether the live app state now matches the desired state --------------------
     cur_tab <- input$`nav-page` %|?% ""
     cur_sub <- get_current_subtab(d$tab, input)
 
+    cur_subregion <- if (identical(d$tab, "mixfish")) {
+      get_current_mixfish_subregion(input, d$subtab)
+    } else {
+      ""
+    }
+
+    cur_plot <- if (identical(d$tab, "mixfish")) {
+      get_current_mixfish_plot(input, d$subtab)
+    } else {
+      ""
+    }
     # We stop restoring when:
     # - the selected ecoregion is correct
     # - the top-level tab matches (or none was requested)
@@ -140,7 +214,9 @@ app_server <- function(input, output, session) {
     if (identical(selected_ecoregion() %|?% "", d$eco %|?% "") &&
       (!nzchar(d$tab) || identical(cur_tab, d$tab)) &&
       (!nzchar(d$subtab) || identical(cur_sub, d$subtab)) &&
-      (!nzchar(d$stock) || identical(selected_stock() %|?% "", d$stock))
+      (!nzchar(d$stock) || identical(selected_stock() %|?% "", d$stock)) &&
+      (!nzchar(d$subregion %|?% "") || identical(cur_subregion, d$subregion)) &&
+      (!nzchar(d$plot %|?% "") || identical(cur_plot, d$plot))
     ) {
       # Freeze the restore loop; further navigation will be driven by user input
       is_restoring(FALSE)
@@ -231,24 +307,105 @@ app_server <- function(input, output, session) {
     bookmark_qs        = reactive(list()), # parent restores
     set_subtab = function(...) {}
   )
+  mod_mixfish_server(
+    "mixfish_1",
+    selected_ecoregion = selected_ecoregion,
+    bookmark_qs        = reactive(list()), # parent restores
+    set_subtab = function(...) {},
+    set_plot = function(...) {}
+  )
   mod_resources_server(
     "resources_1",
     bookmark_qs        = reactive(list()), # parent restores
     set_subtab         = function(...) {}
   )
 
+
+  get_current_mixfish_subregion <- function(input, subtab) {
+
+  if (identical(subtab, "history")) {
+    input[["mixfish_1-subRegion_history"]] %|?% ""
+
+  } else if (identical(subtab, "forecast")) {
+    input[["mixfish_1-subRegion_forecast"]] %|?% ""
+
+  } else if (identical(subtab, "fleet_activity")) {
+    input[["mixfish_1-subRegion_fleet"]] %|?% ""
+
+  } else {
+    ""
+  }
+}
+
+  get_current_mixfish_plot <- function(input, subtab) {
+
+  plot_id <- if (identical(subtab, "history")) {
+    # History has no plot selector anymore: it always shows plot5
+    "plot5"
+    # input[["mixfish_1-plot_selected_history"]] %|?% ""
+  } else if (identical(subtab, "forecast")) {
+    input[["mixfish_1-plot_selected_forecast"]] %|?% ""
+  } else if (identical(subtab, "fleet_activity")) {
+    # Fleet activity has no plot selector: it always shows the alluvial plot
+    "plot6"
+  } else {
+    ""
+  }
+
+  switch(
+    plot_id,
+    plot1 = "scenarios",
+    plot2 = "effort_by_fleet_stock",
+    # plot3 = "landings_by_metier_stock",
+    # plot4 = "landings_by_stock",
+    plot5 = "landings_composition_by_fleet",
+    plot6 = "landings_alluvial_by_stock",
+    ""
+  )
+}
   ##################################### Single writer: keep URL hash in sync (debounced), except during restore #####################################
+  # current_state <- reactive({
+  #   list(
+  #     eco = selected_ecoregion() %|?% "",
+  #     tab = input$`nav-page` %|?% "",
+  #     subtab = {
+  #       t <- input$`nav-page` %|?% ""
+  #       get_current_subtab(t, input)
+  #     },
+  #     stock = selected_stock() %|?% ""
+  #   )
+  # })
   current_state <- reactive({
-    list(
-      eco = selected_ecoregion() %|?% "",
-      tab = input$`nav-page` %|?% "",
-      subtab = {
-        t <- input$`nav-page` %|?% ""
-        get_current_subtab(t, input)
-      },
-      stock = selected_stock() %|?% ""
-    )
-  })
+
+  tab <- input$`nav-page` %|?% ""
+  subtab <- get_current_subtab(tab, input)
+
+  mixfish_subregion <- if (identical(tab, "mixfish")) {
+    get_current_mixfish_subregion(input, subtab)
+  } else {
+    ""
+  }
+
+  # Do not bother putting it in the URL when it is just
+  # the normal single ecoregion selection
+  if (identical(mixfish_subregion, selected_ecoregion())) {
+    mixfish_subregion <- ""
+  }
+
+  list(
+    eco = selected_ecoregion() %|?% "",
+    tab = tab,
+    subtab = subtab,
+    stock = selected_stock() %|?% "",
+
+    plot = if (identical(tab, "mixfish")) {
+      get_current_mixfish_plot(input, subtab)
+    } else {
+      ""
+    },
+    subregion = mixfish_subregion
+  )
+})
   current_state_deb <- debounce(current_state, millis = 150)
 
   observeEvent(current_state_deb(),
@@ -259,7 +416,7 @@ app_server <- function(input, output, session) {
       st <- current_state_deb()
       shinyjs::runjs(sprintf(
         "location.hash = %s;",
-        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock), auto_unbox = TRUE)
+        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock, st$plot, st$subregion), auto_unbox = TRUE)
       ))
     },
     ignoreInit = TRUE
@@ -274,7 +431,7 @@ app_server <- function(input, output, session) {
       st <- current_state()
       shinyjs::runjs(sprintf(
         "location.hash = %s;",
-        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock), auto_unbox = TRUE)
+        jsonlite::toJSON(write_hash(st$eco, st$tab, st$subtab, st$stock, st$plot, st$subregion), auto_unbox = TRUE)
       ))
     },
     ignoreInit = TRUE
@@ -285,7 +442,7 @@ app_server <- function(input, output, session) {
   share_url <- reactiveVal(NULL)
   observeEvent(input$share_btn, {
     st <- current_state()
-    final <- paste0(.base_url(session), write_hash(st$eco, st$tab, st$subtab, st$stock))
+    final <- paste0(.base_url(session), write_hash(st$eco, st$tab, st$subtab, st$stock, st$plot, st$subregion))
     share_url(final)
     showModal(modalDialog(
       title = "Share this view",

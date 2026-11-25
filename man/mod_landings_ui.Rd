@@ -40,14 +40,11 @@ The UI contains:
             in \code{shinycssloaders::withSpinner()}.
         }
       \item \code{"Discards"}: a sidebar with dynamic text
-        (\code{discards_text}) and cards containing:
+        (\code{discards_text}) and a viewport-height card containing:
         \itemize{
-          \item A \code{plotly} discard trends plot
-            (\code{discard_trends}) with a CSV download link
+          \item An HTML discard trends plot
+            (\code{discard_trends_html}) with a CSV download link
             (\code{download_discard_data}).
-          \item Two additional \code{plotly} outputs for recorded and
-            all discards (\code{recorded_discards}, \code{all_discards}),
-            each wrapped in \code{withSpinner()}.
         }
     }
 }

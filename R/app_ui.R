@@ -83,6 +83,7 @@ app_ui <- function(request) {
       tabPanel("Stock status", value = "stock_status", mod_stock_status_ui("stock_status_1")),
       tabPanel("VMS", value = "vms", mod_vms_ui("vms_1")),
       tabPanel("Bycatch", value = "bycatch", mod_bycatch_ui("bycatch_1")),
+      tabPanel("Mixed fisheries", value = "mixfish", mod_mixfish_ui("mixfish_1")),
 
       # push right
       bslib::nav_spacer(),
@@ -140,6 +141,7 @@ app_ui <- function(request) {
 #' @noRd
 golem_add_external_resources <- function() {
   add_resource_path("www", system.file("app/www", package = "fisheriesXplorer"))
+  add_resource_path("plots", app_sys("app/plots"))
   tags$head(
     tags$link(rel = "shortcut icon", href = "www/fishriesXplorer_PNG.png"),
     includeHTML(system.file("app/www/google-analytics.html", package = "fisheriesXplorer")),
