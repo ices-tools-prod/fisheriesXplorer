@@ -1,0 +1,1066 @@
+
+/* Common layout for all overview text sections */
+.fx-section {
+  font-size: 18px;           /* base size */
+  line-height: 1.5;
+  color: #002B5F;
+}
+
+/* Paragraphs inside overview sections */
+.fx-section p {
+  font-size: 18px;
+  line-height: 1.5;
+  margin-top: 0;
+  margin-bottom: 0.75em;
+}
+
+/* Lists inside overview sections */
+.fx-section ul,
+.fx-section ol {
+  margin-top: 0.25em;
+  margin-bottom: 0.75em;
+  padding-left: 1.4em;   /* indent bullets/numbers */
+}
+
+.fx-section li {
+  font-size: 18px;
+  line-height: 1.5;
+  margin-bottom: 0.35em;
+}
+
+/* Sub-headings like country names in "Who is fishing" */
+.fx-section h4 {
+  font-size: 19px;
+  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: 0.35em;
+  color: #002B5F;
+}
+
+/* Make links in the text slightly distinct but subtle */
+.fx-section a {
+  color: #005b99;
+  text-decoration: underline;
+}
+.fx-section a:hover,
+.fx-section a:focus {
+  color: #003f6e;
+}
+
+.card-body, .bslib-gap-spacing, .html-fill-item, .html-fill-container {
+  padding-top: 3px;
+}
+  /*
+* {
+  font-family: "Soho Gothic W04 Ultra";
+}
+
+body {
+    
+    font-family: "Soho Gothic W04 Ultra";
+  }
+*/
+#table tr:hover {
+    background-color: rgba(240, 136, 33, 0.4) !important;
+  }
+
+
+table.dataTable tbody tr:nth-child(even) {background-color: #F5F5F6 !important;}
+table.dataTable tbody tr:nth-child(odd) {background-color: #E6E7E8 !important;}
+
+
+
+.leaflet-container {
+  background: #ffffff;
+  border-color: #000000;
+  outline-style: solid;
+  outline-width: 1px;
+  outline-color: #7e7e7e;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+}
+
+#tbl {outline:#dddddd solid 1px;}
+
+.tab-content>.active {
+  display: block;
+  margin-top: 20px;
+}
+
+.navbar-default {
+  background-color: #002B5F; /*#2fa4e7;*/
+  border-color: #002B5F; /* #1995dc*/
+  background-image: linear-gradient(#00438fd2, #002B5F 60%, #002552); /*linear-gradient(#54b4eb, #2fa4e7 60%, #1d9ce5);*/
+  background-repeat: no-repeat;
+  box-shadow: 0 1px 10px rgb(0 0 0 / 10%);
+  position: fixed;
+  top: 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:hover, .navbar-default .navbar-nav>.active>a:focus {
+  color: #000000;
+  /*
+  background-color: #F15D2A;
+  
+  opacity: .9;
+  
+  background-color: #C2DEFF
+  */
+  background-color: #00B6F1
+  /*
+  background-image: linear-gradient(#EBF4FF, #C2DEFF 60%, #99C9FF);/*#178acc */
+  
+}
+
+.navbar-default .navbar-nav>li>a {
+  color: #ffffff;
+}
+
+.navbar-default .navbar-nav>.open>a, .navbar-default .navbar-nav>.open>a:focus {
+  color: #000000;
+  /*
+  background-color: #C2DEFF;
+  */
+  background-color: #00B6F1
+}
+
+.navbar-default .navbar-toggle {
+  position: relative;
+  float: right;
+  padding: 9px 10px;
+  margin-right: 15px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  background-color: transparent;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  border-color: #ddd;
+}
+
+.form-group .shiny-input-container {
+  margin-top: 0;
+}
+
+.form-group > .shiny-input-container {
+  margin-top: 0;
+}
+    
+
+.disabled {
+  /*
+  background: #819898 !important;
+  cursor: not-allowed;
+  border-color:#819898;
+  color: #737373;
+*/
+  color: #ffffff;
+  cursor: not-allowed;  
+  background-color: transparent
+}
+
+
+.navbar-default .navbar-nav>li>a:hover {
+  color: #cecece;
+  background-color: transparent;
+}
+
+.nav-tabs {
+  border-bottom: 1px solid #ddd;
+  /* margin-top: 0px; */
+}
+
+
+.panel-primary {
+  border-color: #ffffff;
+}
+.panel-primary>.panel-heading {
+  color: #ffffff;
+  background-color: #9AC2B7; /* #2fa4e7  #AEC640*/
+  border-color: #dddddd;
+}
+
+.panel {
+  margin-bottom: 20px;
+  background-color: #fff;
+  border: 0px solid transparent;
+  border-radius: 4px;
+  -webkit-box-shadow: 0 1px 1px rgb(0 0 0 / 5%);
+  box-shadow: 0 1px 1px rgb(0 0 0 / 5%);
+}
+
+.panel-title {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 16px;
+  color: inherit;
+}
+
+.btn-default {
+  color: #ffffff;
+  background-image: linear-gradient(#00a2d8, #00b5f1 60%, #0cc2ff); /*linear-gradient(#f69371, #F15D2A 50%, #f69371)   #bad5ce, #9AC2B7 50%, #bad5ce*/
+  background-repeat: no-repeat;
+  background-color: #00B6F1;
+  border-color: rgba(0,0,0,0.1);
+  border-bottom: 1px solid #e6e6e6;
+}
+
+input[type=radio] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+
+  border: 2px solid #999;
+  transition: 0.2s all linear;
+  margin-right: 5px;
+  transition: 1s opacity 200ms;
+  /*position: relative;
+  top: 4px;
+
+  border: 0px;
+  width: 100%;
+  height: 2em;*/
+}
+input[type=radio]:checked {
+  /*border: 10px solid #f15d2a;*/
+  border: 5px solid #00B6F1;
+  outline: unset !important /* I added this one for Edge (chromium) support */
+}
+
+.hovertext {
+  position: relative;
+  
+}
+
+.hovertext:before {
+  content: attr(data-hover);
+  position: absolute;
+  top: calc(90% + 1px);  
+  bottom: auto;           
+  left: 10%;
+  transform: translate(-50%, 4px);  
+  background: #dbdbdb;
+  color: #000000;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: normal;
+  width: min(82vw, 240px);
+  max-width: 240px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 9999;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .2);
+}
+
+.hovertext:hover:before {
+  opacity: 1;
+  visibility: visible;
+}
+
+.dataTables_wrapper {
+  position: relative;
+  clear: both;
+  background-color: #99AABF;
+}
+
+caption {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 10px;
+  color: #112247;
+  text-align: left;
+}
+
+.well {
+  min-height: 20px;
+  padding: 19px;
+  margin-bottom: 20px;
+  background-color: #E6E7E8;
+  border: 1px solid #e3e3e3;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+}
+
+
+.vscomp-dropbox {
+  position: absolute !important;
+  bottom: auto !important;
+  top: -100 !important;
+}
+
+
+.shiny-input-container:not(.shiny-input-container-inline) {
+  width: 300px;
+  max-width: 100%;
+  margin-top: 20px;
+}
+
+
+
+.center-block {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#logo {
+  height: auto;
+  width: 30% !important;
+  margin-top: 40px;
+  margin-bottom: -40px
+}
+
+.card-body {
+  color: #002B5F;
+  background-color: #ffffff;
+  border-color: rgb(194, 194, 194);
+  border-width: 1px 1px 1px 1px;
+  border-radius: 15px 15px 15px 15px;
+} 
+
+.card-header {
+  color: #002B5F;
+  font-size: large;
+  background-color: #CCF0FC;
+  /* padding-left: 10px; */
+  border-width: 1px 1px 1px 1px;
+  border-radius: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 16px; /* left/right padding inside header */
+}
+
+.bslib-card .card-body{
+  overflow-x: hidden;
+}
+
+.image-button {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  background-size: cover;
+  height: 10vw;
+  width: 10vw;
+  border: none;
+  margin: 10px;
+}
+
+.image-button:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltip {
+  visibility: hidden;
+  width: 160px;
+  background-color: #dbdbdb;
+  color: #000000;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  font-size: 14px;
+  position: absolute;
+  z-index: 1;
+  top: 100%; /* Adjust as necessary */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.sidebar img {
+  max-width: 100%; 
+  height: auto;
+}
+
+.sidebar {
+  overflow: hidden;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.tooltip-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+  }
+.custom-tooltip {
+  visibility: hidden;
+  background-color: #dbdbdb;
+  color: #000000;
+  text-align: left;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  font-size: 0.85em;
+  width: 200px;
+}
+.tooltip-wrapper:hover .custom-tooltip {
+  visibility: visible;
+}
+
+.btn-group, .btn-group-vertical {  
+  width: 18vw;  
+  margin: 0 auto;  
+  display: inline-block;  
+  text-align: center;
+  vertical-align: middle;
+}
+
+.shiny-notification {
+  position: fixed;
+  top: 40% !important;  /* vertical center-ish */
+  left: 50% !important;  /* start from center */
+  transform: translate(-50%, -50%) !important;  /* true centering */
+
+  width: 50% !important;  /* take half the screen width */
+  max-width: 600px;  /* optional cap on very wide screens */
+
+  font-size: 16px;  /* larger text */
+  padding: 20px;  /* more spacing */
+}
+
+
+
+
+@media (max-width: 500px) {
+  .js-plotly-plot .xtick text,
+  .js-plotly-plot .ytick text,
+  .js-plotly-plot .legend text {
+    font-size: 8px !important;
+  }
+}
+@media (min-width: 501px) {
+  .js-plotly-plot .xtick text,
+  .js-plotly-plot .ytick text,
+  .js-plotly-plot .legend text {
+    font-size: 12px !important;
+  }
+}
+
+
+  /* .js-plotly-plot .g-xtitle text,  
+  .js-plotly-plot .g-ytitle text,  
+  .js-plotly-plot .annotation text { */
+
+.image-button-wrap {
+    position: relative;
+    display: inline-block;
+  }
+
+
+ .image-button-link{
+  --btn-size: clamp(110px, 18vw, 200px);
+  width: var(--btn-size);
+  height: var(--btn-size);
+
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: block;
+  cursor: pointer;
+  outline: 0;
+  text-decoration: none;
+  transition: transform .12s ease;
+}
+
+.image-button-link:hover,
+.image-button-link:focus-visible{
+  transform: scale(1.03);
+}
+
+
+.image-button-wrap .fx-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);  
+  bottom: auto;           
+  left: 50%;
+  transform: translate(-50%, 4px);  
+  background: #dbdbdb;
+  color: #000000;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: normal;
+  width: min(82vw, 240px);
+  max-width: 240px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 9999;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .2);
+}
+
+
+.image-button-wrap:hover .fx-tooltip,
+.image-button-wrap:focus-within .fx-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (max-width: 575.98px){
+  .image-button-link{ --btn-size: clamp(140px, 60vw, 240px); }
+  .image-button-wrap .fx-tooltip{
+    width: min(86vw, 320px);
+    font-size: 0.95rem;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1399.98px){
+  .image-button-link{ --btn-size: clamp(120px, 13vw, 170px); }
+  .image-button-wrap .fx-tooltip{
+    width: min(86vw, 170px);
+    font-size: 1.2rem;
+  }
+}
+
+@media (min-width: 1400px){
+  .image-button-link{ --btn-size: clamp(180px, 12vw, 260px); }
+}
+
+
+:root{
+  /* min, preferred (with vw), max */
+  --fx-header-size: clamp(14px, 1.2vw + 0.6rem, 24px);
+}
+
+.fx-header-center{
+  display:flex;
+  justify-content:center;
+  align-items:baseline;
+  gap:.5rem;
+  flex-wrap:wrap;
+  margin-bottom:.5rem;
+
+  /* responsive type */
+  font-size: var(--fx-header-size);
+  line-height: 1.25;
+}
+
+.fx-header-center b{ font-weight:700; }
+
+/* Keep the separator subtle and spaced */
+.fx-sep{ opacity:.6; margin: 0 .25em; }
+
+/* Make the link follow the header size and look tidy */
+.glossary-link{
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 1em;      /* inherits from header */
+  line-height: 1.25;
+}
+
+/* Optional: tighten spacing on very small screens */
+@media (max-width: 420px){
+  .fx-header-center{ gap:.35rem; }
+}
+
+#share_url_box{
+  font-size: 0.9em; 
+  background:#f6f8fa; 
+  border:1px solid #e1e4e8;
+  border-radius: 6px; 
+  padding: 8px 10px; 
+  white-space: normal;
+  overflow-wrap: anywhere; 
+  word-break: break-word;
+}
+
+
+
+/* === Glossary floating panel container === */
+.glossary-float{
+  /* closed by default; JS sets display:flex when opening */
+  display: none;
+
+  position: fixed;
+  right: 20px;           /* starting position */
+  top: 80px;
+  z-index: 2000;
+
+  /* look & layout */
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  overflow: hidden;
+
+  /* make header fixed and body grow */
+  display: flex;
+  flex-direction: column;
+
+  /* responsive size + font */
+  width: clamp(360px, 38vw, 780px);
+  max-height: 42vh;
+  font-size: clamp(12px, 1.4vw, 14px);
+}
+
+/* phones / small tablets */
+@media (max-width: 576px){
+  .glossary-float{
+    right: 8px;
+    top: 8px;
+    width: min(70vw, 560px);
+    /* max-height: 42vh; */
+    font-size: 10px;    /* readable on small screens */
+  }
+}
+
+/* large monitors */
+@media (min-width: 1600px){
+  .glossary-float{
+    width: 28vw;
+    max-width: 900px;
+    font-size: 16px;
+  }
+}
+
+
+
+/* === Glossary panel internals === */
+.glossary-float { /* container rules already exist; keeping for clarity */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable body */
+.glossary-float .g-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px;
+  -webkit-overflow-scrolling: touch; /* smoother iOS scroll */
+}
+
+/* Title text */
+.glossary-float .g-title {
+  font-weight: 600;
+  font-size: clamp(14px, 2vw, 18px);
+}
+
+/* Header bar */
+.glossary-float .g-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  color: #002B5F;
+  background: #CCF0FC;
+  border-bottom: 1px solid #e5e5e5;
+  cursor: move;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Close button */
+.glossary-float .g-close-btn {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Tiny “[source]” link styling */
+.glossary-float .g-body .src-link { font-size: 0.85em; opacity: 0.85; margin-left: .35rem; }
+.glossary-float .g-body a { text-decoration: none; }
+
+
+/* Open/close via class (cleaner than editing inline style) */
+.glossary-float { display: none; }
+.glossary-float.is-open { display: flex; } /* flex so .g-body can scroll */
+
+
+#staticMap1 {
+  margin-left:auto; 
+  margin-right:auto; 
+  margin-bottom:auto; 
+  max-width:97%; 
+  height:auto;}
+
+/* === NAV LABEL SIZES === */
+
+/* Top navbar tabs */
+.navbar-default .navbar-nav > li > a {
+  font-size: 20px;      /* adjust to taste: 15–18px */
+  font-weight: 500;
+}
+
+/* Nav tabs inside cards (Bootstrap 3 style) */
+.nav-tabs > li > a,
+.nav-pills > li > a {
+  font-size: 20px;      /* same as above for consistency */
+  font-weight: 500;
+}
+
+/* bslib / Bootstrap 4/5-style nav links, just in case */
+.nav-link {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+
+
+.msform-embed {
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.msform-embed iframe {
+  width: 100%;
+  height: 70vh;
+  border: 0;
+}
+
+@media (max-width: 600px) {
+  .msform-embed iframe {
+    height: 85vh;
+  }
+}
+
+.resources-page {
+  margin-top: .5rem;
+}
+
+.resources-page .intro-card,
+.resources-page .fair-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.resources-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 992px) {
+  .resources-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.source-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px 16px;
+}
+
+.source-title {
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  font-size: 2.15rem;
+}
+
+.kv {
+  margin: .25rem 0 0 0;
+}
+
+.kv dt {
+  width: 9.5rem;
+  float: left;
+  clear: left;
+  color: #445;
+  font-weight: 600;
+}
+
+.kv dd {
+  margin-left: 10rem;
+}
+
+.source-notes {
+  margin-top: 10px;
+  font-size: .92em;
+  color: #5f6b7a;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.cite-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px 16px;
+}
+
+.cite-title {
+  font-weight: 600;
+  font-size: 1.15rem;
+  margin: 0 0 6px 0;
+}
+
+.codeblock {
+  background: #f6f8fa;
+  border-radius: 6px;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.cite-actions {
+  margin-top: .5rem;
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+details summary {
+  cursor: pointer;
+  margin-top: .5rem;
+  font-weight: 600;
+}
+
+/* avoid clipped first letters with rounded corners */
+.resources-page .source-card,
+.resources-page .intro-card,
+.resources-page .fair-card {
+  overflow: visible;
+}
+
+/* Body text across Resources / Disclaimer / Citation views */
+.resources-page p,
+.resources-page li,
+.disclaimer-card p,
+.disclaimer-card li,
+.cite-card p,
+.cite-card li {
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.sidebar-text p, .sidebar-text li,  .sidebar-text ul, .sidebar-text ol {
+  font-size: 15px;
+  line-height: 1.4;
+  color: #002B5F;
+}
+
+.sidebar-text h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: 0.35em;
+  color: #002B5F;
+}
+
+
+
+
+
+/* === fisheriesXplorer sidebar: Option A ===
+   Works with bslib's existing collapse button and native resize handle.
+   Keep positioning, scrolling, transitions and responsive visibility in bslib.
+   Change the --fx-sidebar-* values below to tune the appearance.
+*/
+.bslib-sidebar-layout {
+  --fx-sidebar-bg: #F0F7FB;
+  --fx-sidebar-fg: #002B5F;
+  --fx-sidebar-divider: #9CB8CC;
+  --fx-sidebar-accent: #005B99;
+  --fx-sidebar-toggle-size: 40px;
+  --fx-sidebar-icon-size: 20px;
+  --fx-sidebar-grip-width: 6px;
+  --fx-sidebar-grip-height: 48px;
+
+  /* Native variables also reserve the correct space for the larger toggle. */
+  --bslib-sidebar-bg: var(--fx-sidebar-bg);
+  --bslib-sidebar-fg: var(--fx-sidebar-fg);
+  --bslib-sidebar-vert-border: 1px solid var(--fx-sidebar-divider);
+  --bslib-sidebar-icon-size: var(--fx-sidebar-icon-size);
+  --bslib-sidebar-icon-button-size: var(--fx-sidebar-toggle-size);
+  --bslib-collapse-toggle-border-radius: 8px;
+  --bslib-sidebar-resize-indicator-color-active: var(--fx-sidebar-accent);
+}
+
+/* Set actual colours too, so sidebar(bg = ..., fg = ...) cannot mask them. */
+.bslib-sidebar-layout > .sidebar {
+  background-color: var(--fx-sidebar-bg);
+  color: var(--fx-sidebar-fg);
+}
+
+/* Scoped override of the existing global 4px !important form-group rule. */
+.bslib-sidebar-layout > .sidebar .form-group {
+  margin-bottom: 10px !important;
+}
+
+/* Include the collapsed state: bslib gives it a separate foreground colour. */
+.bslib-sidebar-layout > .collapse-toggle,
+.bslib-sidebar-layout.sidebar-collapsed > .collapse-toggle {
+  background-color: var(--fx-sidebar-fg);
+  color: #FFFFFF;
+  box-shadow: 0 2px 5px rgba(0, 43, 95, 0.22);
+}
+
+.bslib-sidebar-layout > .collapse-toggle:hover,
+.bslib-sidebar-layout.sidebar-collapsed > .collapse-toggle:hover {
+  background-color: var(--fx-sidebar-accent);
+}
+
+.bslib-sidebar-layout > .collapse-toggle:focus-visible {
+  outline: 3px solid var(--fx-sidebar-accent);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px #FFFFFF;
+}
+
+.bslib-sidebar-layout > .collapse-toggle .collapse-icon {
+  fill: currentColor;
+  stroke: currentColor;
+  opacity: 1;
+}
+
+/* The native grip is now visible at rest, not only after crossing the edge.
+   Do not override the handle's position, display, pointer-events or ::before:
+   bslib uses those to coordinate dragging with the sidebar scrollbar.
+*/
+.bslib-sidebar-layout > .bslib-sidebar-resize-handle .resize-indicator {
+  width: var(--fx-sidebar-grip-width);
+  height: var(--fx-sidebar-grip-height);
+  border-radius: 999px;
+  background-color: var(--fx-sidebar-fg);
+  opacity: 1;
+  transition: width 0.15s ease, height 0.15s ease, background-color 0.15s ease;
+}
+
+/* Override every native enlargement state so hover never shrinks the grip. */
+.bslib-sidebar-layout > .bslib-sidebar-resize-handle:is(:hover, :focus, :active, .handle-active) .resize-indicator,
+.bslib-sidebar-layout.sidebar-resizing > .bslib-sidebar-resize-handle .resize-indicator {
+  width: calc(var(--fx-sidebar-grip-width) + 2px);
+  height: calc(var(--fx-sidebar-grip-height) + 8px);
+  background-color: var(--fx-sidebar-accent);
+  opacity: 1;
+}
+
+.bslib-sidebar-layout > .bslib-sidebar-resize-handle:focus-visible .resize-indicator {
+  outline: 3px solid var(--fx-sidebar-accent);
+  outline-offset: 3px;
+}
+
+/* Retain bslib's native touch resize target and use a larger toggle. */
+@media (any-pointer: coarse) {
+  .bslib-sidebar-layout {
+    --fx-sidebar-toggle-size: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bslib-sidebar-layout > .bslib-sidebar-resize-handle .resize-indicator {
+    transition: none;
+  }
+}
+
+/* Keep the two controls identifiable in Windows high-contrast mode. */
+@media (forced-colors: active) {
+  .bslib-sidebar-layout > .collapse-toggle,
+  .bslib-sidebar-layout.sidebar-right > .collapse-toggle {
+    border: 1px solid ButtonText;
+  }
+
+  .bslib-sidebar-layout > .collapse-toggle:focus-visible,
+  .bslib-sidebar-layout > .bslib-sidebar-resize-handle:focus-visible .resize-indicator {
+    outline-color: Highlight;
+  }
+
+  .bslib-sidebar-layout > .bslib-sidebar-resize-handle .resize-indicator {
+    border: 2px solid ButtonText;
+  }
+}
+
+
+
+
+
+/* Wrapper around glossary link + tooltip */
+.glossary-hover-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+
+.glossary-hover-bubble {
+  position: absolute;
+  top: calc(100% + 8px);  
+  bottom: auto;           
+  left: 50%;
+  transform: translate(-50%, 4px);  
+  background: #dbdbdb;
+  color: #000000;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: normal;
+  width: min(82vw, 240px);
+  max-width: 240px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 9999;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .2);
+}
+
+/* Little arrow under the bubble */
+.glossary-hover-bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #dbdbdb transparent transparent transparent;
+}
+
+/* Show on hover/focus */
+.glossary-hover-wrap:hover .glossary-hover-bubble,
+.glossary-hover-wrap:focus-within .glossary-hover-bubble {
+  opacity: 1;
+  visibility: visible;
+}
+
+.fx-actionlink {
+  font-size: clamp(14px, 2vw, 18px);
+}
+
+
+.form-group {
+    margin-bottom: 4px !important;
+  }
