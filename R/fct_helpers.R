@@ -963,40 +963,38 @@ get_ecoregion_acronym <- function(ecoregion) {
 
 
 
+# Shared About-this-module disclosure box for fisheriesXplorer.
+# Load the accompanying fisheriesXplorer.css through the app's existing CSS setup.
+# Replace the previous tab_about_box() definition with this function.
+# Existing module calls, including tab_about_box(title = "About this module", ...),
+# continue to work. The box starts open, as in the original helper.
+
 tab_about_box <- function(title, ...) {
   shiny::tags$details(
+    class = "fx-about-box",
     open = "open",
-    style = "
-      flex: 0 0 auto;
-      width: 100%;
-      min-width: 0;
-      margin: 0;
-      padding: 0;
-      background-color: #eef4f8;
-      border: 1px solid #d5e2ea;
-      border-radius: 30px;
-      overflow: hidden;
-    ",
 
     shiny::tags$summary(
-      style = "
-        margin: 0;
-        padding: 8px 14px;
-        line-height: 20px;
-        font-weight: 600;
-        cursor: pointer;
-        background-color: #dceaf2;
-        list-style-position: inside;
-      ",
-      title
+      class = "fx-about-summary",
+
+      shiny::tags$span(
+        class = "fx-about-title",
+        title
+      ),
+
+      shiny::tags$span(
+        class = "fx-about-toggle",
+        shiny::tags$span(class = "fx-about-label-show", "Show details"),
+        shiny::tags$span(class = "fx-about-label-hide", "Hide details"),
+        shiny::tags$span(
+          class = "fx-about-chevron",
+          `aria-hidden` = "true"
+        )
+      )
     ),
 
     shiny::div(
-      style = "
-        padding: 12px 14px;
-        background-color: #eef4f8;
-        line-height: 1.5;
-      ",
+      class = "fx-about-content",
       ...
     )
   )

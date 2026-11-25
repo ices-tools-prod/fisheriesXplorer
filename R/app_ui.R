@@ -159,7 +159,8 @@ golem_add_external_resources <- function() {
     ")),
     tags$link(rel = "stylesheet", type = "text/css", href = "css/gothic-a1.css"),
     tags$style("body {font-family: 'Gothic A1', sans-serif;}"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/styles.css"),
+    # tags$link(rel = "stylesheet", type = "text/css", href = "www/styles.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/fisheriesXplorer_2.css"),
     tags$script(src = "www/copy.js"),
     shinyjs::useShinyjs()
   )
