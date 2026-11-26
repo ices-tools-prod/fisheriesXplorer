@@ -78,9 +78,8 @@ The module:
     \itemize{
       \item Uses \code{format_sag()} and \code{CLD_trends()} based on
         \code{shared$SAG} and \code{shared$SID}.
-      \item Produces a \code{plotly} time-series trends plot and two
-        current-year summary plots (stocks with recorded discards and all
-        stocks).
+      \item Displays a pre-generated HTML time-series trends plot in an
+        iframe that fills the available card body.
       \item Provides a ZIP bundle download
         (\code{download_discard_data}) containing a CSV export and a
         disclaimer.

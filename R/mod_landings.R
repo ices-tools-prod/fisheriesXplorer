@@ -1,3 +1,54 @@
+landings_about_box <- function() {
+  tab_about_box(
+    title = "About this module",
+
+    shiny::p(
+      style = "margin: 0;",
+      "Landings data are shown for all reported taxa, including but not limited to those assessed by ICES. ",
+      "Data shown are a combination of historical nominal catches and official nominal catches ",
+      shiny::tags$a(
+        href = "https://www.ices.dk/data/dataset-collections/Pages/Fish-catch-and-stock-assessment.aspx",
+        target = "_blank",
+        rel = "noopener noreferrer",
+        "(ICES Catch statistics)."
+      ), br(),
+      "Landings are reported by ICES areas and divisions and assigned to an ecoregion according to the procedure described in ", 
+      shiny::tags$a(
+        href = "https://doi.org/10.17895/ices.pub.22134020",
+        target = "_blank",
+        rel = "noopener noreferrer",
+        "ICES (2023)."
+      ), br(),
+      "Taxa displayed represent the largest fraction of reported landings in the official nominal catches (i.e. since 2006);",
+      "the remainder are labelled as “other”, with taxa contributions displayed when hovering over the line."
+    )
+  )
+}
+
+discards_about_box <- function() {
+  tab_about_box(
+    title = "About this module",
+
+    shiny::p(
+      style = "margin: 0;",
+      "Discard trends are shown only for stocks assessed by ICES. Discards rates are calculated for each fisheries guild as", 
+      "the sum of all discards divided by the sum of all reported catches (i.e. landings plus discards), ", 
+      "combining all stocks in that guild, and weighted by the proportion of each stock's landings occurring", 
+      "within the ecoregion, based on the RDBES assignment procedure ",
+      shiny::tags$a(
+        href = "https://github.com/ices-taf/fisheriesXplorer_ecoregion_landings_shares_method",
+        target = "_blank",
+        rel = "noopener noreferrer",
+        "(TAF repository)."
+      ),
+      "Note that not all countries fishing on these stocks have reported data to RDBES.", br(),
+      "Detailed annual information on stocks included or not included in discard rate calculations can be displayed ",
+      "Note that discards are not differentiated between dead discards and live discards; ",
+      "for some fisheries guilds, e.g. shellfish and elasmobranchs, discard survival rates may be high."
+    )
+  )
+}
+
 #' Landings and discards UI module
 #'
 #' This module UI creates the main \emph{Landings} section of the app,
@@ -28,14 +79,11 @@
 #'             in \code{shinycssloaders::withSpinner()}.
 #'         }
 #'       \item \code{"Discards"}: a sidebar with dynamic text
-#'         (\code{discards_text}) and cards containing:
+#'         (\code{discards_text}) and a viewport-height card containing:
 #'         \itemize{
-#'           \item A \code{plotly} discard trends plot
-#'             (\code{discard_trends}) with a CSV download link
+#'           \item An HTML discard trends plot
+#'             (\code{discard_trends_html}) with a CSV download link
 #'             (\code{download_discard_data}).
-#'           \item Two additional \code{plotly} outputs for recorded and
-#'             all discards (\code{recorded_discards}, \code{all_discards}),
-#'             each wrapped in \code{withSpinner()}.
 #'         }
 #'     }
 #' }
@@ -64,24 +112,53 @@
 #' @export
 mod_landings_ui <- function(id) {
   ns <- NS(id)
-  
+
   tagList(
-    mod_flex_header_ui(ns, "ecoregion_label", "current_date"),
+    mod_flex_header_ui(
+      ns,
+      "ecoregion_label",
+      "current_date"
+    ),
+
     tabsetPanel(
       id = ns("main_tabset"),
+
+      # ------------------------------------------------------------
+      # Landings
+      # ------------------------------------------------------------
       tabPanel(
-        title = "Landings", value = "landings", # <-- add value
+        title = "Landings",
+        value = "landings",
+
         layout_sidebar(
-          bg = "white", fg = "black",
+          bg = "white",
+          fg = "black",
+
+          # Let the whole layout grow when the about box expands.
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
+
           sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black",
+            width = "20vw",
+            bg = "white",
+            fg = "black",
             open = FALSE,
+
             uiOutput(ns("landings_text"))
           ),
+
+          landings_about_box(),
+
           card(
+            # This height belongs to the plot card only.
             height = "85vh",
+            fill = FALSE,
+
             card_header(
-              radioButtons(ns("landings_layer_selector"), "Select grouping:",
+              radioButtons(
+                ns("landings_layer_selector"),
+                "Select grouping:",
                 inline = TRUE,
                 choices = c(
                   "Main landed species" = "Common name",
@@ -89,6 +166,7 @@ mod_landings_ui <- function(id) {
                   "Country" = "Country"
                 )
               ),
+
               download_icon_label(
                 text = "Download data",
                 outputId = ns("download_landings_data"),
@@ -96,46 +174,74 @@ mod_landings_ui <- function(id) {
                 size = "large"
               )
             ),
+
             card_body(
+              min_height = 0,
+
               uiOutput(ns("guild_selector_ui")),
-              withSpinner(                
-                plotlyOutput(ns("landings_layer"), height = "65vh")
+
+              bslib::as_fill_carrier(
+                shinycssloaders::withSpinner(
+                  plotlyOutput(
+                    ns("landings_layer"),
+                    height = "100%"
+                  )
+                )
               )
             )
           )
         )
       ),
+
+      # ------------------------------------------------------------
+      # Discards
+      # ------------------------------------------------------------
       tabPanel(
-        title = "Discards", value = "discards", # <-- add value
+        title = "Discards",
+        value = "discards",
+
         layout_sidebar(
-          bg = "white", fg = "black",
+          bg = "white",
+          fg = "black",
+
+          # Let the whole layout grow when the about box expands.
+          fill = FALSE,
+          fillable = TRUE,
+          gap = "12px",
+
           sidebar = sidebar(
-            width = "33vw", bg = "white", fg = "black",
+            width = "20vw",
+            bg = "white",
+            fg = "black",
             open = FALSE,
+
             uiOutput(ns("discards_text"))
           ),
+
+          discards_about_box(),
+
           card(
+            # This height belongs to the plot card only.
+            height = "85vh",
+            fill = FALSE,
+
             card_header(
               "Discard trends",
+
               download_icon_label(
                 text = "Download data",
                 outputId = ns("download_discard_data"),
-                hover_text = "Discards (.csv)",
-                size = "large"  
+                hover_text = "Full annual ecoregion data (.csv in .zip)",
+                size = "large"
               )
             ),
+
             card_body(
-              style = "overflow-y: hidden;",
-              withSpinner(plotlyOutput(ns("discard_trends")))
-            )
-          ),
-          card(
-            card_body(
-              style = "overflow-y: hidden;",
-              layout_column_wrap(
-                width = 1 / 2,
-                withSpinner(plotlyOutput(ns("recorded_discards"))),
-                withSpinner(plotlyOutput(ns("all_discards")))
+              min_height = 0,
+
+              uiOutput(
+                ns("discard_trends_html"),
+                fill = TRUE
               )
             )
           )
@@ -160,9 +266,7 @@ mod_landings_ui <- function(id) {
 #' @param selected_ecoregion A reactive expression returning the currently
 #'   selected ecoregion name (character). Used for labelling and to select
 #'   the appropriate cached data file.
-#' @param shared A list or environment containing shared data objects,
-#'   typically including \code{SAG} and \code{SID} tables used by
-#'   \code{format_sag()} and \code{CLD_trends()} for discard calculations.
+#' @param shared Shared app data supplied by the parent server.
 #' @param bookmark_qs A reactive returning a list of bookmark query-string
 #'   parameters (including \code{subtab}) or \code{NULL}. Used to restore
 #'   the selected main tab (\code{"landings"} or \code{"discards"}) on load.
@@ -195,14 +299,13 @@ mod_landings_ui <- function(id) {
 #'     }
 #'   \item For discards:
 #'     \itemize{
-#'       \item Uses \code{format_sag()} and \code{CLD_trends()} based on
-#'         \code{shared$SAG} and \code{shared$SID}.
-#'       \item Produces a \code{plotly} time-series trends plot and two
-#'         current-year summary plots (stocks with recorded discards and all
-#'         stocks).
+#'       \item Reads the selected ecoregion's complete annual RDS snapshot
+#'         from \code{app/plot_data} when a download is requested.
+#'       \item Displays a pre-generated HTML time-series trends plot in an
+#'         iframe that fills the available card body.
 #'       \item Provides a ZIP bundle download
-#'         (\code{download_discard_data}) containing a CSV export and a
-#'         disclaimer.
+#'         (\code{download_discard_data}) containing every row and column
+#'         of that snapshot as a CSV, plus a disclaimer.
 #'     }
 #' }
 #'
@@ -223,6 +326,43 @@ mod_landings_server <- function(
     set_subtab = function(...) {}) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    plot_dir <- app_sys("app/plots")
+    plot_index <- utils::read.csv(
+      file.path(plot_dir, "plot_index.csv"),
+      colClasses = "character",
+      na.strings = character()
+    )
+    plot_report <- utils::read.csv(
+      file.path(plot_dir, "plot_export_report.csv"),
+      colClasses = "character",
+      na.strings = character()
+    )
+    required_plot_columns <- c("plot_type", "ecoregion_id", "guild_id", "file")
+    required_report_columns <- c(required_plot_columns, "status", "reason")
+    if (!all(required_plot_columns %in% names(plot_index)) ||
+        !all(required_report_columns %in% names(plot_report))) {
+      stop("The HTML plot index or export report is missing required columns.")
+    }
+
+    discard_index <- plot_index[plot_index$plot_type == "discards", , drop = FALSE]
+    discard_report <- plot_report[plot_report$plot_type == "discards", , drop = FALSE]
+    if (any(discard_index$guild_id != "") ||
+        any(discard_report$guild_id != "") ||
+        anyDuplicated(discard_index$ecoregion_id) ||
+        anyDuplicated(discard_report$ecoregion_id) ||
+        any(!discard_report$status %in% c("exported", "no_data")) ||
+        any(discard_report$status == "no_data" & !nzchar(discard_report$reason))) {
+      stop("The discard plot index or export report contains invalid selections.")
+    }
+
+    exported_discards <- discard_report[discard_report$status == "exported", , drop = FALSE]
+    if (nrow(discard_index) != nrow(exported_discards) ||
+        !setequal(discard_index$ecoregion_id, exported_discards$ecoregion_id) ||
+        !all(discard_index$file[match(exported_discards$ecoregion_id, discard_index$ecoregion_id)] ==
+          exported_discards$file)) {
+      stop("The discard plot index does not match the successful exports.")
+    }
 
     ################################## bookmarking #########################################
     # This module participates in the global bookmarking via two hooks:
@@ -274,8 +414,9 @@ mod_landings_server <- function(
       if (is.null(tab)) tab <- "landings"
 
       date_text <- switch(tab,
-        "landings" = "October, 2025",
-        "discards" = format(Sys.Date(), "%B %d, %Y"),
+        "landings" = "October, 2026",
+        # "discards" = format(Sys.Date(), "%B %d, %Y"),
+        "discards" = "November 25, 2026",
         ""
       )
 
@@ -365,7 +506,7 @@ output$landings_layer <- renderPlotly({
     type = input$landings_layer_selector,
     line_count = params$n,
     selected_guild = guild_filter,
-    dataUpdated = "October, 2025",
+    dataUpdated = "October, 2026",
     session = session,
     ecoregion = acronym
   )
@@ -458,70 +599,52 @@ output$landings_layer <- renderPlotly({
     )
     ############### Discards plots ##########################################################
 
-    year <- Sys.Date() %>%
-      format("%Y") %>%
-      as.numeric()
-    
-    discard_base_data <- reactive({
-      CLD_trends(format_sag(shared$SAG, shared$SID))
-    })
+    output$discard_trends_html <- renderUI({
+      ecoregion_id <- get_ecoregion_acronym(selected_ecoregion())
+      report_row <- discard_report[
+        discard_report$ecoregion_id == ecoregion_id,
+        ,
+        drop = FALSE
+      ]
 
-    discard_target_year <- reactive({
-      discard_base_data() %>% 
-      dplyr::filter(Discards > 0) %>%
-        dplyr::mutate(Year = as.numeric(Year)) %>%
-        dplyr::filter(!is.na(Year)) %>%
-        dplyr::summarise(target_year = max(Year, na.rm = TRUE)) %>%
-        dplyr::pull(target_year)
-    })
-
-    output$discard_trends <- renderPlotly({
-      fig2 <- ggplotly(plot_discard_trends_app_plotly(discard_base_data(),
-        year,
-        ecoregion = get_ecoregion_acronym(selected_ecoregion())
+      validate(need(
+        nrow(report_row) == 1L,
+        "The discard plot selection is missing or ambiguous in the export report."
       ))
-      for (i in seq_along(fig2$x$data)) {
-        if (!is.null(fig2$x$data[[i]]$name)) {
-          fig2$x$data[[i]]$name <- gsub("\\(", "", strsplit(fig2$x$data[[i]]$name, ",")[[1]][1])
-        }
+
+      if (report_row$status == "no_data") {
+        return(tags$div(
+          style = paste(
+            "height: 100%; display: flex; align-items: center;",
+            "justify-content: center;"
+          ),
+          "No discards available"
+        ))
       }
-      fig2
-    })
-    
-    # output$recorded_discards <- renderPlotly({
-    #   catch_trends2 <- CLD_trends(format_sag(shared$SAG, shared$SID)) %>% filter(Discards > 0)
-    #   plot_discard_current_plotly(catch_trends2,
-    #     year = year,
-    #     position_letter = paste0("Current discards & Landings\nStocks with recorded discards (", year-1, ", ", get_active_region_acronym(selected_ecoregion()), ")"),
-    #     ecoregion = get_ecoregion_acronym(selected_ecoregion())
-    #   )
-    # })
 
-    # output$all_discards <- renderPlotly({
-    #   plot_discard_current_plotly(CLD_trends(format_sag(shared$SAG, shared$SID)),
-    #     year = year,
-    #     position_letter = paste0("Current discards & Landings\nAll Stocks (", year-1, ", ", get_active_region_acronym(selected_ecoregion()), ")") ,
-    #     ecoregion = get_ecoregion_acronym(selected_ecoregion())
-    #   )
-    # })
+      index_row <- discard_index[
+        discard_index$ecoregion_id == ecoregion_id,
+        ,
+        drop = FALSE
+      ]
+      validate(need(
+        nrow(index_row) == 1L &&
+          identical(index_row$file, report_row$file) &&
+          grepl("^discards__[A-Za-z0-9_-]+\\.html$", index_row$file),
+        "The discard plot selection is invalid in the export index."
+      ))
 
-    output$recorded_discards <- renderPlotly({
-      plot_discard_current_plotly(
-        discard_base_data() %>% dplyr::filter(Discards > 0),
-        target_year = discard_target_year(),
-        plot_type = "withDiscards",
-        ecoregion = get_ecoregion_acronym(selected_ecoregion()),
-        region_label = get_active_region_acronym(selected_ecoregion())
-      )
-    })
+      plot_path <- file.path(plot_dir, index_row$file)
+      validate(need(
+        isTRUE(file.exists(plot_path) && file.info(plot_path)$size > 0),
+        "The exported discard plot is missing or empty."
+      ))
 
-    output$all_discards <- renderPlotly({
-      plot_discard_current_plotly(
-        discard_base_data(),
-        target_year = discard_target_year(),
-        plot_type = "all",
-        ecoregion = get_ecoregion_acronym(selected_ecoregion()),
-        region_label = get_active_region_acronym(selected_ecoregion())
+      tags$iframe(
+        src = paste0("plots/", index_row$file),
+        title = paste("Discard trends for", selected_ecoregion()),
+        loading = "lazy",
+        style = "width: 100%; height: 100%; border: 0; display: block;"
       )
     })
 
@@ -546,8 +669,7 @@ output$landings_layer <- renderPlotly({
         date_tag <- format(Sys.Date(), "%d-%b-%y")
 
         # ---- Build CSV (include acronym + date) ----
-        # If CLD_trends() returns multiple measures, filter upstream if needed to "discards" only.
-        dat <- CLD_trends(format_sag(shared$SAG, shared$SID))
+        dat <- readRDS(app_sys(paste0("app/plot_data/annual_", acronym, ".rds")))
 
         csv_name <- paste0("discard_data_", acronym, "_", date_tag, ".csv")
         csv_path <- file.path(td, csv_name)

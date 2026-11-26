@@ -1717,12 +1717,13 @@
     },
     "gdtools": {
       "Package": "gdtools",
-      "Version": "0.5.0",
+      "Version": "0.6.0",
       "Source": "Repository",
       "Title": "Font Metrics and Font Management Utilities for R Graphics",
-      "Authors@R": "c( person(\"David\", \"Gohel\", , \"david.gohel@ardata.fr\", role = c(\"aut\", \"cre\")), person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", role = \"aut\"), person(\"Lionel\", \"Henry\", , \"lionel@rstudio.com\", role = \"aut\"), person(\"Jeroen\", \"Ooms\", , \"jeroen@berkeley.edu\", role = \"aut\", comment = c(ORCID = \"0000-0002-4035-0289\")), person(\"Yixuan\", \"Qiu\", role = \"ctb\"), person(\"R Core Team\", role = \"cph\", comment = \"Cairo code from X11 device\"), person(\"ArData\", role = \"cph\"), person(\"RStudio\", role = \"cph\") )",
-      "Description": "Compute text metrics (width, ascent, descent) using 'Cairo' and 'FreeType', independently of the active graphic device. Font lookup is delegated to 'systemfonts'. Additional utilities let users register 'Google Fonts' or bundled 'Liberation' fonts, check font availability, and assemble 'htmlDependency' objects so that fonts are correctly embedded in 'Shiny' applications, 'R Markdown' documents, and 'htmlwidgets' outputs such as 'ggiraph'.",
+      "Authors@R": "c( person(\"David\", \"Gohel\", , \"david.gohel@ardata.fr\", role = c(\"aut\", \"cre\")), person(\"Hadley\", \"Wickham\", , \"hadley@rstudio.com\", role = \"aut\"), person(\"Lionel\", \"Henry\", , \"lionel@rstudio.com\", role = \"aut\"), person(\"Jeroen\", \"Ooms\", , \"jeroen@berkeley.edu\", role = \"aut\", comment = c(ORCID = \"0000-0002-4035-0289\")), person(\"Yixuan\", \"Qiu\", role = \"ctb\"), person(\"ArData\", role = \"cph\"), person(\"RStudio\", role = \"cph\"), person(\"The STIX Fonts Project Authors\", role = \"cph\", comment = \"STIX Two Math font, see file COPYRIGHTS\") )",
+      "Description": "Compute text metrics (width, ascent, descent), with or without kerning, from font files with 'FreeType', independently of the active graphic device. Font lookup is delegated to 'systemfonts'. Additional utilities let users register 'Google Fonts', the bundled 'Liberation' fonts or the bundled math font 'STIX Two Math', check font availability, and assemble 'htmlDependency' objects so that fonts are correctly embedded in 'Shiny' applications, 'R Markdown' documents, and 'htmlwidgets' outputs such as 'ggiraph'.",
       "License": "GPL-3 | file LICENSE",
+      "Copyright": "See file COPYRIGHTS",
       "URL": "https://davidgohel.github.io/gdtools/",
       "BugReports": "https://github.com/davidgohel/gdtools/issues",
       "Depends": [
@@ -1731,24 +1732,23 @@
       "Imports": [
         "fontquiver (>= 0.2.0)",
         "htmltools",
-        "Rcpp (>= 0.12.12)",
+        "Rcpp (>= 0.12.16)",
         "systemfonts (>= 1.3.1)",
         "tools"
       ],
       "Suggests": [
         "curl",
         "gfonts",
-        "methods",
         "testthat"
       ],
       "LinkingTo": [
         "Rcpp"
       ],
+      "Config/roxygen2/version": "8.1.1",
       "Encoding": "UTF-8",
-      "RoxygenNote": "7.3.3",
-      "SystemRequirements": "cairo, freetype2, fontconfig",
+      "SystemRequirements": "freetype2",
       "NeedsCompilation": "yes",
-      "Author": "David Gohel [aut, cre], Hadley Wickham [aut], Lionel Henry [aut], Jeroen Ooms [aut] (ORCID: <https://orcid.org/0000-0002-4035-0289>), Yixuan Qiu [ctb], R Core Team [cph] (Cairo code from X11 device), ArData [cph], RStudio [cph]",
+      "Author": "David Gohel [aut, cre], Hadley Wickham [aut], Lionel Henry [aut], Jeroen Ooms [aut] (ORCID: <https://orcid.org/0000-0002-4035-0289>), Yixuan Qiu [ctb], ArData [cph], RStudio [cph], The STIX Fonts Project Authors [cph] (STIX Two Math font, see file COPYRIGHTS)",
       "Maintainer": "David Gohel <david.gohel@ardata.fr>",
       "Repository": "CRAN"
     },
@@ -1782,6 +1782,53 @@
       "NeedsCompilation": "no",
       "Author": "Hadley Wickham [aut, cre] (ORCID: <https://orcid.org/0000-0003-4757-117X>), Max Kuhn [aut], Davis Vaughan [aut], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
+      "Repository": "CRAN"
+    },
+    "ggalluvial": {
+      "Package": "ggalluvial",
+      "Version": "0.12.6",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Alluvial Plots in 'ggplot2'",
+      "Authors@R": "c( person(given = \"Jason Cory\", family = \"Brunson\", role = c(\"aut\", \"cre\"), email = \"cornelioid@gmail.com\"), person(given = \"Quentin D.\", family = \"Read\", role = 'aut'))",
+      "Maintainer": "Jason Cory Brunson <cornelioid@gmail.com>",
+      "Description": "Alluvial plots use variable-width ribbons and stacked bar plots to represent multi-dimensional or repeated-measures data with categorical or ordinal variables; see Riehmann, Hanfler, and Froehlich (2005) <doi:10.1109/INFVIS.2005.1532152> and Rosvall and Bergstrom (2010) <doi:10.1371/journal.pone.0008694>. Alluvial plots are statistical graphics in the sense of Wilkinson (2006) <doi:10.1007/0-387-28695-0>; they share elements with Sankey diagrams and parallel sets plots but are uniquely determined from the data and a small set of parameters. This package extends Wickham's (2010) <doi:10.1198/jcgs.2009.07098> layered grammar of graphics to generate alluvial plots from tidy data.",
+      "Depends": [
+        "R (>= 3.6)",
+        "ggplot2 (>= 2.2)"
+      ],
+      "Imports": [
+        "stats",
+        "dplyr (>= 0.7)",
+        "tidyr (>= 0.7)",
+        "lazyeval",
+        "rlang",
+        "tidyselect"
+      ],
+      "Suggests": [
+        "grid",
+        "alluvial",
+        "testthat",
+        "knitr",
+        "rmarkdown",
+        "babynames",
+        "sessioninfo",
+        "ggrepel",
+        "shiny (>= 1.4.0.2)",
+        "htmltools",
+        "sp (>= 1.4-0)",
+        "ggfittext (>= 0.6)",
+        "vdiffr (>= 0.2)"
+      ],
+      "License": "GPL-3",
+      "LazyData": "true",
+      "URL": "http://corybrunson.github.io/ggalluvial/",
+      "BugReports": "https://github.com/corybrunson/ggalluvial/issues",
+      "VignetteBuilder": "knitr",
+      "RoxygenNote": "7.2.3",
+      "Encoding": "UTF-8",
+      "NeedsCompilation": "no",
+      "Author": "Jason Cory Brunson [aut, cre], Quentin D. Read [aut]",
       "Repository": "CRAN"
     },
     "ggplot2": {
@@ -2593,7 +2640,7 @@
       "Encoding": "UTF-8",
       "Language": "en-GB",
       "Config/pak/sysreqs": "libpng-dev libssl-dev",
-      "Repository": "https://ices-tools-prod.r-universe.dev",
+      "Repository": "ICES",
       "NeedsCompilation": "no",
       "Author": "Colin Millar [aut, cre], Luca Lamoni [aut], Neil Maginnis [aut]",
       "Maintainer": "Colin Millar <colin.millar@ices.dk>",
@@ -3225,10 +3272,95 @@
       "Maintainer": "Yihui Xie <xie@yihui.name>",
       "Repository": "CRAN"
     },
+    "mixfishtools": {
+      "Package": "mixfishtools",
+      "Version": "0.5.1",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "WGMIXFISH tools for reproducibility",
+      "Date": "2025-09-29",
+      "Author": "Marc Taylor, Mikel Aristegui, Johnathan Ball, Harriet Cole, Paul Dolder",
+      "Maintainer": "Marc Taylor <marc.taylor@thuenen.de>",
+      "Description": "Contains plot templates used in WGMIXFISH-ADVICE and Fisheries Overviews.",
+      "Depends": [
+        "R (>= 4.1.0)",
+        "ggplot2",
+        "ggrepel",
+        "ggalluvial",
+        "dplyr",
+        "RColorBrewer"
+      ],
+      "Suggests": [
+        "tidyr",
+        "png",
+        "knitr",
+        "kableExtra",
+        "rmarkdown",
+        "FLCore",
+        "FLasher",
+        "ggplotFL",
+        "FLfse",
+        "stockassessment",
+        "spict",
+        "mgcv"
+      ],
+      "License": "GPL-3 + file LICENSE",
+      "Encoding": "UTF-8",
+      "LazyData": "false",
+      "RoxygenNote": "7.3.3",
+      "VignetteBuilder": "knitr",
+      "Config/pak/sysreqs": "libicu-dev",
+      "Repository": "https://ices-tools-prod.r-universe.dev",
+      "NeedsCompilation": "no",
+      "RemoteType": "repository",
+      "RemoteUrl": "https://github.com/ices-tools-dev/mixfishtools",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "f5ab209ba9b23ba863c2789de554a0c493c7cd9d"
+    },
     "officer": {
       "Package": "officer",
-      "Version": "0.7.6",
+      "Version": "0.7.8",
       "Source": "Repository",
+      "Type": "Package",
+      "Title": "Manipulation of Microsoft Word, PowerPoint and Excel Documents",
+      "Authors@R": "c( person(\"David\", \"Gohel\", , \"david.gohel@ardata.fr\", role = c(\"aut\", \"cre\")), person(\"Stefan\", \"Moog\", , \"moogs@gmx.de\", role = \"aut\"), person(\"Mark\", \"Heckmann\", , \"heckmann.mark@gmail.com\", role = \"aut\", comment = c(ORCID = \"0000-0002-0736-7417\")), person(\"ArData\", role = \"cph\"), person(\"Frank\", \"Hangler\", , \"frank@plotandscatter.com\", role = \"ctb\", comment = \"function body_replace_all_text\"), person(\"Liz\", \"Sander\", , \"lsander@civisanalytics.com\", role = \"ctb\", comment = \"several documentation fixes\"), person(\"Anton\", \"Victorson\", , \"anton@victorson.se\", role = \"ctb\", comment = \"fixes xml structures\"), person(\"Jon\", \"Calder\", , \"jonmcalder@gmail.com\", role = \"ctb\", comment = \"update vignettes\"), person(\"John\", \"Harrold\", , \"john.m.harrold@gmail.com\", role = \"ctb\", comment = \"function annotate_base\"), person(\"John\", \"Muschelli\", , \"muschellij2@gmail.com\", role = \"ctb\", comment = \"google doc compatibility\"), person(\"Bill\", \"Denney\", , \"wdenney@humanpredictions.com\", role = \"ctb\", comment = c(ORCID = \"0000-0002-5759-428X\", \"function as.matrix.rpptx\")), person(\"Nikolai\", \"Beck\", , \"beck.nikolai@gmail.com\", role = \"ctb\", comment = \"set speaker notes for .pptx documents\"), person(\"Greg\", \"Leleu\", , \"gregoire.leleu@gmail.com\", role = \"ctb\", comment = \"fields functionality in ppt\"), person(\"Majid\", \"Eismann\", role = \"ctb\"), person(\"Wahiduzzaman\", \"Khan\", role = \"ctb\", comment = \"vectorization of remove_slide\"), person(\"Hongyuan\", \"Jia\", , \"hongyuanjia@cqust.edu.cn\", role = \"ctb\", comment = c(ORCID = \"0000-0002-0075-8183\")), person(\"Michael\", \"Stackhouse\", , \"mike.stackhouse@atorusresearch.com\", role = \"ctb\") )",
+      "Description": "Access and manipulate 'Microsoft Word', 'Microsoft PowerPoint', 'Microsoft Excel' and 'RTF' documents from R.  The package focuses on tabular and graphical reporting from R; it also provides two functions that let users get document content into data objects. A set of functions lets add and remove images, tables and paragraphs of text in new or existing documents.  The package does not require any installation of Microsoft products to be able to write Microsoft files.",
+      "License": "MIT + file LICENSE",
+      "URL": "https://ardata-fr.github.io/officeverse/, https://davidgohel.github.io/officer/",
+      "BugReports": "https://github.com/davidgohel/officer/issues",
+      "Imports": [
+        "cli",
+        "dplyr",
+        "graphics",
+        "grDevices",
+        "openssl",
+        "R6",
+        "ragg",
+        "stats",
+        "tidyr",
+        "utils",
+        "uuid",
+        "xml2 (>= 1.1.0)",
+        "zip (>= 2.1.0)"
+      ],
+      "Suggests": [
+        "devEMF",
+        "gdtools",
+        "ggplot2",
+        "knitr",
+        "magick",
+        "rmarkdown",
+        "rsvg",
+        "mschart",
+        "testthat",
+        "withr"
+      ],
+      "Encoding": "UTF-8",
+      "Collate": "'core_properties.R' 'custom_properties.R' 'defunct.R' 'dev-utils.R' 'docx_add.R' 'docx_comments.R' 'docx_cursor.R' 'docx_embed_font.R' 'docx_part.R' 'docx_replace.R' 'docx_section.R' 'docx_settings.R' 'docx_styles.R' 'docx_utils_funs.R' 'empty_content.R' 'formatting_properties.R' 'fortify_docx.R' 'fortify_pptx.R' 'image_dims.R' 'knitr_utils.R' 'officer.R' 'ooxml.R' 'ooxml_block_objects.R' 'ooxml_run_objects.R' 'openxml_content_type.R' 'openxml_document.R' 'pack_folder.R' 'ph_location.R' 'post-proc.R' 'ppt_class_dir_collection.R' 'ppt_classes.R' 'ppt_notes.R' 'ppt_ph_dedupe_layout.R' 'ppt_ph_manipulate.R' 'ppt_ph_rename_layout.R' 'ppt_ph_with_methods.R' 'pptx_informations.R' 'pptx_layout_helper.R' 'pptx_matrix.R' 'utils.R' 'pptx_slide_manip.R' 'read_docx.R' 'docx_write.R' 'read_docx_styles.R' 'read_pptx.R' 'read_xlsx.R' 'relationship.R' 'rtf.R' 'shape_properties.R' 'shorcuts.R' 'docx_append_context.R' 'utils-xml.R' 'deprecated.R' 'zzz.R'",
+      "Config/roxygen2/version": "8.1.1",
+      "NeedsCompilation": "no",
+      "Author": "David Gohel [aut, cre], Stefan Moog [aut], Mark Heckmann [aut] (ORCID: <https://orcid.org/0000-0002-0736-7417>), ArData [cph], Frank Hangler [ctb] (function body_replace_all_text), Liz Sander [ctb] (several documentation fixes), Anton Victorson [ctb] (fixes xml structures), Jon Calder [ctb] (update vignettes), John Harrold [ctb] (function annotate_base), John Muschelli [ctb] (google doc compatibility), Bill Denney [ctb] (ORCID: <https://orcid.org/0000-0002-5759-428X>, function as.matrix.rpptx), Nikolai Beck [ctb] (set speaker notes for .pptx documents), Greg Leleu [ctb] (fields functionality in ppt), Majid Eismann [ctb], Wahiduzzaman Khan [ctb] (vectorization of remove_slide), Hongyuan Jia [ctb] (ORCID: <https://orcid.org/0000-0002-0075-8183>), Michael Stackhouse [ctb]",
+      "Maintainer": "David Gohel <david.gohel@ardata.fr>",
       "Repository": "CRAN"
     },
     "openssl": {
@@ -5110,7 +5242,7 @@
     },
     "systemfonts": {
       "Package": "systemfonts",
-      "Version": "1.3.2",
+      "Version": "1.3.4",
       "Source": "Repository",
       "Type": "Package",
       "Title": "System Native Font Finding",
@@ -5139,7 +5271,7 @@
         "ragg",
         "rmarkdown",
         "svglite",
-        "testthat (>= 2.1.0)"
+        "testthat (>= 3.2.0)"
       ],
       "LinkingTo": [
         "cpp11 (>= 0.2.1)"
@@ -5149,8 +5281,8 @@
       "Config/Needs/website": "tidyverse/tidytemplate",
       "Config/usethis/last-upkeep": "2025-04-23",
       "Encoding": "UTF-8",
-      "RoxygenNote": "7.3.2",
       "SystemRequirements": "fontconfig, freetype2",
+      "Config/roxygen2/version": "8.1.1",
       "NeedsCompilation": "yes",
       "Author": "Thomas Lin Pedersen [aut, cre] (ORCID: <https://orcid.org/0000-0002-5147-4711>), Jeroen Ooms [aut] (ORCID: <https://orcid.org/0000-0002-4035-0289>), Devon Govett [aut] (Author of font-manager), Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
       "Maintainer": "Thomas Lin Pedersen <thomas.pedersen@posit.co>",
