@@ -5,12 +5,12 @@ landings_about_box <- function() {
     shiny::p(
       style = "margin: 0;",
       "Landings data are shown for all reported taxa, including but not limited to those assessed by ICES. ",
-      "Data shown are a combination of historical nominal catches and official nominal catches",
+      "Data shown are a combination of historical nominal catches and official nominal catches ",
       shiny::tags$a(
         href = "https://www.ices.dk/data/dataset-collections/Pages/Fish-catch-and-stock-assessment.aspx",
         target = "_blank",
         rel = "noopener noreferrer",
-        "ICES Catch statistics"
+        "(ICES Catch statistics)."
       ), br(),
       "Landings are reported by ICES areas and divisions and assigned to an ecoregion according to the procedure described in ", 
       shiny::tags$a(
@@ -39,7 +39,7 @@ discards_about_box <- function() {
         href = "https://github.com/ices-taf/fisheriesXplorer_ecoregion_landings_shares_method",
         target = "_blank",
         rel = "noopener noreferrer",
-        "TAF repository."
+        "(TAF repository)."
       ),
       "Note that not all countries fishing on these stocks have reported data to RDBES.", br(),
       "Detailed annual information on stocks included or not included in discard rate calculations can be displayed ",

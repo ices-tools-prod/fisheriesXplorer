@@ -81,9 +81,9 @@ app_ui <- function(request) {
       tabPanel("Overview", value = "overview", mod_overview_ui("overview_1")),
       tabPanel("Landings", value = "landings", mod_landings_ui("landings_1")),
       tabPanel("Stock status", value = "stock_status", mod_stock_status_ui("stock_status_1")),
-      tabPanel("VMS", value = "vms", mod_vms_ui("vms_1")),
+      # tabPanel("VMS", value = "vms", mod_vms_ui("vms_1")),
       tabPanel("Bycatch", value = "bycatch", mod_bycatch_ui("bycatch_1")),
-      tabPanel("Mixed fisheries", value = "mixfish", mod_mixfish_ui("mixfish_1")),
+      # tabPanel("Mixed fisheries", value = "mixfish", mod_mixfish_ui("mixfish_1")),
 
       # push right
       bslib::nav_spacer(),
@@ -160,7 +160,7 @@ golem_add_external_resources <- function() {
     tags$link(rel = "stylesheet", type = "text/css", href = "css/gothic-a1.css"),
     tags$style("body {font-family: 'Gothic A1', sans-serif;}"),
     # tags$link(rel = "stylesheet", type = "text/css", href = "www/styles.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "www/fisheriesXplorer_2.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "www/fisheriesXplorer.css"),
     tags$script(src = "www/copy.js"),
     shinyjs::useShinyjs()
   )

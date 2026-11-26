@@ -3,7 +3,7 @@
 #' Build the landing page for the fisheriesXplorer app, combining:
 #' \itemize{
 #'   \item an interactive ICES ecoregion map with a synced selector, and
-#'   \item six large topic buttons that the server module can use to
+#'   \item four large topic buttons that the server module can use to
 #'         navigate to the relevant sections of the app.
 #' }
 #'
@@ -111,20 +111,20 @@ mod_navigation_page_ui <- function(id) {
                 )
               ),
               fluidRow(
-                column(
-                  4,
-                  align = "center",
-                  div(
-                    class = "image-button-wrap",
-                    actionLink(
-                      ns("vmsBtn"),
-                      label = NULL, class = "image-button-link",
-                      style = "background-image: url('www/icons/vms.svg');",
-                      title = "VMS", `aria-label` = "VMS"
-                    ),
-                    div(class = "fx-tooltip", HTML("<strong>VMS</strong><br><br>Fishing Effort &amp; Swept Area Ratio (SAR)"))
-                  )
-                ),
+                # column(
+                #   4,
+                #   align = "center",
+                #   div(
+                #     class = "image-button-wrap",
+                #     actionLink(
+                #       ns("vmsBtn"),
+                #       label = NULL, class = "image-button-link",
+                #       style = "background-image: url('www/icons/vms.svg');",
+                #       title = "VMS", `aria-label` = "VMS"
+                #     ),
+                #     div(class = "fx-tooltip", HTML("<strong>VMS</strong><br><br>Fishing Effort &amp; Swept Area Ratio (SAR)"))
+                #   )
+                # ),
                 column(
                   4,
                   align = "center",
@@ -138,21 +138,21 @@ mod_navigation_page_ui <- function(id) {
                     ),
                     div(class = "fx-tooltip", HTML("<strong>Bycatch</strong><br><br>Bycatch of mammals, seabirds, and elasmobranchs"))
                   )
-                ),
-                column(
-                  4,
-                  align = "center",
-                  div(
-                    class = "image-button-wrap",
-                    actionLink(
-                      ns("mixfishBtn"),
-                      label = NULL, class = "image-button-link",
-                      style = "background-image: url('www/icons/mixfish.svg');",
-                      title = "MixFish", `aria-label` = "MixFish"
-                    ),
-                    div(class = "fx-tooltip", HTML("<strong>MixFish</strong><br><br>Mixed fisheries &amp; considerations"))
-                  )
                 )
+                # column(
+                #   4,
+                #   align = "center",
+                #   div(
+                #     class = "image-button-wrap",
+                #     actionLink(
+                #       ns("mixfishBtn"),
+                #       label = NULL, class = "image-button-link",
+                #       style = "background-image: url('www/icons/mixfish.svg');",
+                #       title = "MixFish", `aria-label` = "MixFish"
+                #     ),
+                #     div(class = "fx-tooltip", HTML("<strong>MixFish</strong><br><br>Mixed fisheries &amp; considerations"))
+                #   )
+                # )
               )
             )
           )
@@ -320,14 +320,14 @@ mod_navigation_page_server <- function(
     observeEvent(input$stockStatusBtn, {
       updateNavbarPage(parent_session, "nav-page", selected = "stock_status")
     })
-    observeEvent(input$vmsBtn, {
-      updateNavbarPage(parent_session, "nav-page", selected = "vms")
-    })
+    # observeEvent(input$vmsBtn, {
+    #   updateNavbarPage(parent_session, "nav-page", selected = "vms")
+    # })
     observeEvent(input$bycatchBtn, {
       updateNavbarPage(parent_session, "nav-page", selected = "bycatch")
     })
-    observeEvent(input$mixfishBtn, {
-      updateNavbarPage(parent_session, "nav-page", selected = "mixfish")
-    })
+    # observeEvent(input$mixfishBtn, {
+    #   updateNavbarPage(parent_session, "nav-page", selected = "mixfish")
+    # })
   })
 }

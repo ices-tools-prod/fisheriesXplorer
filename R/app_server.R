@@ -294,24 +294,24 @@ app_server <- function(input, output, session) {
     bookmark_qs = reactive(list()), # parent restores
     set_subtab = function(...) {}
   )
-  mod_vms_server(
-    "vms_1",
-    selected_ecoregion = selected_ecoregion,
-    bookmark_qs        = reactive(list()) # parent restores
-  )
+  # mod_vms_server(
+  #   "vms_1",
+  #   selected_ecoregion = selected_ecoregion,
+  #   bookmark_qs        = reactive(list()) # parent restores
+  # )
   mod_bycatch_server(
     "bycatch_1",
     selected_ecoregion = selected_ecoregion,
     bookmark_qs        = reactive(list()), # parent restores
     set_subtab = function(...) {}
   )
-  mod_mixfish_server(
-    "mixfish_1",
-    selected_ecoregion = selected_ecoregion,
-    bookmark_qs        = reactive(list()), # parent restores
-    set_subtab = function(...) {},
-    set_plot = function(...) {}
-  )
+  # mod_mixfish_server(
+  #   "mixfish_1",
+  #   selected_ecoregion = selected_ecoregion,
+  #   bookmark_qs        = reactive(list()), # parent restores
+  #   set_subtab = function(...) {},
+  #   set_plot = function(...) {}
+  # )
   mod_resources_server(
     "resources_1",
     bookmark_qs        = reactive(list()), # parent restores
