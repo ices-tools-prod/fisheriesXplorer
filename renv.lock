@@ -2640,7 +2640,7 @@
       "Encoding": "UTF-8",
       "Language": "en-GB",
       "Config/pak/sysreqs": "libpng-dev libssl-dev",
-      "Repository": "https://ices-tools-prod.r-universe.dev",
+      "Repository": "ICES",
       "NeedsCompilation": "no",
       "Author": "Colin Millar [aut, cre], Luca Lamoni [aut], Neil Maginnis [aut]",
       "Maintainer": "Colin Millar <colin.millar@ices.dk>",
