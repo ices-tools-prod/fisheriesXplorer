@@ -1064,3 +1064,204 @@ details summary {
 .form-group {
     margin-bottom: 4px !important;
   }
+
+
+/* === fisheriesXplorer: About this module ===
+   Used by tab_about_box() in tab_about_box.R.
+   Keep the existing pale blue box, with a solid blue Show/Hide control.
+   Body text matches .sidebar-text: 15px with a 1.4 (21px) line height.
+*/
+details.fx-about-box {
+  --fx-about-header-bg: #DCEAF2;
+  --fx-about-body-bg: #EEF4F8;
+  --fx-about-border: #D5E2EA;
+  --fx-about-text: #002B5F;
+  --fx-about-toggle-bg: #002B5F;
+  --fx-about-toggle-hover: #005B99;
+  --fx-about-header-hover: #D2E3ED;
+  --fx-about-font-size: 15px;
+  --fx-about-line-height: 1.4;
+  --fx-about-paragraph-gap: 10px;
+
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--fx-about-text);
+  background-color: var(--fx-about-body-bg);
+  border: 1px solid var(--fx-about-border);
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+/* The whole summary is the native control; the blue pill is a styled span. */
+details.fx-about-box > .fx-about-summary {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  min-height: 48px;
+  margin: 0;
+  padding: 8px 14px;
+  color: var(--fx-about-text);
+  background-color: var(--fx-about-header-bg);
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  transition: background-color 0.15s ease;
+}
+
+details.fx-about-box > .fx-about-summary::marker {
+  content: "";
+}
+
+details.fx-about-box > .fx-about-summary::-webkit-details-marker {
+  display: none;
+}
+
+details.fx-about-box[open] > .fx-about-summary {
+  border-bottom: 1px solid var(--fx-about-border);
+}
+
+details.fx-about-box > .fx-about-summary:hover {
+  background-color: var(--fx-about-header-hover);
+}
+
+/* Inset focus stays visible inside the box's rounded, clipped boundary. */
+details.fx-about-box > .fx-about-summary:focus-visible {
+  outline: 3px solid var(--fx-about-toggle-hover);
+  outline-offset: -4px;
+}
+
+details.fx-about-box .fx-about-title {
+  flex: 1 1 180px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+details.fx-about-box .fx-about-toggle {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid var(--fx-about-toggle-bg);
+  border-radius: 999px;
+  background-color: var(--fx-about-toggle-bg);
+  color: #FFFFFF;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+details.fx-about-box > .fx-about-summary:is(:hover, :focus-visible) .fx-about-toggle {
+  background-color: var(--fx-about-toggle-hover);
+  border-color: var(--fx-about-toggle-hover);
+}
+
+/* Native [open] state controls the visible action text; no JavaScript needed. */
+details.fx-about-box:not([open]) > .fx-about-summary .fx-about-label-hide,
+details.fx-about-box[open] > .fx-about-summary .fx-about-label-show {
+  display: none;
+}
+
+/* Decorative CSS chevron: right when closed, down when expanded. */
+details.fx-about-box .fx-about-chevron {
+  box-sizing: border-box;
+  display: inline-block;
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  margin: 0 2px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+details.fx-about-box[open] > .fx-about-summary .fx-about-chevron {
+  transform: rotate(135deg);
+}
+
+details.fx-about-box > .fx-about-content {
+  padding: 10px 14px;
+  color: var(--fx-about-text);
+  background-color: var(--fx-about-body-bg);
+  font-size: var(--fx-about-font-size);
+  line-height: var(--fx-about-line-height);
+  overflow-wrap: anywhere;
+}
+
+/* Override app-wide paragraph/list typography within this component only. */
+details.fx-about-box > .fx-about-content :is(p, li, ul, ol) {
+  font-size: var(--fx-about-font-size);
+  line-height: var(--fx-about-line-height);
+}
+
+details.fx-about-box > .fx-about-content :is(p, ul, ol) {
+  margin-top: 0;
+  margin-bottom: var(--fx-about-paragraph-gap);
+}
+
+details.fx-about-box > .fx-about-content :is(ul, ol) {
+  padding-inline-start: 1.4em;
+}
+
+details.fx-about-box > .fx-about-content > :first-child {
+  margin-top: 0;
+}
+
+details.fx-about-box > .fx-about-content > :last-child {
+  margin-bottom: 0;
+}
+
+details.fx-about-box > .fx-about-content a {
+  color: var(--fx-about-toggle-hover);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+details.fx-about-box > .fx-about-content a:hover {
+  color: var(--fx-about-text);
+}
+
+/* Reflow the header on phones; body text stays at the sidebar's 15px size. */
+@media (max-width: 420px) {
+  details.fx-about-box .fx-about-title {
+    flex-basis: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  details.fx-about-box > .fx-about-summary,
+  details.fx-about-box .fx-about-toggle,
+  details.fx-about-box .fx-about-chevron {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  details.fx-about-box,
+  details.fx-about-box[open] > .fx-about-summary {
+    border-color: CanvasText;
+  }
+
+  details.fx-about-box .fx-about-toggle {
+    border-color: ButtonText;
+  }
+
+  details.fx-about-box > .fx-about-summary:focus-visible {
+    outline-color: Highlight;
+  }
+}
