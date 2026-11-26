@@ -9,7 +9,13 @@ status_about_box <- function() {
       "Stock status is assessed using biomass indices (B) or proxies relative to the highest B reference point ",
       "or proxy reference point (Bref) available in the latest ICES stock assessment. ",
       "For stocks for which only Blim is defined, Bref is considered unknown. For details ",
-      "and examples related to the definition of Fref and Bref, see [WKBoBFO report]. ",br(),
+      "and examples related to the definition of Fref and Bref, see ",
+      shiny::tags$a(
+        href = "https://doi.org/10.17895/ices.pub.34923333",
+        target = "_blank",
+        rel = "noopener noreferrer",
+        "WKBoBFO report."
+      ), br(),
       "Status information is provided for ICES assessed stocks fished within the ecoregion, ",
       "including stocks that are also fished in other ecoregions. All data shown are based on the ",
       "latest ICES assessments."
@@ -463,7 +469,8 @@ mod_stock_status_server <- function(
       tab <- input$main_tabset
       if (is.null(tab)) tab <- "landings"
       
-      date_text <- format(Sys.Date(), "%B %d, %Y")
+      # date_text <- format(Sys.Date(), "%B %d, %Y")
+      date_text <- "November 25, 2026"
 
       tagList(
         tags$span(tags$b("Last data update:"), " ", date_text),
