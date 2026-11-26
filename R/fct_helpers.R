@@ -712,7 +712,7 @@ add_keys <- function(df, stock_label, keys, key_col = "AssessmentKey") {
 #'  Used in the Overview tab.
 revision_dates <- c(
   AZ = "2022-11-30",
-  BI = "2026-11-16",
+  BI = "2026-11-27",
   BrS ="2022-11-30",
   BtS = "2022-11-30",
   CS  = "2025-11-27",

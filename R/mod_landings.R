@@ -415,7 +415,8 @@ mod_landings_server <- function(
 
       date_text <- switch(tab,
         "landings" = "October, 2026",
-        "discards" = format(Sys.Date(), "%B %d, %Y"),
+        # "discards" = format(Sys.Date(), "%B %d, %Y"),
+        "discards" = "November 25, 2026",
         ""
       )
 
